@@ -1,0 +1,119 @@
+<!-- src/main/resources/templates/order.html -->
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        .document {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+        }
+
+        header {
+            background-color: #f8f9fa;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .reference {
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        section {
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            color: #34495e;
+            font-size: 18px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin: 15px 0;
+            display: flex;
+        }
+
+        label {
+            width: 150px;
+            color: #7f8c8d;
+            font-weight: bold;
+        }
+
+        span {
+            color: #2c3e50;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            color: #2c3e50;
+        }
+
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .total-row {
+            font-weight: bold;
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="document order">
+        <header>
+            <h1>BON DE COMMANDE</h>
+            <div class="reference">Ref: {{reference}}</div>
+        </header>
+        <section class="vehicle-details">
+            <h2>Véhicule</h2>
+            <table>
+                <tr>
+                    <th>Description</th>
+                    <th>Prix HT</th>
+                    <th>TVA</th>
+                    <th>Prix TTC</th>
+                </tr>
+                <tr>
+                    <td>{{vehicle.description}}</td>
+                    <td>{{vehicle.priceHT}}</td>
+                    <td>{{vehicle.tva}}</td>
+                    <td>{{vehicle.priceTTC}}</td>
+                </tr> {{#each options}} <tr>
+                    <td>{{this.description}}</td>
+                    <td>{{this.priceHT}}</td>
+                    <td>{{this.tva}}</td>
+                    <td>{{this.priceTTC}}</td>
+                </tr> {{/each}}
+            </table>
+        </section>
+    </div>
+</body>
+
+</html>

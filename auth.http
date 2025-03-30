@@ -1,0 +1,32 @@
+
+### Create a new user
+POST http://localhost:8080/api/auth/register
+Content-Type: application/json
+
+{
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "johndoe@example.com",
+    "password": "StrongP@ssw0rd",
+    "address": "123 Main Street, City",
+    "phoneNumber": "+1234567890"
+}
+
+
+### Activate user
+POST http://localhost:8080/api/auth/activate
+Content-Type: application/json
+
+{
+    "email": "johndoe@example.com",
+    "activationCode": "298160"
+}
+
+### Login
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+    "email": "johndoe@example.com",
+    "password": "StrongP@ssw0rd"
+}
