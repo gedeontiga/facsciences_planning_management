@@ -1,5 +1,5 @@
 # ---- Step 1: Build Stage ----
-FROM openjdk:21
+FROM openjdk:21-jdk-slim
 WORKDIR /app
 
 # Copy the application source code

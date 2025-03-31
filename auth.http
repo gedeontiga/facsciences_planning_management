@@ -1,6 +1,6 @@
 
 ### Create a new user
-POST https://facsciences-planning-management.up.railway.app/api/auth/register
+POST https://extreme-ivonne-gedeontiga-3cf88bd1.koyeb.app/api/auth/register
 Content-Type: application/json
 
 {
@@ -14,7 +14,7 @@ Content-Type: application/json
 
 
 ### Activate user
-POST https://facsciences-planning-management.up.railway.app/api/auth/activate
+POST https://extreme-ivonne-gedeontiga-3cf88bd1.koyeb.app/api/auth/activate
 Content-Type: application/json
 
 {
@@ -23,7 +23,7 @@ Content-Type: application/json
 }
 
 ### Login
-POST https://facsciences-planning-management.up.railway.app/api/auth/login
+POST https://extreme-ivonne-gedeontiga-3cf88bd1.koyeb.app/api/auth/login
 Content-Type: application/json
 
 {

@@ -9,16 +9,17 @@ import lombok.AllArgsConstructor;
 @Service
 @AllArgsConstructor
 public class MailNotificationService {
-
     private final JavaMailSender javaMailSender;
-    private static String CODE_ACTIVATION = "Code d'activation";
+    private static String ACCOUNT_ACTIVATION = "Activation de votre compte";
 
-    public void sendActivationEmail(String email, String code) {
+    private static final String BASE_URL = "https://extreme-ivonne-gedeontiga-3cf88bd1.koyeb.app/";
+
+    public void sendActivationEmail(String email, String token) {
         SimpleMailMessage mailMessage = new SimpleMailMessage();
-        String text = "Votre code d'activation est: " + code;
+        String activationLink = BASE_URL + "/activate?email=" + email + "&token=" + token;
+        String text = "Cliquez sur le lien suivant pour activer votre compte: " + activationLink;
         mailMessage.setTo(email);
-        mailMessage.setSubject(CODE_ACTIVATION);
-        mailMessage.setFrom("gedeon.ambomo@facsciences-uy1.cm"); // Optionnel si Gmail gère "From"
+        mailMessage.setSubject(ACCOUNT_ACTIVATION);
         mailMessage.setText(text);
         javaMailSender.send(mailMessage);
     }

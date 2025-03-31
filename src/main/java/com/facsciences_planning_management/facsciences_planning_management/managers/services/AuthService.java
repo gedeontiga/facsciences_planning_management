@@ -1,8 +1,8 @@
 package com.facsciences_planning_management.facsciences_planning_management.managers.services;
 
-import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.Map;
+import java.util.UUID;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -27,7 +27,6 @@ import lombok.AllArgsConstructor;
 @Service
 @AllArgsConstructor
 public class AuthService {
-
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final ValidationRepository validationRepository;
@@ -59,29 +58,29 @@ public class AuthService {
     }
 
     private void saveAndSendActivation(Users user) {
-        String activationCode = generateActivationCode();
-        saveActivationCode(user.getEmail(), activationCode);
-        notificationService.sendActivationEmail(user.getEmail(), activationCode);
+        String token = generateActivationToken();
+        saveActivationToken(user.getEmail(), token);
+        notificationService.sendActivationEmail(user.getEmail(), token);
     }
 
-    public String activate(String email, String code) {
+    public void activate(String email, String token) {
         Users user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (user.getEnabled()) {
-            return "User already activated";
+            throw new RuntimeException("User already activated");
         }
 
-        Validation activationCode = validationRepository.findByEmailAndExpiredAfter(email, Instant.now())
-                .orElseThrow(() -> new RuntimeException("Invalid or expired code"));
+        Validation activation = validationRepository.findByEmailAndExpiredAfter(email, Instant.now())
+                .orElseThrow(() -> new RuntimeException("Invalid or expired activation link"));
 
-        if (!activationCode.getActivationCode().equals(code)) {
-            return "Activation Failed";
+        if (!activation.getActivationCode().equals(token)) {
+            throw new RuntimeException("Activation Failed");
         }
 
         user.setEnabled(true);
         userRepository.save(user);
-        return "User activated successfully";
+        validationRepository.delete(activation); // Clean up the used token
     }
 
     public Map<String, String> login(LoginRequest request) {
@@ -95,24 +94,22 @@ public class AuthService {
         throw new RuntimeException("Invalid login credentials");
     }
 
-    private String generateActivationCode() {
-        SecureRandom random = new SecureRandom();
-        int code = 100000 + random.nextInt(900000); // Generates a number between 100000 and 999999
-        return String.valueOf(code);
+    private String generateActivationToken() {
+        return UUID.randomUUID().toString();
     }
 
-    private void saveActivationCode(String email, String code) {
+    private void saveActivationToken(String email, String token) {
         validationRepository.findByEmail(email).ifPresent(validationRepository::delete);
 
-        Validation activationCode = new Validation();
-        activationCode.setEmail(email);
-        activationCode.setActivationCode(code);
-        activationCode.setExpired(Instant.now().plusMillis(ACTIVATION_HOURS_VALIDITY));
-        validationRepository.save(activationCode);
+        Validation activation = new Validation();
+        activation.setEmail(email);
+        activation.setActivationCode(token);
+        activation.setExpired(Instant.now().plusMillis(ACTIVATION_HOURS_VALIDITY));
+        validationRepository.save(activation);
     }
 
     @Scheduled(cron = "@daily")
-    public void cleanupExpiredCodes() {
+    public void cleanupExpiredTokens() {
         validationRepository.deleteByExpiredBefore(Instant.now());
     }
 
