@@ -1,6 +1,6 @@
 
 ### Create a new user
-POST http://localhost:8080/api/auth/register
+POST https://facsciences-planning-management.up.railway.app/api/auth/register
 Content-Type: application/json
 
 {
@@ -14,16 +14,16 @@ Content-Type: application/json
 
 
 ### Activate user
-POST http://localhost:8080/api/auth/activate
+POST https://facsciences-planning-management.up.railway.app/api/auth/activate
 Content-Type: application/json
 
 {
     "email": "johndoe@example.com",
-    "activationCode": "298160"
+    "activationCode": "325546"
 }
 
 ### Login
-POST http://localhost:8080/api/auth/login
+POST https://facsciences-planning-management.up.railway.app/api/auth/login
 Content-Type: application/json
 
 {
