@@ -16,7 +16,7 @@ public class MailNotificationService {
     private final JavaMailSender javaMailSender;
     private static String ACCOUNT_ACTIVATION = "Activation de votre compte";
 
-    private static final String BASE_URL = "https://extreme-ivonne-gedeontiga-3cf88bd1.koyeb.app/";
+    private static final String BASE_URL = "https://extreme-ivonne-gedeontiga-3cf88bd1.koyeb.app";
 
     public void sendActivationEmail(String email, String token) {
         try {
@@ -43,9 +43,10 @@ public class MailNotificationService {
                     + "' style='display: inline-block; background-color: #4CAF50; color: white; " +
                     "padding: 10px 20px; text-decoration: none; border-radius: 4px;'>Activer mon compte</a></p>" +
                     "<p>Ce lien est valable pendant 24 heures.</p>" +
-                    "<p>Si vous n'arrivez pas à cliquer sur le bouton, vous pouvez copier et coller le lien suivant dans votre navigateur :</p>"
-                    +
-                    "<p>" + activationLink + "</p>" +
+                    // "<p>Si vous n'arrivez pas à cliquer sur le bouton, vous pouvez copier et
+                    // coller le lien suivant dans votre navigateur :</p>"
+                    // +
+                    // "<p>" + activationLink + "</p>" +
                     "</div>" +
                     "</body>" +
                     "</html>";
