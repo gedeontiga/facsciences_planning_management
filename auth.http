@@ -4,29 +4,23 @@ POST https://extreme-ivonne-gedeontiga-3cf88bd1.koyeb.app/api/auth/register
 Content-Type: application/json
 
 {
-    "firstName": "John",
-    "lastName": "Doe",
-    "email": "johndoe@example.com",
-    "password": "StrongP@ssw0rd",
+    "firstName": "Gedeon",
+    "lastName": "Test",
+    "email": "gedeontigadev@gmail.com",
+    "password": "test....",
     "address": "123 Main Street, City",
     "phoneNumber": "+1234567890"
 }
 
 
 ### Activate user
-POST https://extreme-ivonne-gedeontiga-3cf88bd1.koyeb.app/api/auth/activate
-Content-Type: application/json
-
-{
-    "email": "johndoe@example.com",
-    "activationCode": "325546"
-}
+GET https://extreme-ivonne-gedeontiga-3cf88bd1.koyeb.app//activate?email=gedeontigadev@gmail.com&token=81704ac2-84bd-459c-b38e-9c3942589dc6
 
 ### Login
 POST https://extreme-ivonne-gedeontiga-3cf88bd1.koyeb.app/api/auth/login
 Content-Type: application/json
 
 {
-    "email": "johndoe@example.com",
-    "password": "StrongP@ssw0rd"
+    "email": "gedeontigadev@gmail.com",
+    "password": "test...."
 }
