@@ -14,7 +14,7 @@ Content-Type: application/json
 
 
 ### Activate user
-GET https://extreme-ivonne-gedeontiga-3cf88bd1.koyeb.app/activate?email=gedeontigadev%40gmail.com&token=828c5824-5c8d-4b52-90e0-a3e29a0f0ad5
+GET https://extreme-ivonne-gedeontiga-3cf88bd1.koyeb.app/activate?token=828c5824-5c8d-4b52-90e0-a3e29a0f0ad5
 
 ### Login
 POST https://extreme-ivonne-gedeontiga-3cf88bd1.koyeb.app/api/auth/login

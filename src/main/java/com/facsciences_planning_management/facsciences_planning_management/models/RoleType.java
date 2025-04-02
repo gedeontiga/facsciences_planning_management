@@ -17,18 +17,17 @@ public enum RoleType {
                         Set.of(
                                         PermissionType.DEPARTMENT_CHIEF_READ_PLANNING,
                                         PermissionType.DEPARTMENT_CHIEF_CUSTOMIZE_PLANNING)),
-        DEAN(
+        ADMINISTRATOR(
                         Set.of(
-                                        PermissionType.DEAN_CREATE_ALL,
-                                        PermissionType.DEAN_READ_ALL,
-                                        PermissionType.DEAN_UPDATE_ALL,
-                                        PermissionType.DEAN_DELETE_ALL)),
-        VICE_DEAN(
+                                        PermissionType.ADMINISTRATOR_CREATE_ALL,
+                                        PermissionType.ADMINISTRATOR_READ_ALL,
+                                        PermissionType.ADMINISTRATOR_UPDATE_ALL,
+                                        PermissionType.ADMINISTRATOR_DELETE_ALL)),
+        SECRETARY(
                         Set.of(
-                                        PermissionType.VICE_DEAN_CREATE_PLANNING,
-                                        PermissionType.VICE_DEAN_READ_PLANNING,
-                                        PermissionType.VICE_DEAN_UPDATE_PLANNING,
-                                        PermissionType.VICE_DEAN_DELETE_PLANNING)),
+                                        PermissionType.SECRETARY_READ_PLANNING,
+                                        PermissionType.SECRETARY_UPDATE_PLANNING,
+                                        PermissionType.SECRETARY_DELETE_PLANNING)),
         TEACHER(
                         Set.of(
                                         PermissionType.TEACHER_READ_PLANNING)),

@@ -3,8 +3,8 @@ package com.facsciences_planning_management.facsciences_planning_management.mode
 import java.time.Instant;
 
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.DocumentReference;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,10 +20,10 @@ public class Validation {
     @Id
     private String id;
 
-    @Indexed(unique = true)
-    private String email;
+    @DocumentReference(collection = "users")
+    private Users user;
 
-    private String activationCode;
+    private String activationToken;
 
     private Instant expired;
 }

@@ -11,9 +11,7 @@ import com.facsciences_planning_management.facsciences_planning_management.model
 @Repository
 public interface ValidationRepository extends MongoRepository<Validation, String> {
 
-    Optional<Validation> findByEmailAndExpiredAfter(String email, Instant now);
-
-    Optional<Validation> findByEmail(String email);
+    Optional<Validation> findByActivationTokenAndExpiredIsAfter(String email, Instant now);
 
     void deleteByExpiredBefore(Instant now);
 }

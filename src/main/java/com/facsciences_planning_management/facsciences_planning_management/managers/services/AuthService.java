@@ -27,15 +27,15 @@ import lombok.AllArgsConstructor;
 @Service
 @AllArgsConstructor
 public class AuthService {
+    private static final long ACTIVATION_HOURS_VALIDITY = 24 * 3600 * 1000;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final ValidationRepository validationRepository;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
-    private final MailNotificationService notificationService;
 
-    private static final long ACTIVATION_HOURS_VALIDITY = 24 * 3600 * 1000;
+    private final MailNotificationService notificationService;
 
     public Boolean isEmailAlreadyExists(String email) {
         return userRepository.findByEmail(email).isPresent();
@@ -57,27 +57,16 @@ public class AuthService {
         saveAndSendActivation(userRepository.save(customer));
     }
 
-    private void saveAndSendActivation(Users user) {
-        String token = generateActivationToken();
-        saveActivationToken(user.getEmail(), token);
-        notificationService.sendActivationEmail(user.getEmail(), token);
-    }
+    public void activate(String token) {
 
-    public void activate(String email, String token) {
-        Users user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        if (user.getEnabled()) {
-            throw new RuntimeException("User already activated");
-        }
-
-        Validation activation = validationRepository.findByEmailAndExpiredAfter(email, Instant.now())
+        Validation activation = validationRepository.findByActivationTokenAndExpiredIsAfter(token, Instant.now())
                 .orElseThrow(() -> new RuntimeException("Invalid or expired activation link"));
 
-        if (!activation.getActivationCode().equals(token)) {
-            throw new RuntimeException("Activation Failed");
+        if (!activation.getActivationToken().equals(token)) {
+            throw new RuntimeException("Activation Failed: invalid token");
         }
 
+        Users user = activation.getUser();
         user.setEnabled(true);
         userRepository.save(user);
         validationRepository.delete(activation); // Clean up the used token
@@ -94,23 +83,28 @@ public class AuthService {
         throw new RuntimeException("Invalid login credentials");
     }
 
+    @Scheduled(cron = "@daily")
+    public void cleanupExpiredTokens() {
+        validationRepository.deleteByExpiredBefore(Instant.now());
+    }
+
+    private void saveAndSendActivation(Users user) {
+        String token = generateActivationToken();
+        saveActivationToken(user, token);
+        notificationService.sendActivationEmail(user.getEmail(), token);
+    }
+
     private String generateActivationToken() {
         return UUID.randomUUID().toString();
     }
 
-    private void saveActivationToken(String email, String token) {
-        validationRepository.findByEmail(email).ifPresent(validationRepository::delete);
+    private void saveActivationToken(Users user, String token) {
 
         Validation activation = new Validation();
-        activation.setEmail(email);
-        activation.setActivationCode(token);
+        activation.setUser(user);
+        activation.setActivationToken(token);
         activation.setExpired(Instant.now().plusMillis(ACTIVATION_HOURS_VALIDITY));
         validationRepository.save(activation);
-    }
-
-    @Scheduled(cron = "@daily")
-    public void cleanupExpiredTokens() {
-        validationRepository.deleteByExpiredBefore(Instant.now());
     }
 
     private Role getRoleByType(RoleType roleType) {
