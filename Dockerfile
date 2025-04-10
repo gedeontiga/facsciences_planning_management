@@ -1,5 +1,5 @@
 # ---- Step 1: Build Stage ----
-FROM maven:3.9.6-eclipse-temurin-21-slim AS build
+FROM maven:3.9.6-eclipse-temurin-21 AS build
 WORKDIR /app
 
 # Copy only the POM file first to leverage Docker cache for dependencies
@@ -15,7 +15,7 @@ COPY src ./src
 RUN mvn package -DskipTests
 
 # ---- Step 2: Run Stage ----
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:21-jre AS runtime
 WORKDIR /app
 
 # Copy only the generated JAR file
