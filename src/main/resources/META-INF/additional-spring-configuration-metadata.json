@@ -1,0 +1,10 @@
+{
+    "properties": [
+    {
+        "name": "app.base-url",
+        "type": "java.lang.String",
+        "description": "The base URL for the application, used in email links.",
+        "defaultValue": "https://facsciences-uy1-planning-management-gedeontiga-eabfb5d3.koyeb.app"
+    }
+    ]
+}

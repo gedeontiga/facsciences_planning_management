@@ -1,10 +1,6 @@
 package com.facsciences_planning_management.facsciences_planning_management.managers.services;
 
-// import java.nio.charset.StandardCharsets;
-
-// import java.net.URLEncoder;
-// import java.nio.charset.StandardCharsets;
-
+import org.springframework.core.env.Environment;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -18,7 +14,12 @@ public class MailNotificationService {
     private final JavaMailSender javaMailSender;
     private static String ACCOUNT_ACTIVATION = "Activation de votre compte";
 
-    private static final String BASE_URL = "https://extreme-ivonne-gedeontiga-3cf88bd1.koyeb.app";
+    private final Environment environment;
+
+    private String getBaseUrl() {
+        return environment.getProperty("app.base-url",
+                "https://facsciences-uy1-planning-management-gedeontiga-eabfb5d3.koyeb.app");
+    }
 
     public void sendActivationEmail(String email, String token) {
         try {
@@ -26,7 +27,7 @@ public class MailNotificationService {
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
 
             // For RESTful API, the frontend will handle the activation
-            String activationLink = BASE_URL + "/activate?token=" + token;
+            String activationLink = getBaseUrl() + "/activate?token=" + token;
             // + URLEncoder.encode(email, StandardCharsets.UTF_8.toString())
 
             helper.setFrom("gedeon.ambomo@facsciences-uy1.cm");
@@ -62,7 +63,7 @@ public class MailNotificationService {
             MimeMessage mimeMessage = javaMailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
 
-            String resetLink = BASE_URL + "/reset-password?token=" + token;
+            String resetLink = getBaseUrl() + "/reset-password?token=" + token;
             // + URLEncoder.encode(email, StandardCharsets.UTF_8.toString())
 
             helper.setFrom("gedeon.ambomo@facsciences-uy1.cm");
