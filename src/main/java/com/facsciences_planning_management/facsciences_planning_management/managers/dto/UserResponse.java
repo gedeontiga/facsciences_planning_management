@@ -3,7 +3,7 @@ package com.facsciences_planning_management.facsciences_planning_management.mana
 import com.facsciences_planning_management.facsciences_planning_management.models.Users;
 
 public record UserResponse(
-                String customerId,
+                String userId,
                 String firstName,
                 String lastName,
                 String email,

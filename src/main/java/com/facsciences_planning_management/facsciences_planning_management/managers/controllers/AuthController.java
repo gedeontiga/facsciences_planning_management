@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.facsciences_planning_management.facsciences_planning_management.managers.dto.UserRequest;
 import com.facsciences_planning_management.facsciences_planning_management.managers.services.AuthService;
 import com.facsciences_planning_management.facsciences_planning_management.managers.dto.LoginRequest;
+import com.facsciences_planning_management.facsciences_planning_management.managers.dto.PasswordResetRequest;
 
 import lombok.AllArgsConstructor;
 
@@ -45,5 +46,17 @@ public class AuthController {
     public ResponseEntity<String> activate(@RequestParam String token) {
         authService.activate(token);
         return ResponseEntity.ok("User activated successfully");
+    }
+
+    @PostMapping("/reset-password-request")
+    public ResponseEntity<String> requestPasswordReset(@RequestParam String email) {
+        authService.requestPasswordReset(email);
+        return ResponseEntity.ok("Password reset email sent");
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(@RequestBody PasswordResetRequest request) {
+        authService.resetPassword(request);
+        return ResponseEntity.ok("Password reset successful");
     }
 }

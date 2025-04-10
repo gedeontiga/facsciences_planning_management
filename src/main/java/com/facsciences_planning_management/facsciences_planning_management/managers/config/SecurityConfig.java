@@ -29,6 +29,8 @@ public class SecurityConfig {
                                 .authorizeHttpRequests(
                                                 authorize -> authorize
                                                                 .requestMatchers("/api/auth/**").permitAll()
+                                                                .requestMatchers("/api/admin/**")
+                                                                .hasRole("ADMINISTRATOR")
                                                                 .anyRequest().authenticated())
                                 .sessionManagement(
                                                 httpSecuritySessionManagementConfigurer -> httpSecuritySessionManagementConfigurer

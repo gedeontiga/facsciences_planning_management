@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import com.facsciences_planning_management.facsciences_planning_management.managers.dto.UserRequest;
 import com.facsciences_planning_management.facsciences_planning_management.managers.dto.LoginRequest;
+import com.facsciences_planning_management.facsciences_planning_management.managers.dto.PasswordResetRequest;
 import com.facsciences_planning_management.facsciences_planning_management.managers.repositories.RoleRepository;
 import com.facsciences_planning_management.facsciences_planning_management.managers.repositories.UserRepository;
 import com.facsciences_planning_management.facsciences_planning_management.managers.repositories.ValidationRepository;
@@ -43,7 +44,7 @@ public class AuthService {
 
     public void register(UserRequest request) {
         validateEmailUniqueness(request.email());
-        Users customer = Users.builder()
+        Users user = Users.builder()
                 .email(request.email())
                 .firstName(request.firstName())
                 .lastName(request.lastName())
@@ -54,7 +55,9 @@ public class AuthService {
                 .enabled(false)
                 .build();
 
-        saveAndSendActivation(userRepository.save(customer));
+        String token = generateActivationToken();
+        saveToken(userRepository.save(user), token);
+        notificationService.sendActivationEmail(user.getEmail(), token);
     }
 
     public void activate(String token) {
@@ -83,22 +86,41 @@ public class AuthService {
         throw new RuntimeException("Invalid login credentials");
     }
 
+    public void requestPasswordReset(String email) {
+        Users user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+
+        if (!user.isEnabled()) {
+            throw new RuntimeException("Account not activated");
+        }
+
+        String token = generateActivationToken();
+        saveToken(user, token);
+        notificationService.sendPasswordResetEmail(email, token);
+    }
+
+    public void resetPassword(PasswordResetRequest request) {
+        Validation resetValidation = validationRepository
+                .findByActivationTokenAndExpiredIsAfter(request.token(), Instant.now())
+                .orElseThrow(() -> new RuntimeException("Invalid or expired reset token"));
+
+        Users user = resetValidation.getUser();
+
+        user.setPassword(passwordEncoder.encode(request.newPassword()));
+        userRepository.save(user);
+        validationRepository.delete(resetValidation);
+    }
+
     @Scheduled(cron = "@daily")
     public void cleanupExpiredTokens() {
         validationRepository.deleteByExpiredBefore(Instant.now());
-    }
-
-    private void saveAndSendActivation(Users user) {
-        String token = generateActivationToken();
-        saveActivationToken(user, token);
-        notificationService.sendActivationEmail(user.getEmail(), token);
     }
 
     private String generateActivationToken() {
         return UUID.randomUUID().toString();
     }
 
-    private void saveActivationToken(Users user, String token) {
+    private void saveToken(Users user, String token) {
 
         Validation activation = new Validation();
         activation.setUser(user);
