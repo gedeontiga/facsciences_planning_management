@@ -26,7 +26,7 @@ public class UserService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String email) {
         return userRepository.findByEmailAndEnabledIsTrue(email)
-                .orElseThrow(() -> new RuntimeException("User is not activated"));
+                .orElseThrow(() -> new UserNotFoundException("User is not activated"));
     }
 
     public Users getUserByEmail(String email) {

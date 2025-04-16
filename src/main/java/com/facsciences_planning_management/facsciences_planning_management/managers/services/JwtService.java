@@ -13,6 +13,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import com.facsciences_planning_management.facsciences_planning_management.managers.exceptions.TokenExpiredException;
+import com.facsciences_planning_management.facsciences_planning_management.managers.exceptions.UserNotFoundException;
 import com.facsciences_planning_management.facsciences_planning_management.managers.repositories.JwtRepository;
 import com.facsciences_planning_management.facsciences_planning_management.managers.repositories.UserRepository;
 import com.facsciences_planning_management.facsciences_planning_management.models.Jwt;
@@ -39,7 +40,7 @@ public class JwtService {
 
     public Map<String, String> generate(final String email) {
         final Users user = userRepository.findByEmailAndEnabledIsTrue(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
         return this.generateJwt(user);
     }
 
