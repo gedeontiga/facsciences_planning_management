@@ -1,4 +1,5 @@
-@baseUrl = http://facsciences-uy1-planning-management-gedeontiga-eabfb5d3.koyeb.app
+# @baseUrl = http://facsciences-uy1-planning-management-gedeontiga-eabfb5d3.koyeb.app
+@baseUrl = http://localhost:8080
 @authToken = {login.response.body.token}
 
 ### Register New User
@@ -24,8 +25,8 @@ POST {{baseUrl}}/api/auth/login
 Content-Type: application/json
 
 {
-    "email": "test@example.com",
-    "password": "password123"
+    "email": "admin1@facsciences-uy1.cm",
+    "password": "admin1.password"
 }
 
 ### Request Password Reset

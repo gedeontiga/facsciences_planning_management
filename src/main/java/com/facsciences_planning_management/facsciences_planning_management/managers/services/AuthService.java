@@ -6,6 +6,8 @@ import java.util.UUID;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -13,6 +15,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.facsciences_planning_management.facsciences_planning_management.managers.dto.UserRequest;
+import com.facsciences_planning_management.facsciences_planning_management.managers.exceptions.AccountNotActivatedException;
+import com.facsciences_planning_management.facsciences_planning_management.managers.exceptions.EmailAlreadyExistsException;
+import com.facsciences_planning_management.facsciences_planning_management.managers.exceptions.InvalidCredentialsException;
+import com.facsciences_planning_management.facsciences_planning_management.managers.exceptions.InvalidTokenException;
+import com.facsciences_planning_management.facsciences_planning_management.managers.exceptions.TokenExpiredException;
+import com.facsciences_planning_management.facsciences_planning_management.managers.exceptions.UserNotFoundException;
 import com.facsciences_planning_management.facsciences_planning_management.managers.dto.LoginRequest;
 import com.facsciences_planning_management.facsciences_planning_management.managers.dto.PasswordResetRequest;
 import com.facsciences_planning_management.facsciences_planning_management.managers.repositories.RoleRepository;
@@ -35,7 +43,6 @@ public class AuthService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
-
     private final MailNotificationService notificationService;
 
     public Boolean isEmailAlreadyExists(String email) {
@@ -61,37 +68,45 @@ public class AuthService {
     }
 
     public void activate(String token) {
-
-        Validation activation = validationRepository.findByActivationTokenAndExpiredIsAfter(token, Instant.now())
-                .orElseThrow(() -> new RuntimeException("Invalid or expired activation link"));
+        Validation activation = validationRepository
+                .findByActivationTokenAndExpiredIsAfter(token, Instant.now())
+                .orElseThrow(() -> new TokenExpiredException("Invalid or expired activation link"));
 
         if (!activation.getActivationToken().equals(token)) {
-            throw new RuntimeException("Activation Failed: invalid token");
+            throw new InvalidTokenException("Activation Failed: invalid token");
         }
 
         Users user = activation.getUser();
         user.setEnabled(true);
         userRepository.save(user);
-        validationRepository.delete(activation); // Clean up the used token
+        validationRepository.delete(activation);
     }
 
     public Map<String, String> login(LoginRequest request) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.email(), request.password()));
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.email(), request.password()));
+            SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        if (authentication.isAuthenticated()) {
-            return jwtService.generate(request.email());
+            if (authentication.isAuthenticated()) {
+                return jwtService.generate(request.email());
+            }
+            throw new InvalidCredentialsException("Invalid login credentials");
+        } catch (BadCredentialsException e) {
+            throw new InvalidCredentialsException("Invalid login credentials");
+        } catch (DisabledException e) {
+            throw new AccountNotActivatedException("Account is not activated");
+        } catch (Exception e) {
+            throw new InvalidCredentialsException("Authentication failed: " + e.getMessage());
         }
-        throw new RuntimeException("Invalid login credentials");
     }
 
     public void requestPasswordReset(String email) {
         Users user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
 
         if (!user.isEnabled()) {
-            throw new RuntimeException("Account not activated");
+            throw new AccountNotActivatedException("Account not activated");
         }
 
         String token = generateActivationToken();
@@ -102,10 +117,9 @@ public class AuthService {
     public void resetPassword(PasswordResetRequest request) {
         Validation resetValidation = validationRepository
                 .findByActivationTokenAndExpiredIsAfter(request.token(), Instant.now())
-                .orElseThrow(() -> new RuntimeException("Invalid or expired reset token"));
+                .orElseThrow(() -> new TokenExpiredException("Invalid or expired reset token"));
 
         Users user = resetValidation.getUser();
-
         user.setPassword(passwordEncoder.encode(request.newPassword()));
         userRepository.save(user);
         validationRepository.delete(resetValidation);
@@ -121,7 +135,6 @@ public class AuthService {
     }
 
     private void saveToken(Users user, String token) {
-
         Validation activation = new Validation();
         activation.setUser(user);
         activation.setActivationToken(token);
@@ -136,7 +149,7 @@ public class AuthService {
 
     private void validateEmailUniqueness(String email) {
         if (isEmailAlreadyExists(email)) {
-            throw new RuntimeException("Email already registered");
+            throw new EmailAlreadyExistsException("Email already registered");
         }
     }
 }
