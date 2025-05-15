@@ -31,6 +31,10 @@ public class SecurityConfig {
                                                                 .requestMatchers("/api/auth/**").permitAll()
                                                                 .requestMatchers("/api/admin/**")
                                                                 .hasRole("ADMINISTRATOR")
+                                                                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**",
+                                                                                "/swagger-ui.html")
+                                                                .permitAll()
+                                                                .requestMatchers("/actuator/**").permitAll()
                                                                 .anyRequest().authenticated())
                                 .sessionManagement(
                                                 httpSecuritySessionManagementConfigurer -> httpSecuritySessionManagementConfigurer
