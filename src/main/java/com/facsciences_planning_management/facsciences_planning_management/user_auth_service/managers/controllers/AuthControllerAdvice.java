@@ -10,7 +10,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 
-import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dto.ErrorResponse;
+import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.ErrorResponse;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.exceptions.AccountNotActivatedException;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.exceptions.ActivationCodeException;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.exceptions.EmailAlreadyExistsException;

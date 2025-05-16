@@ -2,10 +2,10 @@ package com.facsciences_planning_management.facsciences_planning_management.user
 
 import org.springframework.web.bind.annotation.RestController;
 
-import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dto.UserAndRole;
-import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dto.UserResponse;
+import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.UserAndRole;
+import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.UserResponse;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.services.AdminServices;
-import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.models.RoleType;
+import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.models.types.RoleType;
 
 import lombok.AllArgsConstructor;
 

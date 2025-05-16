@@ -4,11 +4,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 
-import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dto.UserResponse;
+import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.UserResponse;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.exceptions.AccountNotActivatedException;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.exceptions.UserNotFoundException;
-import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.repositories.UserRepository;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.models.Users;
+import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.models.repositories.UserRepository;
 
 import lombok.AllArgsConstructor;
 

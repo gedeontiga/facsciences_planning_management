@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dto.UserResponse;
+import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.UserResponse;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.services.UserService;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.models.Users;
 
