@@ -7,10 +7,12 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.models.types.RoomType;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @Document(collection = "rooms")
@@ -21,7 +23,7 @@ public class Room {
     private String code;
     private RoomType type;
     private Long capacity;
-    private Boolean isAvailable;
+    private Boolean availability;
 
     public RoomDTO toDTO() {
         return RoomDTO.fromRoom(this);

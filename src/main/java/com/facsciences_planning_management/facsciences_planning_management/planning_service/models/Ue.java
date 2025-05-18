@@ -33,5 +33,4 @@ public class Ue {
     public UeDTO toDTO() {
         return UeDTO.fromUe(this);
     }
-
 }

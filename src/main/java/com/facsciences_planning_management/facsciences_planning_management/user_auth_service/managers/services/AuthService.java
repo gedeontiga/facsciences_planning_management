@@ -95,9 +95,9 @@ public class AuthService {
         } catch (BadCredentialsException e) {
             throw new InvalidCredentialsException("Invalid login credentials");
         } catch (DisabledException e) {
-            throw new AccountNotActivatedException("Account is not activated");
+            throw new AccountNotActivatedException("User not found or account is not activated");
         } catch (Exception e) {
-            throw new InvalidCredentialsException("Authentication failed: " + e.getMessage());
+            throw new InvalidCredentialsException("Authentication failed: invalid login credentials");
         }
     }
 

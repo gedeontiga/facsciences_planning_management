@@ -6,7 +6,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
 
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.ExamSchedulingDTO;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.SchedulingDTO;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.models.Users;
 
 import lombok.AllArgsConstructor;
@@ -29,7 +28,7 @@ public final class ExamScheduling extends Scheduling {
     private LocalDateTime sessionDate;
 
     @Override
-    public SchedulingDTO toDTO() {
+    public ExamSchedulingDTO toDTO() {
         return ExamSchedulingDTO.fromEntity(this);
     }
 }

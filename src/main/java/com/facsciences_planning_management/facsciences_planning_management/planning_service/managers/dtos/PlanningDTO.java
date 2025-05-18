@@ -13,18 +13,18 @@ import lombok.Singular;
 
 @Builder
 public record PlanningDTO(
-        String id,
-        @Singular Set<SchedulingDTO> schedules,
-        Year academicYear,
-        String semester,
-        LocalDateTime createdAt) {
-    public static PlanningDTO fromPlanning(Planning entity) {
-        return new PlanningDTO(entity.getId(),
-                entity.getSchedules().stream()
-                        .map(Scheduling::toDTO)
-                        .collect(Collectors.toSet()),
-                entity.getAcademicYear(),
-                entity.getSemester(),
-                entity.getCreatedAt());
-    }
+		String id,
+		@Singular Set<SchedulingDTO> schedules,
+		Year academicYear,
+		String semester,
+		LocalDateTime createdAt) {
+	public static PlanningDTO fromPlanning(Planning entity) {
+		return new PlanningDTO(entity.getId(),
+				entity.getSchedules().stream()
+						.map(Scheduling::toDTO)
+						.collect(Collectors.toSet()),
+				entity.getAcademicYear(),
+				entity.getSemester(),
+				entity.getCreatedAt());
+	}
 }

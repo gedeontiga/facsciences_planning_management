@@ -5,7 +5,6 @@ import java.time.DayOfWeek;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
 
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.SchedulingDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.SimpleSchedulingDTO;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.models.Users;
 
@@ -27,7 +26,7 @@ public final class SimpleScheduling extends Scheduling {
     protected DayOfWeek day;
 
     @Override
-    public SchedulingDTO toDTO() {
+    public SimpleSchedulingDTO toDTO() {
         return SimpleSchedulingDTO.fromEntity(this);
     }
 }

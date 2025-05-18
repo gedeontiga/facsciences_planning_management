@@ -12,9 +12,9 @@ public record RoomDTO(
 		String code,
 		RoomType type,
 		Long capacity,
-		Boolean isAvailable) {
+		Boolean availability) {
 	public static RoomDTO fromRoom(Room room) {
 		return new RoomDTO(room.getId(), room.getName(), room.getCode(), room.getType(), room.getCapacity(),
-				room.getIsAvailable());
+				room.getAvailability());
 	}
 }

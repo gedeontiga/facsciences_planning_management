@@ -10,7 +10,7 @@ public record AvailableRoomsRequestDTO(
                 LocalTime startTime,
                 LocalTime endTime,
                 DayOfWeek day,
-                LocalDateTime date, // For exam scheduling
+                LocalDateTime date,
                 Long minimumCapacity,
                 RoomType roomType) {
 }
