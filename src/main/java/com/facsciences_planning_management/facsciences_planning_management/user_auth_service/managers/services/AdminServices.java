@@ -29,7 +29,7 @@ public class AdminServices {
         return new UserResponse(userRepository.save(user));
     }
 
-    public List<RoleType> getAllRoles() {
-        return roleRepository.findAll().stream().map(Role::getType).collect(Collectors.toList());
+    public List<String> getAllRoles() {
+        return roleRepository.findAll().stream().map(role -> role.getType().toString()).collect(Collectors.toList());
     }
 }

@@ -4,7 +4,9 @@ import com.facsciences_planning_management.facsciences_planning_management.user_
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.PasswordResetRequest;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.UserRequest;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.services.AuthService;
-import lombok.AllArgsConstructor;
+
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,7 +19,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class AuthController {
     private final AuthService authService;
 

@@ -33,7 +33,7 @@ public class FacsciencesPlanningManagementApplication {
 		return args -> {
 			Stream<String> adminStream = Stream.of("admin1", "admin2");
 			defaultSaveUser(adminStream, userRepository,
-					roleRepository.findByType(RoleType.ADMINISTRATOR).orElseThrow(),
+					roleRepository.findByType(RoleType.ADMIN).orElseThrow(),
 					passwordEncoder);
 		};
 	}

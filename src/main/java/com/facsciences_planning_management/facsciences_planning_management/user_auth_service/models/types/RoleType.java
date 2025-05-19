@@ -17,12 +17,12 @@ public enum RoleType {
                         Set.of(
                                         PermissionType.DEPARTMENT_CHIEF_READ_PLANNING,
                                         PermissionType.DEPARTMENT_CHIEF_CUSTOMIZE_PLANNING)),
-        ADMINISTRATOR(
+        ADMIN(
                         Set.of(
-                                        PermissionType.ADMINISTRATOR_CREATE_ALL,
-                                        PermissionType.ADMINISTRATOR_READ_ALL,
-                                        PermissionType.ADMINISTRATOR_UPDATE_ALL,
-                                        PermissionType.ADMINISTRATOR_DELETE_ALL)),
+                                        PermissionType.ADMIN_CREATE_ALL,
+                                        PermissionType.ADMIN_READ_ALL,
+                                        PermissionType.ADMIN_UPDATE_ALL,
+                                        PermissionType.ADMIN_DELETE_ALL)),
         SECRETARY(
                         Set.of(
                                         PermissionType.SECRETARY_READ_PLANNING,
