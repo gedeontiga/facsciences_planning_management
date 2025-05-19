@@ -13,10 +13,10 @@ import com.facsciences_planning_management.facsciences_planning_management.user_
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.models.repositories.UserRepository;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.models.types.RoleType;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
-@AllArgsConstructor
 @Service
+@RequiredArgsConstructor
 public class AdminServices {
 
     private final UserRepository userRepository;

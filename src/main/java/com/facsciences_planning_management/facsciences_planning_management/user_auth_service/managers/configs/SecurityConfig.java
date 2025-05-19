@@ -13,12 +13,12 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.services.JwtFilter;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
-@AllArgsConstructor
 @Configuration
 @EnableMethodSecurity
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
 	private final JwtFilter jwtFilter;
@@ -29,7 +29,7 @@ public class SecurityConfig {
 				.authorizeHttpRequests(
 						authorize -> authorize
 								.requestMatchers("/api/auth/**").permitAll()
-								.requestMatchers("/api/admin/**").hasRole("ADMIN")
+								.requestMatchers("/api/admin/**").hasAuthority("ADMIN")
 								.requestMatchers("/swagger-ui/**", "/v3/api-docs/**",
 										"/swagger-ui.html")
 								.permitAll()

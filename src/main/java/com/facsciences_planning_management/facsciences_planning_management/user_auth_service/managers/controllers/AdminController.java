@@ -5,9 +5,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.UserAndRole;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.UserResponse;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.services.AdminServices;
-
 import lombok.RequiredArgsConstructor;
-
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
