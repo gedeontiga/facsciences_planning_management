@@ -22,12 +22,12 @@ import com.facsciences_planning_management.facsciences_planning_management.user_
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@AllArgsConstructor
 @Service
+@RequiredArgsConstructor
 public class JwtService {
 
     private static final String TOKEN_NOT_FOUND = "Token not found";

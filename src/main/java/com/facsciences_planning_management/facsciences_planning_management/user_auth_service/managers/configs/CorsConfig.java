@@ -9,7 +9,7 @@ public class CorsConfig implements WebMvcConfigurer {
     @Override 
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("*")
+                .allowedOrigins("https://facsciences-planning-management.netlify.app", "http://localhost:3000", "http://localhost:4200")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH")
                 .allowedHeaders("*")
                 .allowCredentials(true); // Enable credentials for JWT tokens
