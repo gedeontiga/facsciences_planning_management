@@ -32,6 +32,12 @@ public class JwtFilter extends OncePerRequestFilter {
     protected void doFilterInternal(@NonNull final HttpServletRequest request,
             @NonNull final HttpServletResponse response, @NonNull final FilterChain filterChain)
             throws ServletException, IOException {
+        
+        // Skip JWT processing for preflight requests
+        if ("OPTIONS".equals(request.getMethod())) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         Boolean isTokenExpired = true;
         String email = null;
