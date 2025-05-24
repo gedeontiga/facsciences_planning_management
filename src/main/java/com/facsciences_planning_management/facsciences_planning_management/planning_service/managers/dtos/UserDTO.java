@@ -2,9 +2,6 @@ package com.facsciences_planning_management.facsciences_planning_management.plan
 
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.models.Users;
 
-import lombok.Builder;
-
-@Builder
 public record UserDTO(
         String id,
         String email,

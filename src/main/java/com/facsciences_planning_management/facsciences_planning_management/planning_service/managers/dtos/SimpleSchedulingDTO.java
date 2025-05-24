@@ -6,9 +6,6 @@ import java.time.LocalTime;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.models.SimpleScheduling;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.models.types.SessionType;
 
-import lombok.Builder;
-
-@Builder
 public record SimpleSchedulingDTO(
         String id,
         String roomId,

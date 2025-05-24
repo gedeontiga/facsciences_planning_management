@@ -103,12 +103,6 @@ public class PlanningServiceImpl implements PlanningService {
         allSchedules.addAll(simpleSchedules.stream().map(SimpleScheduling::toDTO).collect(Collectors.toSet()));
         allSchedules.addAll(examSchedules.stream().map(ExamScheduling::toDTO).collect(Collectors.toSet()));
 
-        return PlanningDTO.builder()
-                .id(planning.getId())
-                .academicYear(planning.getAcademicYear())
-                .semester(planning.getSemester())
-                .createdAt(planning.getCreatedAt())
-                .schedules(allSchedules)
-                .build();
+        return PlanningDTO.fromPlanning(planning);
     }
 }

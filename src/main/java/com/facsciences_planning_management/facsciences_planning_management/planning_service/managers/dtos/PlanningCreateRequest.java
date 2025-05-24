@@ -2,9 +2,6 @@ package com.facsciences_planning_management.facsciences_planning_management.plan
 
 import java.time.Year;
 
-import lombok.Builder;
-
-@Builder
 public record PlanningCreateRequest(
         Year academicYear,
         String semester) {

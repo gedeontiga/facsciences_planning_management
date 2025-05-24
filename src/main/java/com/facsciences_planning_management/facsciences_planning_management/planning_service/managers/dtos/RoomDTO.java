@@ -3,9 +3,6 @@ package com.facsciences_planning_management.facsciences_planning_management.plan
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.models.Room;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.models.types.RoomType;
 
-import lombok.Builder;
-
-@Builder
 public record RoomDTO(
 		String id,
 		String name,

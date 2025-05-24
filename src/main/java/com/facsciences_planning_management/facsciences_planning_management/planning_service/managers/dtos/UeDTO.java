@@ -2,9 +2,6 @@ package com.facsciences_planning_management.facsciences_planning_management.plan
 
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.models.Ue;
 
-import lombok.Builder;
-
-@Builder
 public record UeDTO(
         String id,
         String name,
