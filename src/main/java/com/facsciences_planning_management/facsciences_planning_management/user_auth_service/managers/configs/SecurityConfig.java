@@ -1,5 +1,7 @@
 package com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.configs;
 
+import java.util.Arrays;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -10,6 +12,10 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.services.JwtFilter;
 
 import lombok.RequiredArgsConstructor;
@@ -19,31 +25,48 @@ import lombok.RequiredArgsConstructor;
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-
-	private final JwtFilter jwtFilter;
-
-	@Bean
-	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-		return http.csrf(csrf -> csrf.disable())
-				.authorizeHttpRequests(
-						authorize -> authorize
-								.requestMatchers("/api/auth/**").permitAll()
-								.requestMatchers("/api/admin/**").hasAuthority("ADMIN")
-								.requestMatchers("/swagger-ui/**", "/v3/api-docs/**",
-										"/swagger-ui.html")
-								.permitAll()
-								.requestMatchers("/actuator/**").permitAll()
-								.anyRequest().authenticated())
-				.sessionManagement(
-						httpSecuritySessionManagementConfigurer -> httpSecuritySessionManagementConfigurer
-								.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-				.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-				.build();
-	}
-
-	@Bean
-	AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
-			throws Exception {
-		return authenticationConfiguration.getAuthenticationManager();
-	}
+    private final JwtFilter jwtFilter;
+    
+    @Bean 
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        return http
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .csrf(csrf -> csrf.disable())
+            .authorizeHttpRequests(authorize -> authorize
+                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
+                .requestMatchers("/actuator/**").permitAll()
+                .anyRequest().authenticated()
+            )
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
+            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+            .build();
+    }
+    
+    @Bean
+    CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(Arrays.asList(
+            "https://facsciences-planning-management.netlify.app",
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "http://localhost:4200"
+        ));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE"));
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowCredentials(true);
+        
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/api/**", configuration);
+        return source;
+    }
+    
+    @Bean 
+    AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) 
+            throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
+    }
 }
