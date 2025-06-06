@@ -5,8 +5,8 @@ import java.time.Year;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.models.Planning;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.models.Scheduling;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Planning;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Scheduling;
 
 import lombok.Singular;
 

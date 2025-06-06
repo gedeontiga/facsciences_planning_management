@@ -12,12 +12,12 @@ import org.springframework.cglib.core.internal.Function;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import com.facsciences_planning_management.facsciences_planning_management.entities.Users;
+import com.facsciences_planning_management.facsciences_planning_management.entities.repositories.UserRepository;
+import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.entities.Jwt;
+import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.entities.repositories.JwtRepository;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.exceptions.TokenExpiredException;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.exceptions.UserNotFoundException;
-import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.models.Jwt;
-import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.models.Users;
-import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.models.repositories.JwtRepository;
-import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.models.repositories.UserRepository;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

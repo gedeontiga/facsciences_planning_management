@@ -2,9 +2,21 @@ package com.facsciences_planning_management.facsciences_planning_management.plan
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
+import com.facsciences_planning_management.facsciences_planning_management.entities.Users;
+import com.facsciences_planning_management.facsciences_planning_management.entities.repositories.UserRepository;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.ExamScheduling;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Planning;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Room;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.SimpleScheduling;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Ue;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.ExamSchedulingRepository;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.RoomRepository;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.SimpleSchedulingRepository;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.SessionType;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.ExamSchedulingCreateRequest;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.ExamSchedulingDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.ExamSchedulingUpdateRequest;
@@ -19,17 +31,6 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces.RoomService;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces.SchedulingService;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces.UeService;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.models.ExamScheduling;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.models.Planning;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.models.Room;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.models.SimpleScheduling;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.models.Ue;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.models.repositories.ExamSchedulingRepository;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.models.repositories.RoomRepository;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.models.repositories.SimpleSchedulingRepository;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.models.types.SessionType;
-import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.models.Users;
-import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.models.repositories.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -177,20 +178,12 @@ public class SchedulingServiceImpl implements SchedulingService {
             throw new ResourceConflictException("Room is not available at the requested time");
         }
 
-        // Update fields if provided
-        if (request.roomId() != null) {
-            scheduling.setRoom(roomRepository.findById(request.roomId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Room not found")));
-        }
+        Optional.of(request.roomId()).ifPresent(roomId -> scheduling.setRoom(roomRepository.findById(roomId)
+                .orElseThrow(() -> new ResourceNotFoundException("Room not found"))));
 
-        if (request.ueId() != null) {
-            scheduling.setUe(ueService.getUeEntityById(request.ueId()));
-        }
-
-        if (request.teacherId() != null) {
-            scheduling.setTeacher(userRepository.findById(request.teacherId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Teacher not found")));
-        }
+        Optional.of(request.ueId()).ifPresent(ueId -> scheduling.setUe(ueService.getUeEntityById(ueId)));
+        Optional.of(request.teacherId()).ifPresent(teacherId -> scheduling.setTeacher(userRepository.findById(teacherId)
+                .orElseThrow(() -> new ResourceNotFoundException("Teacher not found"))));
 
         if (request.startTime() != null) {
             scheduling.setStartTime(request.startTime());

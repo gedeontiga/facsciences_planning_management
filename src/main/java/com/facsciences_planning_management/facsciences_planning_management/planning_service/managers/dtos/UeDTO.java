@@ -1,6 +1,6 @@
 package com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos;
 
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.models.Ue;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Ue;
 
 public record UeDTO(
         String id,
@@ -8,10 +8,11 @@ public record UeDTO(
         String code,
         Long credits,
         String duration,
+        String category,
         Integer hourlyCharge,
         LevelDTO level) {
     public static UeDTO fromUe(Ue ue) {
         return new UeDTO(ue.getId(), ue.getName(), ue.getCode(), ue.getCredits(), ue.getDuration().toString(),
-                ue.getHourlyCharge(), LevelDTO.fromLevel(ue.getLevel()));
+                ue.getCategory(), ue.getHourlyCharge(), LevelDTO.fromLevel(ue.getLevel()));
     }
 }

@@ -1,13 +1,12 @@
 package com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos;
 
-import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.models.Role;
-import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.models.Users;
+import com.facsciences_planning_management.facsciences_planning_management.entities.Users;
+import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.entities.Role;
 
 public record UserAndRole(
         String firstName,
         String lastName,
         String email,
-        String password,
         String role,
         String address,
         String phoneNumber) {
@@ -18,7 +17,6 @@ public record UserAndRole(
                 .enabled(true)
                 .lastName(lastName)
                 .email(email)
-                .password(password)
                 .phoneNumber(phoneNumber)
                 .role(role)
                 .build();

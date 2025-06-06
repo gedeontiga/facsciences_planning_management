@@ -23,8 +23,12 @@ public class AdminController {
 
     @PostMapping("/create-user")
     public ResponseEntity<UserResponse> createUser(@RequestBody UserAndRole userAndRole) {
-
         return ResponseEntity.ok().body(adminServices.createUserWithRole(userAndRole));
+    }
+
+    @GetMapping("/teachers")
+    public ResponseEntity<List<UserResponse>> getAllTeachers() {
+        return ResponseEntity.ok().body(adminServices.getAllTeachers());
     }
 
     @GetMapping("/roles")

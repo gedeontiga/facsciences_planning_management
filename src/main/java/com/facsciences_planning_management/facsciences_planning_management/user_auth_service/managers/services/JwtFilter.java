@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
-import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.models.Jwt;
+import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.entities.Jwt;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

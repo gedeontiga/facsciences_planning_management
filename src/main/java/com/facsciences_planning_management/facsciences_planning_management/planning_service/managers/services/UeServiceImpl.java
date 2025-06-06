@@ -6,15 +6,15 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Level;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Ue;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.LevelRepository;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.UeRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.UeCreateRequest;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.UeDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.UeUpdateRequest;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.exceptions.ResourceNotFoundException;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces.UeService;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.models.Level;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.models.Ue;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.models.repositories.LevelRepository;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.models.repositories.UeRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -36,6 +36,7 @@ public class UeServiceImpl implements UeService {
                 .code(request.code())
                 .credits(request.credits())
                 .duration(duration)
+                .category(request.category())
                 .hourlyCharge(request.hourlyCharge())
                 .level(level)
                 .build();
@@ -94,6 +95,10 @@ public class UeServiceImpl implements UeService {
 
         if (request.duration() != null) {
             ue.setDuration(Duration.parse(request.duration()));
+        }
+
+        if (request.category() != null) {
+            ue.setCategory(request.category());
         }
 
         if (request.hourlyCharge() != null) {

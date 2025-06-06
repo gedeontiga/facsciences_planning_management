@@ -2,10 +2,10 @@ package com.facsciences_planning_management.facsciences_planning_management.plan
 
 import java.util.List;
 
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Ue;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.UeCreateRequest;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.UeDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.UeUpdateRequest;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.models.Ue;
 
 public interface UeService {
     UeDTO createUe(UeCreateRequest request);

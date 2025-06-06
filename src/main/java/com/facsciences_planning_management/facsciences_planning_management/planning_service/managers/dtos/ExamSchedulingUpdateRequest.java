@@ -3,7 +3,7 @@ package com.facsciences_planning_management.facsciences_planning_management.plan
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.models.types.SessionType;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.SessionType;
 
 public record ExamSchedulingUpdateRequest(
         String roomId,

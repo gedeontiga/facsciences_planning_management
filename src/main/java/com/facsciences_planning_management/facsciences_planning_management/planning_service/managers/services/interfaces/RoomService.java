@@ -5,9 +5,9 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.RoomType;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.AvailableRoomsRequestDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.RoomDTO;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.models.types.RoomType;
 
 public interface RoomService {
     List<RoomDTO> getAllRooms();

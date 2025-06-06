@@ -8,17 +8,17 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.ExamScheduling;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Room;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.SimpleScheduling;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.ExamSchedulingRepository;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.RoomRepository;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.SimpleSchedulingRepository;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.RoomType;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.AvailableRoomsRequestDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.RoomDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.exceptions.ResourceNotFoundException;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces.RoomService;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.models.ExamScheduling;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.models.Room;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.models.SimpleScheduling;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.models.repositories.ExamSchedulingRepository;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.models.repositories.RoomRepository;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.models.repositories.SimpleSchedulingRepository;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.models.types.RoomType;
 
 import lombok.RequiredArgsConstructor;
 
@@ -46,10 +46,10 @@ public class RoomServiceImpl implements RoomService {
     @Override
     public RoomDTO createRoom(RoomDTO roomDTO) {
         Room room = Room.builder()
-                .name(roomDTO.name())
                 .code(roomDTO.code())
                 .type(roomDTO.type())
                 .capacity(roomDTO.capacity())
+                .building(roomDTO.building())
                 .availability(roomDTO.availability())
                 .build();
 
@@ -61,10 +61,10 @@ public class RoomServiceImpl implements RoomService {
         Room room = roomRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Room not found with id: " + id));
 
-        room.setName(roomDTO.name());
         room.setCode(roomDTO.code());
         room.setType(roomDTO.type());
         room.setCapacity(roomDTO.capacity());
+        room.setBuilding(roomDTO.building());
         room.setAvailability(roomDTO.availability());
 
         return roomRepository.save(room).toDTO();

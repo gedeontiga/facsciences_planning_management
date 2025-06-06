@@ -2,6 +2,7 @@ package com.facsciences_planning_management.facsciences_planning_management.plan
 
 import java.util.List;
 
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.SessionType;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.ExamSchedulingCreateRequest;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.ExamSchedulingDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.ExamSchedulingUpdateRequest;
@@ -10,7 +11,6 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.SimpleSchedulingCreateRequest;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.SimpleSchedulingDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.SimpleSchedulingUpdateRequest;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.models.types.SessionType;
 
 public interface SchedulingService {
     SimpleSchedulingDTO createSimpleScheduling(SimpleSchedulingCreateRequest request);
