@@ -40,7 +40,7 @@ public class Users implements UserDetails {
     private String address;
     private String phoneNumber;
 
-    @DocumentReference(collection = "roles")
+    @DocumentReference(lazy = true, collection = "roles")
     @NonNull
     private Role role;
 
@@ -55,5 +55,20 @@ public class Users implements UserDetails {
     @Override
     public String getUsername() {
         return email;
+    }
+
+    @Override
+    public String toString() {
+        return "Users{" +
+                "id='" + id + '\'' +
+                ", email='" + email + '\'' +
+                ", password='" + password + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", address='" + address + '\'' +
+                ", phoneNumber='" + phoneNumber + '\'' +
+                ", role=" + role +
+                ", enabled=" + enabled +
+                '}';
     }
 }

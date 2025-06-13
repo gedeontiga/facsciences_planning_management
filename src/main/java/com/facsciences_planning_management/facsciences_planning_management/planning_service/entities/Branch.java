@@ -26,12 +26,12 @@ public class Branch {
     private String code;
 
     @Builder.Default
-    @DocumentReference(collection = "levels")
+    @DocumentReference(lazy = true, collection = "levels")
     private Set<Level> levels = new HashSet<>();
 
-    @DocumentReference(collection = "departments")
+    @DocumentReference(lazy = true, collection = "departments")
     private Department department;
 
-    @DocumentReference(collection = "faculties")
+    @DocumentReference(lazy = true, collection = "faculties")
     private Faculty faculty;
 }

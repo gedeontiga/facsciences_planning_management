@@ -11,7 +11,7 @@ public interface SchedulingDTO {
 
     String ueId();
 
-    String planningId();
+    String timetableId();
 
     LocalTime startTime();
 

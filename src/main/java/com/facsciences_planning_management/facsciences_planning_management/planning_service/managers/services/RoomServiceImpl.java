@@ -1,21 +1,13 @@
 package com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services;
 
-import java.time.DayOfWeek;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.ExamScheduling;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Room;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.SimpleScheduling;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.ExamSchedulingRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.RoomRepository;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.SimpleSchedulingRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.RoomType;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.AvailableRoomsRequestDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.RoomDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.exceptions.ResourceNotFoundException;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces.RoomService;
@@ -26,8 +18,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class RoomServiceImpl implements RoomService {
     private final RoomRepository roomRepository;
-    private final ExamSchedulingRepository examSchedulingRepository;
-    private final SimpleSchedulingRepository simpleSchedulingRepository;
+    // private final ExamSchedulingRepository examSchedulingRepository;
+    // private final SimpleSchedulingRepository simpleSchedulingRepository;
 
     @Override
     public List<RoomDTO> getAllRooms() {
@@ -75,74 +67,80 @@ public class RoomServiceImpl implements RoomService {
         roomRepository.deleteById(id);
     }
 
-    @Override
-    public List<RoomDTO> findAvailableRooms(AvailableRoomsRequestDTO request) {
-        List<Room> allMatchingRooms = roomRepository.findByCapacityIsGreaterThanEqualAndTypeAndAvailabilityTrue(
-                request.minimumCapacity(), request.roomType());
-        return allMatchingRooms.stream()
-                .filter(room -> isRoomAvailableInternal(room.getId(), request.startTime(), request.endTime(),
-                        request.day(), request.date()))
-                .map(Room::toDTO)
-                .collect(Collectors.toList());
-    }
+    // @Override
+    // public List<RoomDTO> findAvailableRooms(AvailableRoomsRequestDTO request) {
+    // List<Room> allMatchingRooms =
+    // roomRepository.findByCapacityIsGreaterThanEqualAndTypeAndAvailabilityTrue(
+    // request.minimumCapacity(), request.roomType());
+    // return allMatchingRooms.stream()
+    // .filter(room -> isRoomAvailableInternal(room.getId(), request.startTime(),
+    // request.endTime(),
+    // request.day(), request.date()))
+    // .map(Room::toDTO)
+    // .collect(Collectors.toList());
+    // }
 
     @Override
-    public List<RoomDTO> findRoomsByCapacity(Long minimumCapacity) {
+    public List<RoomDTO> getRoomsByCapacity(Long minimumCapacity) {
         return roomRepository.findByCapacityIsGreaterThanEqualAndAvailabilityTrue(minimumCapacity).stream()
                 .map(Room::toDTO)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<RoomDTO> findRoomsByType(RoomType type) {
-        return roomRepository.findByTypeAndAvailabilityTrue(type).stream()
+    public List<RoomDTO> getRoomsByType(String type) {
+        return roomRepository.findByTypeAndAvailabilityTrue(RoomType.valueOf(type)).stream()
                 .map(Room::toDTO)
                 .collect(Collectors.toList());
     }
 
-    @Override
-    public boolean isRoomAvailable(String roomId, LocalTime startTime, LocalTime endTime, DayOfWeek day) {
-        return isRoomAvailableInternal(roomId, startTime, endTime, day, null);
-    }
+    // @Override
+    // public boolean isRoomAvailable(String roomId, LocalTime startTime, LocalTime
+    // endTime, DayOfWeek day) {
+    // return isRoomAvailableInternal(roomId, startTime, endTime, day, null);
+    // }
 
-    @Override
-    public boolean isRoomAvailableForDate(String roomId, LocalTime startTime, LocalTime endTime, LocalDateTime date) {
-        return isRoomAvailableInternal(roomId, startTime, endTime, null, date);
-    }
+    // @Override
+    // public boolean isRoomAvailableForDate(String roomId, LocalTime startTime,
+    // LocalTime endTime, LocalDateTime date) {
+    // return isRoomAvailableInternal(roomId, startTime, endTime, null, date);
+    // }
 
-    private boolean isRoomAvailableInternal(String roomId, LocalTime startTime, LocalTime endTime,
-            DayOfWeek day, LocalDateTime date) {
+    // private boolean isRoomAvailableInternal(String roomId, LocalTime startTime,
+    // LocalTime endTime,
+    // DayOfWeek day, LocalDateTime date) {
 
-        Room room = roomRepository.findById(roomId)
-                .orElseThrow(() -> new ResourceNotFoundException("Room not found with id: " + roomId));
+    // Room room = roomRepository.findById(roomId)
+    // .orElseThrow(() -> new ResourceNotFoundException("Room not found with id: " +
+    // roomId));
 
-        if (!room.getAvailability()) {
-            return false;
-        }
+    // if (!room.getAvailability()) {
+    // return false;
+    // }
 
-        if (day != null) {
-            List<SimpleScheduling> conflictingSchedules = simpleSchedulingRepository
-                    .findConflicts(roomId, startTime, endTime, day);
+    // if (day != null) {
+    // List<SimpleScheduling> conflictingSchedules = simpleSchedulingRepository
+    // .findConflicts(roomId, startTime, endTime, day);
 
-            return conflictingSchedules.isEmpty();
-        }
+    // return conflictingSchedules.isEmpty();
+    // }
 
-        if (date != null) {
+    // if (date != null) {
 
-            List<ExamScheduling> examConflicts = examSchedulingRepository
-                    .findConflicts(roomId, startTime, endTime, date);
+    // List<ExamScheduling> examConflicts = examSchedulingRepository
+    // .findConflicts(roomId, startTime, endTime, date);
 
-            if (!examConflicts.isEmpty()) {
-                return false;
-            }
+    // if (!examConflicts.isEmpty()) {
+    // return false;
+    // }
 
-            DayOfWeek dateDay = date.getDayOfWeek();
-            List<SimpleScheduling> recurringConflicts = simpleSchedulingRepository
-                    .findConflicts(roomId, startTime, endTime, dateDay);
+    // DayOfWeek dateDay = date.getDayOfWeek();
+    // List<SimpleScheduling> recurringConflicts = simpleSchedulingRepository
+    // .findConflicts(roomId, startTime, endTime, dateDay);
 
-            return recurringConflicts.isEmpty();
-        }
+    // return recurringConflicts.isEmpty();
+    // }
 
-        throw new IllegalArgumentException("Either day or date must be provided");
-    }
+    // throw new IllegalArgumentException("Either day or date must be provided");
+    // }
 }

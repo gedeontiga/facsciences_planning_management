@@ -17,15 +17,13 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @AllArgsConstructor
 @NoArgsConstructor
-public sealed abstract class Scheduling permits SimpleScheduling, ExamScheduling {
+public sealed abstract class Scheduling permits CourseScheduling, ExamScheduling {
     @Id
     private String id;
-    @DocumentReference(collection = "rooms")
+    @DocumentReference(lazy = true, collection = "rooms")
     private Room room;
-    @DocumentReference(collection = "ues")
-    private Ue ue;
-    @DocumentReference(collection = "plannings")
-    private Planning planning;
+    @DocumentReference(lazy = true, collection = "timetables")
+    private Timetable timetable;
     private LocalTime startTime;
     private LocalTime endTime;
     private SessionType sessionType;

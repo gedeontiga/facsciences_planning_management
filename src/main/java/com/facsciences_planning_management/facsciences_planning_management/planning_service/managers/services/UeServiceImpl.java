@@ -1,6 +1,5 @@
 package com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services;
 
-import java.time.Duration;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,13 +28,10 @@ public class UeServiceImpl implements UeService {
         Level level = levelRepository.findById(request.levelId())
                 .orElseThrow(() -> new ResourceNotFoundException("Level not found with id: " + request.levelId()));
 
-        Duration duration = Duration.parse(request.duration());
-
         Ue ue = Ue.builder()
                 .name(request.name())
                 .code(request.code())
                 .credits(request.credits())
-                .duration(duration)
                 .category(request.category())
                 .hourlyCharge(request.hourlyCharge())
                 .level(level)
@@ -52,9 +48,31 @@ public class UeServiceImpl implements UeService {
     }
 
     @Override
-    public Ue getUeEntityById(String id) {
-        return ueRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("UE not found with id: " + id));
+    public UeDTO getUeByCode(String code) {
+        return ueRepository.findByCode(code)
+                .map(Ue::toDTO)
+                .orElseThrow(() -> new ResourceNotFoundException("UE not found with code: " + code));
+    }
+
+    @Override
+    public List<UeDTO> getUesByCategory(String category) {
+        return ueRepository.findByCategory(category).stream()
+                .map(Ue::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<UeDTO> getUesByCategoryAndLevel(String category, String levelId) {
+        return ueRepository.findByCategoryAndLevelId(category, levelId).stream()
+                .map(Ue::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<UeDTO> getUesByCreditsAndLevel(Integer credits, String levelId) {
+        return ueRepository.findByCreditsAndLevelId(credits, levelId).stream()
+                .map(Ue::toDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -72,11 +90,6 @@ public class UeServiceImpl implements UeService {
     }
 
     @Override
-    public List<Ue> getUesByLevelId(String levelId) {
-        return ueRepository.findByLevelId(levelId);
-    }
-
-    @Override
     public UeDTO updateUe(String id, UeUpdateRequest request) {
         Ue ue = ueRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("UE not found with id: " + id));
@@ -91,10 +104,6 @@ public class UeServiceImpl implements UeService {
 
         if (request.credits() != null) {
             ue.setCredits(request.credits());
-        }
-
-        if (request.duration() != null) {
-            ue.setDuration(Duration.parse(request.duration()));
         }
 
         if (request.category() != null) {

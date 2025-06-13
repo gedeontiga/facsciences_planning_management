@@ -8,12 +8,12 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.ExamSchedulingUpdateRequest;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.SchedulingConflictCheckRequest;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.SchedulingDTO;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.SimpleSchedulingCreateRequest;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.SimpleSchedulingDTO;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.CourseSchedulingCreateRequest;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.CourseSchedulingDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.SimpleSchedulingUpdateRequest;
 
 public interface SchedulingService {
-    SimpleSchedulingDTO createSimpleScheduling(SimpleSchedulingCreateRequest request);
+    CourseSchedulingDTO createSimpleScheduling(CourseSchedulingCreateRequest request);
 
     ExamSchedulingDTO createExamScheduling(ExamSchedulingCreateRequest request);
 
@@ -25,7 +25,7 @@ public interface SchedulingService {
 
     void deleteScheduling(String id, SessionType type);
 
-    SimpleSchedulingDTO updateSimpleScheduling(String id, SimpleSchedulingUpdateRequest request);
+    CourseSchedulingDTO updateSimpleScheduling(String id, SimpleSchedulingUpdateRequest request);
 
     ExamSchedulingDTO updateExamScheduling(String id, ExamSchedulingUpdateRequest request);
 

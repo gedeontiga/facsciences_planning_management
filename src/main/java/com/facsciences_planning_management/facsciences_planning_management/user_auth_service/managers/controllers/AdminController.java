@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -26,9 +27,9 @@ public class AdminController {
         return ResponseEntity.ok().body(adminServices.createUserWithRole(userAndRole));
     }
 
-    @GetMapping("/teachers")
-    public ResponseEntity<List<UserResponse>> getAllTeachers() {
-        return ResponseEntity.ok().body(adminServices.getAllTeachers());
+    @GetMapping("/users/{role}")
+    public ResponseEntity<List<UserResponse>> getAllTeachers(@PathVariable String role) {
+        return ResponseEntity.ok().body(adminServices.getUserByRole(role));
     }
 
     @GetMapping("/roles")

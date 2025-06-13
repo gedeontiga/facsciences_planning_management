@@ -28,6 +28,6 @@ public class Jwt {
     private String token;
     private Instant expiredAt;
 
-    @DocumentReference(collection = "users")
+    @DocumentReference(lazy = true, collection = "users")
     private Users user;
 }

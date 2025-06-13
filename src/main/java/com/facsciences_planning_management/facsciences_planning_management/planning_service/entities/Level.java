@@ -23,7 +23,7 @@ public class Level {
     private String name;
     private Long totalNumberOfStudents;
 
-    @DocumentReference(collection = "branches")
+    @DocumentReference(lazy = true, collection = "branches")
     private Branch branch;
 
     public LevelDTO toDTO() {

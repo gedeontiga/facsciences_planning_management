@@ -10,18 +10,18 @@ public record ExamSchedulingDTO(
 		String id,
 		String roomId,
 		String ueId,
-		String planningId,
+		String timetableId,
 		LocalTime startTime,
 		LocalTime endTime,
 		SessionType sessionType,
 		String proctorId,
 		LocalDateTime sessionDate) implements SchedulingDTO {
-	public static ExamSchedulingDTO fromEntity(ExamScheduling entity) {
+	public static ExamSchedulingDTO fromExamScheduling(ExamScheduling entity) {
 		return new ExamSchedulingDTO(
 				entity.getId(),
 				entity.getRoom().getId(),
 				entity.getUe().getId(),
-				entity.getPlanning().getId(),
+				entity.getTimetable().getId(),
 				entity.getStartTime(),
 				entity.getEndTime(),
 				entity.getSessionType(),

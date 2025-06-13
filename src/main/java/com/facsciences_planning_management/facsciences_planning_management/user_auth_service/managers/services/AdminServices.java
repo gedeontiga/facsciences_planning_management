@@ -15,7 +15,9 @@ import com.facsciences_planning_management.facsciences_planning_management.user_
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.UserResponse;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AdminServices {
@@ -35,6 +37,8 @@ public class AdminServices {
         Users user = userAndRole.fromUserAndRole(role);
         user.setPassword(passwordEncoder.encode(DEFAULT_PASSWORD));
 
+        log.debug(user.toString());
+
         // Save user
         Users savedUser = userRepository.save(user);
 
@@ -52,8 +56,8 @@ public class AdminServices {
         return new UserResponse(savedUser);
     }
 
-    public List<UserResponse> getAllTeachers() {
-        return userRepository.findByRoleType(RoleType.TEACHER).stream().map(UserResponse::new)
+    public List<UserResponse> getUserByRole(String role) {
+        return userRepository.findByRoleType(RoleType.valueOf(role)).stream().map(UserResponse::new)
                 .collect(Collectors.toList());
     }
 

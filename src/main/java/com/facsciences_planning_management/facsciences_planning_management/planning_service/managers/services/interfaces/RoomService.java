@@ -1,12 +1,7 @@
 package com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces;
 
-import java.time.DayOfWeek;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
 
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.RoomType;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.AvailableRoomsRequestDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.RoomDTO;
 
 public interface RoomService {
@@ -20,14 +15,16 @@ public interface RoomService {
 
     void deleteRoom(String id);
 
-    List<RoomDTO> findAvailableRooms(AvailableRoomsRequestDTO request);
+    // List<RoomDTO> findAvailableRooms(AvailableRoomsRequestDTO request);
 
-    List<RoomDTO> findRoomsByCapacity(Long minimumCapacity);
+    List<RoomDTO> getRoomsByCapacity(Long minimumCapacity);
 
-    List<RoomDTO> findRoomsByType(RoomType type);
+    List<RoomDTO> getRoomsByType(String type);
 
-    boolean isRoomAvailable(String roomId, LocalTime startTime, LocalTime endTime, DayOfWeek day);
+    // boolean isRoomAvailable(String roomId, LocalTime startTime, LocalTime
+    // endTime, DayOfWeek day);
 
-    boolean isRoomAvailableForDate(String roomId, LocalTime startTime, LocalTime endTime, LocalDateTime date);
+    // boolean isRoomAvailableForDate(String roomId, LocalTime startTime, LocalTime
+    // endTime, LocalDateTime date);
 
 }

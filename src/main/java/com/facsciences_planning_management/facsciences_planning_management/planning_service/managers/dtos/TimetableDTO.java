@@ -5,19 +5,19 @@ import java.time.Year;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Planning;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Timetable;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Scheduling;
 
 import lombok.Singular;
 
-public record PlanningDTO(
+public record TimetableDTO(
 		String id,
 		@Singular Set<SchedulingDTO> schedules,
 		Year academicYear,
 		String semester,
 		LocalDateTime createdAt) {
-	public static PlanningDTO fromPlanning(Planning entity) {
-		return new PlanningDTO(entity.getId(),
+	public static TimetableDTO fromTimetable(final Timetable entity) {
+		return new TimetableDTO(entity.getId(),
 				entity.getSchedules().stream()
 						.map(Scheduling::toDTO)
 						.collect(Collectors.toSet()),

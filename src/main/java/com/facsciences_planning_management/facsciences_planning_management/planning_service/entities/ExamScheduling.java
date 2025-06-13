@@ -23,12 +23,14 @@ import lombok.experimental.SuperBuilder;
 @Document(collection = "exam_schedules")
 @EqualsAndHashCode(callSuper = false)
 public final class ExamScheduling extends Scheduling {
-    @DocumentReference(collection = "users")
+    @DocumentReference(lazy = true, collection = "users")
     private Users proctor;
     private LocalDateTime sessionDate;
+    @DocumentReference(lazy = true, collection = "ues")
+    private Ue ue;
 
     @Override
     public ExamSchedulingDTO toDTO() {
-        return ExamSchedulingDTO.fromEntity(this);
+        return ExamSchedulingDTO.fromExamScheduling(this);
     }
 }

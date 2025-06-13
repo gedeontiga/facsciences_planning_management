@@ -26,14 +26,14 @@ public class Faculty {
     private String code;
 
     @Builder.Default
-    @DocumentReference(collection = "branches")
+    @DocumentReference(lazy = true, collection = "branches")
     private Set<Branch> branches = new HashSet<>();
 
     @Builder.Default
-    @DocumentReference(collection = "rooms")
+    @DocumentReference(lazy = true, collection = "rooms")
     private Set<Room> rooms = new HashSet<>();
 
     @Builder.Default
-    @DocumentReference(collection = "departments")
+    @DocumentReference(lazy = true, collection = "departments")
     private Set<Department> departments = new HashSet<>();
 }

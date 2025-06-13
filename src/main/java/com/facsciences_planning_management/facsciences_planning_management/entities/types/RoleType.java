@@ -15,10 +15,10 @@ import lombok.Getter;
 
 @AllArgsConstructor
 public enum RoleType {
-	DEPARTMENT_CHIEF(
+	DEPARTMENT_HEAD(
 			Set.of(
-					PermissionType.DEPARTMENT_CHIEF_READ_PLANNING,
-					PermissionType.DEPARTMENT_CHIEF_CUSTOMIZE_PLANNING)),
+					PermissionType.DEPARTMENT_HEAD_READ_PLANNING,
+					PermissionType.DEPARTMENT_HEAD_CUSTOMIZE_PLANNING)),
 	ADMIN(
 			Set.of(
 					PermissionType.ADMIN_CREATE_ALL,

@@ -2,7 +2,7 @@ package com.facsciences_planning_management.facsciences_planning_management.plan
 
 import java.time.Year;
 
-public record PlanningCreateRequest(
-        Year academicYear,
-        String semester) {
+public record TimetableCreateRequest(
+                Year academicYear,
+                String semester) {
 }

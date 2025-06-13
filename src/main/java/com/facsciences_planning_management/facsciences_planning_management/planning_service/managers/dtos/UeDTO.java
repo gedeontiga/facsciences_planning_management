@@ -6,13 +6,12 @@ public record UeDTO(
         String id,
         String name,
         String code,
-        Long credits,
-        String duration,
+        Integer credits,
         String category,
         Integer hourlyCharge,
         LevelDTO level) {
     public static UeDTO fromUe(Ue ue) {
-        return new UeDTO(ue.getId(), ue.getName(), ue.getCode(), ue.getCredits(), ue.getDuration().toString(),
+        return new UeDTO(ue.getId(), ue.getName(), ue.getCode(), ue.getCredits(),
                 ue.getCategory(), ue.getHourlyCharge(), LevelDTO.fromLevel(ue.getLevel()));
     }
 }

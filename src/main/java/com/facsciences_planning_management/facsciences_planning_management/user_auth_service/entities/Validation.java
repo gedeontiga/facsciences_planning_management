@@ -22,7 +22,7 @@ public class Validation {
     @Id
     private String id;
 
-    @DocumentReference(collection = "users")
+    @DocumentReference(lazy = true, collection = "users")
     private Users user;
 
     private String activationToken;

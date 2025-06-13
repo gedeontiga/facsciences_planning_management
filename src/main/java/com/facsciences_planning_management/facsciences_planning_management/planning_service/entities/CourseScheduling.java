@@ -5,8 +5,7 @@ import java.time.DayOfWeek;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
 
-import com.facsciences_planning_management.facsciences_planning_management.entities.Users;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.SimpleSchedulingDTO;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.CourseSchedulingDTO;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -19,14 +18,14 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "scheduling")
-public final class SimpleScheduling extends Scheduling {
-    @DocumentReference(collection = "users")
-    protected Users teacher;
+@Document(collection = "course_schedules")
+public final class CourseScheduling extends Scheduling {
     protected DayOfWeek day;
+    @DocumentReference(lazy = true, collection = "courses")
+    private Course assignedCourse;
 
     @Override
-    public SimpleSchedulingDTO toDTO() {
-        return SimpleSchedulingDTO.fromEntity(this);
+    public CourseSchedulingDTO toDTO() {
+        return CourseSchedulingDTO.fromEntity(this);
     }
 }

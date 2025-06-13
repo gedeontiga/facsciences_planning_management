@@ -1,7 +1,5 @@
 package com.facsciences_planning_management.facsciences_planning_management.planning_service.entities;
 
-import java.time.Duration;
-
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
@@ -23,12 +21,11 @@ public class Ue {
     private String id;
     private String name;
     private String code;
-    private Long credits;
+    private Integer credits;
     private String category;
-    private Duration duration;
     private Integer hourlyCharge;
 
-    @DocumentReference(collection = "levels")
+    @DocumentReference(lazy = true, collection = "levels")
     private Level level;
 
     public UeDTO toDTO() {

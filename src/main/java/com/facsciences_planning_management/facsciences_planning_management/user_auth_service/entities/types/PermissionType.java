@@ -5,8 +5,8 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public enum PermissionType {
-    DEPARTMENT_CHIEF_READ_PLANNING,
-    DEPARTMENT_CHIEF_CUSTOMIZE_PLANNING,
+    DEPARTMENT_HEAD_READ_PLANNING,
+    DEPARTMENT_HEAD_CUSTOMIZE_PLANNING,
     ADMIN_CREATE_ALL,
     ADMIN_READ_ALL,
     ADMIN_UPDATE_ALL,
