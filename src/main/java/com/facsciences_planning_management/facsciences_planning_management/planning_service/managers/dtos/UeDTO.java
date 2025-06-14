@@ -9,9 +9,16 @@ public record UeDTO(
         Integer credits,
         String category,
         Integer hourlyCharge,
-        LevelDTO level) {
+        String levelId
+// Optional<String> levelCode,
+// Optional<Long> totalNumberOfStudents
+) {
     public static UeDTO fromUe(Ue ue) {
-        return new UeDTO(ue.getId(), ue.getName(), ue.getCode(), ue.getCredits(),
-                ue.getCategory(), ue.getHourlyCharge(), LevelDTO.fromLevel(ue.getLevel()));
+        return new UeDTO(
+                ue.getId(), ue.getName(), ue.getCode(),
+                ue.getCredits(), ue.getCategory(),
+                ue.getHourlyCharge(), ue.getLevel().getId());
+        // Optional.of(ue.getLevel().getCode()),
+        // Optional.of(ue.getLevel().getTotalNumberOfStudents()));
     }
 }

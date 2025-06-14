@@ -10,10 +10,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.facsciences_planning_management.facsciences_planning_management.entities.Users;
 import com.facsciences_planning_management.facsciences_planning_management.entities.repositories.UserRepository;
+import com.facsciences_planning_management.facsciences_planning_management.exceptions.EntityNotFoundException;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.UserResponse;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.UserUpdate;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.exceptions.AccountNotActivatedException;
-import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.exceptions.UserNotFoundException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,7 +25,7 @@ public class UserService implements UserDetailsService {
     public UserResponse getUser() {
         String email = ((Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
         Users user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
         return new UserResponse(user);
     }
 
@@ -43,13 +43,13 @@ public class UserService implements UserDetailsService {
             if (userRepository.findByEmail(email).isPresent()) {
                 throw new AccountNotActivatedException("User is not activated");
             }
-            throw new UserNotFoundException("User not found");
+            throw new EntityNotFoundException("User not found");
         }
     }
 
     public Users getUserByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("User with email " + email + " not found."));
+                .orElseThrow(() -> new EntityNotFoundException("User with email " + email + " not found."));
     }
 
     public UserResponse updateUser(UserUpdate user) {
@@ -64,7 +64,7 @@ public class UserService implements UserDetailsService {
 
     public void deleteUser(String email) {
         if (!userRepository.findByEmail(email).isPresent()) {
-            throw new UserNotFoundException("Cannot delete: User with email " + email + " not found");
+            throw new EntityNotFoundException("Cannot delete: User with email " + email + " not found");
         }
         userRepository.deleteByEmail(email);
     }

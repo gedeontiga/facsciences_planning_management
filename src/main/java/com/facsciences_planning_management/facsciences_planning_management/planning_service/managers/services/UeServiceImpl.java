@@ -9,9 +9,7 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Ue;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.LevelRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.UeRepository;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.UeCreateRequest;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.UeDTO;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.UeUpdateRequest;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.exceptions.ResourceNotFoundException;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces.UeService;
 
@@ -24,7 +22,7 @@ public class UeServiceImpl implements UeService {
     private final LevelRepository levelRepository;
 
     @Override
-    public UeDTO createUe(UeCreateRequest request) {
+    public UeDTO createUe(UeDTO request) {
         Level level = levelRepository.findById(request.levelId())
                 .orElseThrow(() -> new ResourceNotFoundException("Level not found with id: " + request.levelId()));
 
@@ -90,7 +88,7 @@ public class UeServiceImpl implements UeService {
     }
 
     @Override
-    public UeDTO updateUe(String id, UeUpdateRequest request) {
+    public UeDTO updateUe(String id, UeDTO request) {
         Ue ue = ueRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("UE not found with id: " + id));
 

@@ -16,9 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.UeCreateRequest;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.UeDTO;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.UeUpdateRequest;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces.UeService;
 
 import jakarta.validation.Valid;
@@ -80,7 +78,7 @@ public class UeController {
 
     @PostMapping
     @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<UeDTO> createUe(@Valid @RequestBody UeCreateRequest request) {
+    public ResponseEntity<UeDTO> createUe(@Valid @RequestBody UeDTO request) {
         UeDTO createdUe = ueService.createUe(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdUe);
     }
@@ -89,7 +87,7 @@ public class UeController {
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<UeDTO> updateUe(
             @PathVariable String id,
-            @Valid @RequestBody UeUpdateRequest request) {
+            @Valid @RequestBody UeDTO request) {
         UeDTO updatedUe = ueService.updateUe(id, request);
         return ResponseEntity.ok(updatedUe);
     }

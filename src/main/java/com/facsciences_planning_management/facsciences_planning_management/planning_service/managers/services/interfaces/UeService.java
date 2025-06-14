@@ -2,12 +2,10 @@ package com.facsciences_planning_management.facsciences_planning_management.plan
 
 import java.util.List;
 
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.UeCreateRequest;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.UeDTO;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.UeUpdateRequest;
 
 public interface UeService {
-    UeDTO createUe(UeCreateRequest request);
+    UeDTO createUe(UeDTO request);
 
     UeDTO getUeById(String id);
 
@@ -23,7 +21,7 @@ public interface UeService {
 
     List<UeDTO> getUesByCreditsAndLevel(Integer credits, String levelId);
 
-    UeDTO updateUe(String id, UeUpdateRequest request);
+    UeDTO updateUe(String id, UeDTO request);
 
     void deleteUe(String id);
 }

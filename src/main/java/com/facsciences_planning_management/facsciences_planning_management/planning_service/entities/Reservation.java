@@ -10,7 +10,7 @@ import org.springframework.data.mongodb.core.mapping.DocumentReference;
 
 import com.facsciences_planning_management.facsciences_planning_management.entities.Users;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.SessionType;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.ReservationresponseDTO;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.ReservationResponseDTO;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -46,7 +46,7 @@ public class Reservation {
         PENDING, APPROVED, REJECTED
     }
 
-    public ReservationresponseDTO toDTO() {
-        return ReservationresponseDTO.fromReservation(this);
+    public ReservationResponseDTO toDTO() {
+        return ReservationResponseDTO.fromReservation(this);
     }
 }

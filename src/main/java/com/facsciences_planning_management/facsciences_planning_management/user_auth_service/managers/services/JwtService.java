@@ -14,10 +14,10 @@ import org.springframework.stereotype.Service;
 
 import com.facsciences_planning_management.facsciences_planning_management.entities.Users;
 import com.facsciences_planning_management.facsciences_planning_management.entities.repositories.UserRepository;
+import com.facsciences_planning_management.facsciences_planning_management.exceptions.EntityNotFoundException;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.entities.Jwt;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.entities.repositories.JwtRepository;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.exceptions.TokenExpiredException;
-import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.exceptions.UserNotFoundException;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -40,7 +40,7 @@ public class JwtService {
 
     public Map<String, String> generate(final String email) {
         final Users user = userRepository.findByEmailAndEnabledIsTrue(email)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
         return this.generateJwt(user);
     }
 

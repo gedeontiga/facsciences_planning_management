@@ -34,8 +34,16 @@ public class AdminServices {
         final String DEFAULT_PASSWORD = userAndRole.firstName().toLowerCase() + ".password123!";
 
         // Create user with encoded default password
-        Users user = userAndRole.fromUserAndRole(role);
-        user.setPassword(passwordEncoder.encode(DEFAULT_PASSWORD));
+        Users user = Users.builder()
+                .firstName(userAndRole.firstName())
+                .lastName(userAndRole.lastName())
+                .email(userAndRole.email())
+                .address(userAndRole.address())
+                .phoneNumber(userAndRole.phoneNumber())
+                .password(passwordEncoder.encode(DEFAULT_PASSWORD))
+                .role(role)
+                .enabled(true)
+                .build();
 
         log.debug(user.toString());
 

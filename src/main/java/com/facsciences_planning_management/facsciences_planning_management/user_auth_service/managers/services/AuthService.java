@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import com.facsciences_planning_management.facsciences_planning_management.entities.Users;
 import com.facsciences_planning_management.facsciences_planning_management.entities.repositories.UserRepository;
 import com.facsciences_planning_management.facsciences_planning_management.entities.types.RoleType;
+import com.facsciences_planning_management.facsciences_planning_management.exceptions.EntityNotFoundException;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.entities.Role;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.entities.Validation;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.entities.repositories.RoleRepository;
@@ -29,7 +30,6 @@ import com.facsciences_planning_management.facsciences_planning_management.user_
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.exceptions.InvalidCredentialsException;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.exceptions.InvalidTokenException;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.exceptions.TokenExpiredException;
-import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.exceptions.UserNotFoundException;
 
 import lombok.AllArgsConstructor;
 
@@ -103,7 +103,7 @@ public class AuthService {
 
     public void requestPasswordReset(String email) {
         Users user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
+                .orElseThrow(() -> new EntityNotFoundException("User not found with email: " + email));
 
         if (!user.isEnabled()) {
             throw new AccountNotActivatedException("Account not activated");

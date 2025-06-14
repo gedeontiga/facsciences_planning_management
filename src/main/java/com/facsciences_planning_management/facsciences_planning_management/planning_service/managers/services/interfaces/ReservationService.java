@@ -7,16 +7,16 @@ import org.springframework.data.domain.Sort;
 
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Reservation.RequestStatus;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.ReservationRequestDTO;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.ReservationresponseDTO;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.ReservationResponseDTO;
 
 public interface ReservationService {
-    ReservationresponseDTO createRequest(ReservationRequestDTO request);
+    ReservationResponseDTO createRequest(ReservationRequestDTO request);
 
-    ReservationresponseDTO updateRequestStatus(String requestId, ReservationresponseDTO request);
+    ReservationResponseDTO updateRequestStatus(String requestId, ReservationResponseDTO request);
 
-    List<ReservationresponseDTO> getReservations(String teacherId, Optional<Sort> sort);
+    List<ReservationResponseDTO> getReservations(String teacherId, Optional<Sort> sort);
 
-    List<ReservationresponseDTO> getAllRequests(Optional<RequestStatus> status, Optional<Sort> sort);
+    List<ReservationResponseDTO> getAllRequests(Optional<RequestStatus> status, Optional<Sort> sort);
 
     void deleteRequest(String id);
 }

@@ -8,7 +8,7 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Reservation.RequestStatus;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.SessionType;
 
-public record ReservationresponseDTO(
+public record ReservationResponseDTO(
 		String id,
 		String teacherId,
 		String teacherName,
@@ -25,12 +25,12 @@ public record ReservationresponseDTO(
 		LocalDateTime processedAt,
 		String adminComment) {
 
-	public static ReservationresponseDTO fromReservation(Reservation reservation) {
+	public static ReservationResponseDTO fromReservation(Reservation reservation) {
 		String teacherName = reservation.getTeacher().getFirstName() + " "
 				+ reservation.getTeacher().getLastName();
 		String adminName = reservation.getProcessedBy().getFirstName() + " "
 				+ reservation.getProcessedBy().getLastName();
-		return new ReservationresponseDTO(
+		return new ReservationResponseDTO(
 				reservation.getId(),
 				reservation.getTeacher().getId(),
 				teacherName,

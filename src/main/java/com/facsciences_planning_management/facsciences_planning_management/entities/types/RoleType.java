@@ -17,25 +17,26 @@ import lombok.Getter;
 public enum RoleType {
 	DEPARTMENT_HEAD(
 			Set.of(
-					PermissionType.DEPARTMENT_HEAD_READ_PLANNING,
-					PermissionType.DEPARTMENT_HEAD_CUSTOMIZE_PLANNING)),
+					PermissionType.READ_PLANNING)),
 	ADMIN(
 			Set.of(
-					PermissionType.ADMIN_CREATE_ALL,
-					PermissionType.ADMIN_READ_ALL,
-					PermissionType.ADMIN_UPDATE_ALL,
-					PermissionType.ADMIN_DELETE_ALL)),
+					PermissionType.CREATE_PLANNING,
+					PermissionType.READ_PLANNING,
+					PermissionType.UPDATE_PLANNING,
+					PermissionType.DELETE_PLANNING)),
 	SECRETARY(
 			Set.of(
-					PermissionType.SECRETARY_READ_PLANNING,
-					PermissionType.SECRETARY_UPDATE_PLANNING,
-					PermissionType.SECRETARY_DELETE_PLANNING)),
+					PermissionType.READ_PLANNING,
+					PermissionType.UPDATE_PLANNING)),
 	TEACHER(
 			Set.of(
-					PermissionType.TEACHER_READ_PLANNING)),
+					PermissionType.READ_PLANNING)),
+	PROCTOR(
+			Set.of(
+					PermissionType.READ_PLANNING)),
 	STUDENT(
 			Set.of(
-					PermissionType.STUDENT_GET_PLANNING));
+					PermissionType.READ_PLANNING));
 
 	@Getter
 	private Set<PermissionType> permissions;
