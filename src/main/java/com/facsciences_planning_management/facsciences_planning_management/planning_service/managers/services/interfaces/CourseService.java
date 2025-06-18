@@ -20,8 +20,6 @@ public interface CourseService {
 
     CourseDTO getCourseByUeId(String ueId);
 
-    CourseDTO getCourseByUeCode(String ueCode);
-
     void deleteCourse(String courseId);
 
 }

@@ -4,6 +4,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import com.facsciences_planning_management.facsciences_planning_management.entities.types.RoleType;
+import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.RoleDTO;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -21,4 +22,8 @@ public class Role {
 
     @NonNull
     private RoleType type;
+
+    public RoleDTO toDTO() {
+        return RoleDTO.fromRole(this);
+    }
 }

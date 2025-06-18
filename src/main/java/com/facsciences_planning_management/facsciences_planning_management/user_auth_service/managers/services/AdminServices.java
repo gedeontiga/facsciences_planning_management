@@ -11,6 +11,7 @@ import com.facsciences_planning_management.facsciences_planning_management.entit
 import com.facsciences_planning_management.facsciences_planning_management.entities.types.RoleType;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.entities.Role;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.entities.repositories.RoleRepository;
+import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.RoleDTO;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.UserAndRole;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.UserResponse;
 
@@ -64,12 +65,12 @@ public class AdminServices {
         return new UserResponse(savedUser);
     }
 
-    public List<UserResponse> getUserByRole(String role) {
-        return userRepository.findByRoleType(RoleType.valueOf(role)).stream().map(UserResponse::new)
+    public List<UserResponse> getUserByRole(String roleId) {
+        return userRepository.findByRoleId(roleId).stream().map(UserResponse::new)
                 .collect(Collectors.toList());
     }
 
-    public List<String> getAllRoles() {
-        return roleRepository.findAll().stream().map(role -> role.getType().toString()).collect(Collectors.toList());
+    public List<RoleDTO> getAllRoles() {
+        return roleRepository.findAll().stream().map(role -> role.toDTO()).collect(Collectors.toList());
     }
 }

@@ -38,12 +38,6 @@ public class CourseController {
         return ResponseEntity.ok(course);
     }
 
-    @GetMapping("/ue/code/{ueCode}")
-    public ResponseEntity<CourseDTO> getCourseByUeCode(@PathVariable String ueCode) {
-        CourseDTO course = courseService.getCourseByUeCode(ueCode);
-        return ResponseEntity.ok(course);
-    }
-
     @GetMapping("/{courseId}")
     public ResponseEntity<CourseDTO> getCourse(@PathVariable String courseId) {
         CourseDTO course = courseService.getCourse(courseId);

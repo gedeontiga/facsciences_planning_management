@@ -40,7 +40,7 @@ public class Users implements UserDetails {
     private String address;
     private String phoneNumber;
 
-    @DocumentReference(lazy = true, collection = "roles")
+    @DocumentReference(collection = "roles")
     @NonNull
     private Role role;
 

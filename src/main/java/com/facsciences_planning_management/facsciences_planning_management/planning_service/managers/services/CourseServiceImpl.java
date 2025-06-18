@@ -76,12 +76,6 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
-    public CourseDTO getCourseByUeCode(String ueCode) {
-        return courseRepository.findByUeCode(ueCode).orElseThrow(() -> new RuntimeException("Course not found"))
-                .toDTO();
-    }
-
-    @Override
     public void deleteCourse(String courseId) {
         courseRepository.deleteById(courseId);
     }

@@ -2,6 +2,7 @@ package com.facsciences_planning_management.facsciences_planning_management.user
 
 import org.springframework.web.bind.annotation.RestController;
 
+import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.RoleDTO;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.UserAndRole;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.UserResponse;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.services.AdminServices;
@@ -27,13 +28,13 @@ public class AdminController {
         return ResponseEntity.ok().body(adminServices.createUserWithRole(userAndRole));
     }
 
-    @GetMapping("/users/{role}")
-    public ResponseEntity<List<UserResponse>> getAllTeachers(@PathVariable String role) {
-        return ResponseEntity.ok().body(adminServices.getUserByRole(role));
+    @GetMapping("/users/{roleId}")
+    public ResponseEntity<List<UserResponse>> getAllTeachers(@PathVariable String roleId) {
+        return ResponseEntity.ok().body(adminServices.getUserByRole(roleId));
     }
 
     @GetMapping("/roles")
-    public ResponseEntity<List<String>> getAllRoles() {
+    public ResponseEntity<List<RoleDTO>> getAllRoles() {
         return ResponseEntity.ok().body(adminServices.getAllRoles());
     }
 

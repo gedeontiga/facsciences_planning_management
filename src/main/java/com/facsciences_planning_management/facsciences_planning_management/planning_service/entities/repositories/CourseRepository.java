@@ -16,7 +16,5 @@ public interface CourseRepository extends
 
     Optional<Course> findByUeId(String ueId);
 
-    Optional<Course> findByUeCode(String ueCode);
-
     boolean existsByUe(Ue ue);
 }
