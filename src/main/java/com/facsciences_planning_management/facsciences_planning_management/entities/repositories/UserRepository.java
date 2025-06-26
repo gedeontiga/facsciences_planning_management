@@ -1,8 +1,9 @@
 package com.facsciences_planning_management.facsciences_planning_management.entities.repositories;
 
 import java.util.Optional;
-import java.util.Set;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
@@ -21,5 +22,5 @@ public interface UserRepository extends MongoRepository<Users, String> {
 
     Optional<Users> findByEmailAndEnabledIsTrue(String email);
 
-    Set<Users> findByRoleId(String roleId);
+    Page<Users> findByRoleId(String roleId, Pageable page);
 }

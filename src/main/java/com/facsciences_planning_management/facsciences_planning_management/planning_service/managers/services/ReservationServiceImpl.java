@@ -1,185 +1,114 @@
-// package
-// com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services;
+package com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services;
 
-// import java.time.LocalDateTime;
-// import java.util.List;
-// import java.util.Optional;
-// import java.util.stream.Collectors;
-// import java.util.stream.Stream;
+import lombok.RequiredArgsConstructor;
 
-// import org.springframework.data.domain.Sort;
-// import org.springframework.stereotype.Service;
-// import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-// import
-// com.facsciences_planning_management.facsciences_planning_management.entities.repositories.UserRepository;
-// import
-// com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Reservation;
-// import
-// com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Reservation.RequestStatus;
-// import
-// com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.ReservationRepository;
-// import
-// com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.SessionType;
-// import
-// com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.ExamSchedulingCreateRequest;
-// import
-// com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.SimpleSchedulingCreateRequest;
-// import
-// com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.ReservationCreateRequestDTO;
-// import
-// com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.ReservationDTO;
-// import
-// com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.exceptions.ResourceConflictException;
-// import
-// com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.exceptions.ResourceInUseException;
-// import
-// com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.exceptions.ResourceNotFoundException;
-// import
-// com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces.RoomService;
-// import
-// com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces.SchedulingService;
-// import
-// com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces.ReservationService;
-// import
-// com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces.TimetableService;
-// import
-// com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces.UeService;
+import com.facsciences_planning_management.facsciences_planning_management.entities.Users;
+import com.facsciences_planning_management.facsciences_planning_management.entities.repositories.UserRepository;
+import com.facsciences_planning_management.facsciences_planning_management.exceptions.CustomBusinessException;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Reservation;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Reservation.RequestStatus;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Room;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.ReservationRepository;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.RoomRepository;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.ReservationProcessingDTO;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.ReservationRequestDTO;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.ReservationResponseDTO;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces.ReservationService;
 
-// import lombok.RequiredArgsConstructor;
+import java.time.LocalDateTime;
 
-// @Service
-// @RequiredArgsConstructor
-// public class ReservationServiceImpl implements ReservationService {
-// private final ReservationRepository teacherRequestRepository;
-// private final RoomService roomService;
-// private final UeService ueService;
-// private final UserRepository userRepository;
-// private final TimetableService timetableService;
-// private final SchedulingService schedulingService;
+@Service
+@RequiredArgsConstructor
+public class ReservationServiceImpl implements ReservationService {
 
-// @Override
-// @Transactional
-// public ReservationDTO createRequest(ReservationCreateRequestDTO
-// request) {
-// // Validate inputs
-// userRepository.findById(request.getTeacherId())
-// .orElseThrow(() -> new ResourceNotFoundException("Teacher not found"));
-// ueService.getUeEntityById(request.getCourseId());
-// timetableService.getTimetableEntityById(request.getTimetableId());
+    private final ReservationRepository reservationRepository;
+    private final UserRepository userRepository;
+    private final RoomRepository roomRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
-// // Check room availability if specified
-// if (request.getRoomId() != null && request.getStartTime() != null &&
-// request.getEndTime() != null) {
-// boolean isAvailable = request.getDay() != null
-// ? roomService.isRoomAvailable(request.getRoomId(), request.getStartTime(),
-// request.getEndTime(),
-// request.getDay())
-// : roomService.isRoomAvailableForDate(request.getRoomId(),
-// request.getStartTime(),
-// request.getEndTime(), request.getDate());
-// if (!isAvailable) {
-// throw new ResourceConflictException("Requested room is not available");
-// }
-// }
+    private static final String WS_RESERVATION_TOPIC = "/topic/reservations";
 
-// Reservation teacherRequest = Reservation.builder()
-// .teacherId(request.getTeacherId())
-// .courseId(request.getCourseId())
-// .sessionType(request.getSessionType())
-// .status(Reservation.RequestStatus.PENDING)
-// .roomId(request.getRoomId())
-// .startTime(request.getStartTime())
-// .endTime(request.getEndTime())
-// .day(request.getDay())
-// .date(request.getDate())
-// .timetableId(request.getTimetableId())
-// .createdAt(LocalDateTime.now())
-// .build();
+    @Override
+    @Transactional
+    public ReservationResponseDTO createRequest(ReservationRequestDTO request) {
+        Users teacher = userRepository.findById(request.teacherId())
+                .orElseThrow(() -> new CustomBusinessException("Teacher not found with id: " + request.teacherId()));
 
-// return teacherRequestRepository.save(teacherRequest).toDTO();
-// }
+        Room room = roomRepository.findById(request.roomId())
+                .orElseThrow(() -> new CustomBusinessException("Room not found with id: " + request.roomId()));
 
-// @Override
-// @Transactional
-// public ReservationDTO updateRequestStatus(String requestId,
-// ReservationDTO request) {
-// Reservation teacherRequest = teacherRequestRepository.findById(requestId)
-// .orElseThrow(() -> new ResourceNotFoundException("Request not found"));
+        Reservation reservation = Reservation.builder()
+                .teacher(teacher)
+                .sessionType(request.sessionType())
+                .status(RequestStatus.PENDING)
+                .preferredRoom(room)
+                .preferredStartTime(request.startTime())
+                .preferredEndTime(request.endTime())
+                .preferredDay(request.day())
+                .createdAt(LocalDateTime.now())
+                .build();
 
-// if (request.getStatus() == Reservation.RequestStatus.APPROVED) {
-// // Create scheduling if approved
-// if (teacherRequest.getSessionType() == SessionType.COURSE
-// || teacherRequest.getSessionType() == SessionType.TUTORIAL) {
-// SimpleSchedulingCreateRequest schedulingRequest =
-// SimpleSchedulingCreateRequest.builder()
-// .roomId(teacherRequest.getRoomId())
-// .ueId(teacherRequest.getCourseId())
-// .timetableId(teacherRequest.getTimetableId())
-// .teacherId(teacherRequest.getTeacherId())
-// .startTime(teacherRequest.getStartTime())
-// .endTime(teacherRequest.getEndTime())
-// .day(teacherRequest.getDay())
-// .sessionType(teacherRequest.getSessionType())
-// .build();
-// schedulingService.createSimpleScheduling(schedulingRequest);
-// } else {
-// ExamSchedulingCreateRequest schedulingRequest =
-// ExamSchedulingCreateRequest.builder()
-// .roomId(teacherRequest.getRoomId())
-// .ueId(teacherRequest.getCourseId())
-// .timetableId(teacherRequest.getTimetableId())
-// .proctorId(teacherRequest.getTeacherId())
-// .startTime(teacherRequest.getStartTime())
-// .endTime(teacherRequest.getEndTime())
-// .sessionDate(teacherRequest.getDate())
-// .sessionType(teacherRequest.getSessionType())
-// .build();
-// schedulingService.createExamScheduling(schedulingRequest);
-// }
-// }
+        Reservation savedReservation = reservationRepository.save(reservation);
+        ReservationResponseDTO responseDTO = ReservationResponseDTO.fromReservation(savedReservation);
 
-// teacherRequest.setStatus(request.getStatus());
-// if (request.getAdminComment() != null) {
-// teacherRequest.setAdminComment(request.getAdminComment());
-// }
+        // Notify all subscribed clients of the new reservation
+        messagingTemplate.convertAndSend(WS_RESERVATION_TOPIC, responseDTO);
 
-// return teacherRequestRepository.save(teacherRequest).toDTO();
-// }
+        return responseDTO;
+    }
 
-// @Override
-// public List<ReservationDTO> getReservations(String teacherId,
-// Optional<Sort> sort) {
-// Sort effectiveSort = sort.orElse(Sort.by(Sort.Direction.DESC, "createdAt"));
-// return teacherRequestRepository.findByTeacherId(teacherId).stream()
-// .sorted(effectiveSort)
-// .map(Reservation::toDTO)
-// .collect(Collectors.toList());
-// }
+    @Override
+    @Transactional
+    public ReservationResponseDTO processRequest(String requestId, ReservationProcessingDTO request) {
+        Reservation reservation = reservationRepository.findById(requestId)
+                .orElseThrow(() -> new CustomBusinessException("Reservation not found with id: " + requestId));
 
-// @Override
-// public List<ReservationDTO> getAllRequests(Optional<RequestStatus> status,
-// Optional<Sort> sort) {
-// Sort effectiveSort = sort.orElse(Sort.by(Sort.Direction.DESC, "createdAt"));
-// Stream<Reservation> stream = status.isPresent()
-// ? teacherRequestRepository.findByStatus(status.get()).stream()
-// : teacherRequestRepository.findAllByOrderByCreatedAtDesc().stream();
-// return stream.sorted((a, b) ->
-// effectiveSort.getOrderFor("createdAt").isAscending()
-// ? a.getCreatedAt().compareTo(b.getCreatedAt())
-// : b.getCreatedAt().compareTo(a.getCreatedAt()))
-// .map(ReservationDTO::fromEntity)
-// .collect(Collectors.toList());
-// }
+        // Assuming the processor is the currently logged-in admin user.
+        // This would typically come from the security context.
+        Users admin = userRepository.findAll().stream().findFirst()
+                .orElseThrow(() -> new CustomBusinessException("No admin user found to process request"));
 
-// @Override
-// @Transactional
-// public void deleteRequest(String id) {
-// Reservation request = teacherRequestRepository.findById(id)
-// .orElseThrow(() -> new ResourceNotFoundException("Request not found"));
-// if (request.getStatus() == Reservation.RequestStatus.APPROVED) {
-// throw new ResourceInUseException("Cannot delete approved request");
-// }
-// teacherRequestRepository.deleteById(id);
-// }
-// }
+        reservation.setStatus(RequestStatus.valueOf(request.status().toUpperCase()));
+        reservation.setAdminComment(request.message());
+        reservation.setProcessedBy(admin);
+        reservation.setProcessedAt(LocalDateTime.now());
+
+        Reservation updatedReservation = reservationRepository.save(reservation);
+        ReservationResponseDTO responseDTO = ReservationResponseDTO.fromReservation(updatedReservation);
+
+        // Notify all subscribed clients of the updated reservation
+        messagingTemplate.convertAndSend(WS_RESERVATION_TOPIC, responseDTO);
+
+        return responseDTO;
+    }
+
+    @Override
+    public Page<ReservationResponseDTO> getReservations(String teacherId, Pageable page) {
+        return reservationRepository.findByTeacherId(teacherId, page)
+                .map(ReservationResponseDTO::fromReservation);
+    }
+
+    @Override
+    public Page<ReservationResponseDTO> getAllRequests(String status, Pageable page) {
+        if (status != null && !status.isBlank()) {
+            return reservationRepository.findByStatusOrderByCreatedAt(RequestStatus.valueOf(status.toUpperCase()), page)
+                    .map(ReservationResponseDTO::fromReservation);
+        }
+        return reservationRepository.findAll(page)
+                .map(ReservationResponseDTO::fromReservation);
+    }
+
+    @Override
+    public void deleteRequest(String id) {
+        if (!reservationRepository.existsById(id)) {
+            throw new CustomBusinessException("Reservation not found with id: " + id);
+        }
+        reservationRepository.deleteById(id);
+    }
+}

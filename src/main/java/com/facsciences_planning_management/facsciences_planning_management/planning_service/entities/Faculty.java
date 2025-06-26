@@ -32,8 +32,4 @@ public class Faculty {
     @Builder.Default
     @DocumentReference(lazy = true, collection = "rooms")
     private Set<Room> rooms = new HashSet<>();
-
-    @Builder.Default
-    @DocumentReference(lazy = true, collection = "departments")
-    private Set<Department> departments = new HashSet<>();
 }

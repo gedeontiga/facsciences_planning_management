@@ -2,9 +2,11 @@ package com.facsciences_planning_management.facsciences_planning_management.plan
 
 import java.time.DayOfWeek;
 
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
 
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.TimeSlot;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.CourseSchedulingDTO;
 
 import lombok.AllArgsConstructor;
@@ -20,9 +22,11 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @Document(collection = "course_schedules")
 public final class CourseScheduling extends Scheduling {
+    @Indexed
     protected DayOfWeek day;
-    @DocumentReference(lazy = true, collection = "courses")
+    @DocumentReference(collection = "courses")
     private Course assignedCourse;
+    private TimeSlot.CourseTimeSlot timeSlot;
 
     @Override
     public CourseSchedulingDTO toDTO() {

@@ -3,16 +3,18 @@ package com.facsciences_planning_management.facsciences_planning_management.user
 import org.springframework.web.bind.annotation.RestController;
 
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.RoleDTO;
-import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.UserAndRole;
-import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.UserResponse;
+import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.UserDTO;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.services.AdminServices;
 import lombok.RequiredArgsConstructor;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -24,13 +26,15 @@ public class AdminController {
     private final AdminServices adminServices;
 
     @PostMapping("/create-user")
-    public ResponseEntity<UserResponse> createUser(@RequestBody UserAndRole userAndRole) {
-        return ResponseEntity.ok().body(adminServices.createUserWithRole(userAndRole));
+    public ResponseEntity<UserDTO> createUser(@RequestBody UserDTO user) {
+        return ResponseEntity.ok().body(adminServices.createUserWithRole(user));
     }
 
-    @GetMapping("/users/{roleId}")
-    public ResponseEntity<List<UserResponse>> getAllTeachers(@PathVariable String roleId) {
-        return ResponseEntity.ok().body(adminServices.getUserByRole(roleId));
+    @GetMapping("/users")
+    public ResponseEntity<Page<UserDTO>> getAllTeachers(
+            @RequestParam String roleId,
+            @PageableDefault(size = 10) Pageable page) {
+        return ResponseEntity.ok().body(adminServices.getUserByRole(roleId, page));
     }
 
     @GetMapping("/roles")

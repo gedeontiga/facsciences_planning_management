@@ -1,22 +1,20 @@
 package com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces;
 
-import java.util.List;
-import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-import org.springframework.data.domain.Sort;
-
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Reservation.RequestStatus;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.ReservationProcessingDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.ReservationRequestDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.ReservationResponseDTO;
 
 public interface ReservationService {
     ReservationResponseDTO createRequest(ReservationRequestDTO request);
 
-    ReservationResponseDTO updateRequestStatus(String requestId, ReservationResponseDTO request);
+    ReservationResponseDTO processRequest(String requestId, ReservationProcessingDTO request);
 
-    List<ReservationResponseDTO> getReservations(String teacherId, Optional<Sort> sort);
+    Page<ReservationResponseDTO> getReservations(String teacherId, Pageable page);
 
-    List<ReservationResponseDTO> getAllRequests(Optional<RequestStatus> status, Optional<Sort> sort);
+    Page<ReservationResponseDTO> getAllRequests(String status, Pageable page);
 
     void deleteRequest(String id);
 }

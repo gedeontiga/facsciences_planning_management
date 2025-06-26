@@ -14,10 +14,9 @@ import org.springframework.stereotype.Service;
 
 import com.facsciences_planning_management.facsciences_planning_management.entities.Users;
 import com.facsciences_planning_management.facsciences_planning_management.entities.repositories.UserRepository;
-import com.facsciences_planning_management.facsciences_planning_management.exceptions.EntityNotFoundException;
+import com.facsciences_planning_management.facsciences_planning_management.exceptions.CustomBusinessException;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.entities.Jwt;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.entities.repositories.JwtRepository;
-import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.exceptions.TokenExpiredException;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -40,7 +39,7 @@ public class JwtService {
 
     public Map<String, String> generate(final String email) {
         final Users user = userRepository.findByEmailAndEnabledIsTrue(email)
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+                .orElseThrow(() -> new CustomBusinessException("User not found"));
         return this.generateJwt(user);
     }
 
@@ -49,14 +48,14 @@ public class JwtService {
     }
 
     public Jwt getJwtByToken(final String token) {
-        return jwtRepository.findByToken(token).orElseThrow(() -> new RuntimeException(TOKEN_NOT_FOUND));
+        return jwtRepository.findByToken(token).orElseThrow(() -> new CustomBusinessException(TOKEN_NOT_FOUND));
     }
 
     public boolean isTokenExpired(String token) {
         final Date expiration = getClaim(token, Claims::getExpiration);
 
         if (expiration != null && expiration.before(new Date())) {
-            throw new TokenExpiredException("Token has expired");
+            throw new CustomBusinessException("Token has expired");
         }
         return false;
     }
@@ -72,7 +71,7 @@ public class JwtService {
         return claimsResolver.apply(claims);
     }
 
-    private Claims getAllClaims(final String token) throws RuntimeException {
+    private Claims getAllClaims(final String token) throws CustomBusinessException {
         return Jwts.parser()
                 .verifyWith(SECRET_KEY)
                 .build()

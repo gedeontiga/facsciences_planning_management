@@ -1,11 +1,12 @@
 package com.facsciences_planning_management.facsciences_planning_management.planning_service.entities;
 
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
 
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.SessionType;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.SchedulingDTO;
 
 import lombok.AllArgsConstructor;
@@ -20,13 +21,14 @@ import lombok.experimental.SuperBuilder;
 public sealed abstract class Scheduling permits CourseScheduling, ExamScheduling {
     @Id
     private String id;
-    @DocumentReference(lazy = true, collection = "rooms")
+    @DocumentReference(collection = "rooms")
     private Room room;
     @DocumentReference(lazy = true, collection = "timetables")
     private Timetable timetable;
-    private LocalTime startTime;
-    private LocalTime endTime;
-    private SessionType sessionType;
+    @CreatedDate
+    private LocalDateTime createdAt;
+    @LastModifiedDate
+    private LocalDateTime updatedAt;
 
     public abstract SchedulingDTO toDTO();
 }

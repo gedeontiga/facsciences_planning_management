@@ -4,7 +4,10 @@ import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
 
@@ -36,8 +39,11 @@ public class Reservation {
     private DayOfWeek preferredDay;
     @DocumentReference(lazy = true, collection = "timetables")
     private Timetable timetable;
+    @CreatedDate
     private LocalDateTime createdAt;
+    @LastModifiedDate
     private LocalDateTime processedAt;
+    @LastModifiedBy
     @DocumentReference(lazy = true, collection = "users")
     private Users processedBy;
     private String adminComment;

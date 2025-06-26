@@ -2,6 +2,8 @@ package com.facsciences_planning_management.facsciences_planning_management.plan
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
@@ -11,9 +13,9 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 @Repository
 public interface ReservationRepository extends
         MongoRepository<Reservation, String> {
-    List<Reservation> findByTeacherId(String teacherId);
+    Page<Reservation> findByTeacherId(String teacherId, Pageable page);
 
-    List<Reservation> findByStatusOrderByCreatedAt(RequestStatus status);
+    Page<Reservation> findByStatusOrderByCreatedAt(RequestStatus status, Pageable page);
 
     List<Reservation> findAllByOrderByCreatedAtDesc();
 }

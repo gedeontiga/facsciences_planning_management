@@ -2,6 +2,9 @@ package com.facsciences_planning_management.facsciences_planning_management.plan
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -31,8 +34,9 @@ public class RoomController {
     private final RoomService roomService;
 
     @GetMapping
-    public ResponseEntity<List<RoomDTO>> getAllRooms() {
-        List<RoomDTO> rooms = roomService.getAllRooms();
+    public ResponseEntity<Page<RoomDTO>> getAllRooms(
+            @PageableDefault(size = 10, sort = "capacity") Pageable page) {
+        Page<RoomDTO> rooms = roomService.getAllRooms(page);
         return ResponseEntity.ok(rooms);
     }
 

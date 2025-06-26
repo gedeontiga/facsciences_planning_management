@@ -16,7 +16,7 @@ public interface UeRepository extends MongoRepository<Ue, String> {
 
     boolean existsByCode(String code);
 
-    List<Ue> findByCategory(String category);
+    List<Ue> findByLevelIdAndCategory(String levelId, String category);
 
     List<Ue> findByCreditsAndLevelId(Integer credits, String levelId);
 

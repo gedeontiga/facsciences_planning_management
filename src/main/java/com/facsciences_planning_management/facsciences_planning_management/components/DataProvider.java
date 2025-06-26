@@ -84,8 +84,8 @@ public class DataProvider {
                 return;
             }
             Faculty faculty = createOrGetFaculty();
-            Department department = createOrGetDepartment();
-            Branch branch = createOrGetBranch(faculty, department);
+            Branch branch = createOrGetBranch(faculty);
+            createOrGetDepartment(branch);
             loadRoles();
             loadUsersFromJson();
             loadRoomsFromJson(faculty);
@@ -408,26 +408,28 @@ public class DataProvider {
                 });
     }
 
-    private Department createOrGetDepartment() {
+    private Department createOrGetDepartment(Branch branch) {
         return departmentRepository.findByCode(DEPARTMENT_CODE)
                 .orElseGet(() -> {
                     log.info("Creating new department: {}", DEPARTMENT_NAME);
-                    Department department = Department.builder()
+                    Department department = departmentRepository.save(Department.builder()
                             .name(DEPARTMENT_NAME)
                             .code(DEPARTMENT_CODE)
-                            .build();
-                    return departmentRepository.save(department);
+                            .branch(branch)
+                            .build());
+                    branch.setDepartment(department);
+                    branchRepository.save(branch);
+                    return department;
                 });
     }
 
-    private Branch createOrGetBranch(Faculty faculty, Department department) {
+    private Branch createOrGetBranch(Faculty faculty) {
         return branchRepository.findByCode(BRANCH_CODE)
                 .orElseGet(() -> {
                     log.info("Creating new branch: {}", BRANCH_NAME);
                     Branch branch = Branch.builder()
                             .name(BRANCH_NAME)
                             .code(BRANCH_CODE)
-                            .department(department)
                             .faculty(faculty)
                             .levels(new HashSet<>())
                             .build();

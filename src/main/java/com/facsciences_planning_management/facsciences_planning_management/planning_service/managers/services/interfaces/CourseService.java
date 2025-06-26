@@ -2,11 +2,14 @@ package com.facsciences_planning_management.facsciences_planning_management.plan
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.CourseDTO;
 
 public interface CourseService {
 
-    List<CourseDTO> getAllCourses();
+    Page<CourseDTO> getAllCourses(Pageable page);
 
     CourseDTO createCourse(String teacherId, String ueId, Long duration);
 
@@ -18,7 +21,11 @@ public interface CourseService {
 
     CourseDTO getCourse(String courseId);
 
-    CourseDTO getCourseByUeId(String ueId);
+    CourseDTO getCourseByUe(String ueId);
+
+    List<CourseDTO> getCourseByLevel(String levelId);
+
+    List<CourseDTO> getUnscheduledCourses(String levelId, String timetableId);
 
     void deleteCourse(String courseId);
 

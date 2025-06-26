@@ -48,12 +48,6 @@ public class UeController {
         return ResponseEntity.ok(ue);
     }
 
-    @GetMapping("/category/{category}")
-    public ResponseEntity<List<UeDTO>> getUesByCategory(@PathVariable String category) {
-        List<UeDTO> ues = ueService.getUesByCategory(category);
-        return ResponseEntity.ok(ues);
-    }
-
     @GetMapping("/level/{levelId}")
     public ResponseEntity<List<UeDTO>> getUesByLevel(@PathVariable String levelId) {
         List<UeDTO> ues = ueService.getUesByLevel(levelId);

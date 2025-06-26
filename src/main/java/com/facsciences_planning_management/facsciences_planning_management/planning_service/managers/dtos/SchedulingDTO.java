@@ -2,20 +2,22 @@ package com.facsciences_planning_management.facsciences_planning_management.plan
 
 import java.time.LocalTime;
 
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.SessionType;
-
-public interface SchedulingDTO {
+public sealed interface SchedulingDTO permits CourseSchedulingDTO, ExamSchedulingDTO {
     String id();
 
     String roomId();
 
+    String roomCode();
+
     String ueId();
 
+    String ueCode();
+
     String timetableId();
+
+    String timeSlotLabel();
 
     LocalTime startTime();
 
     LocalTime endTime();
-
-    SessionType sessionType();
 }

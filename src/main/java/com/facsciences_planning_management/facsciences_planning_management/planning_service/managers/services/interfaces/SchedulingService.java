@@ -1,38 +1,32 @@
-// package
-// com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces;
+package com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces;
 
-// import java.util.List;
+import java.util.List;
 
-// import
-// com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.SessionType;
-// import
-// com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.ExamSchedulingDTO;
-// import
-// com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.SchedulingConflictCheckRequest;
-// import
-// com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.SchedulingDTO;
-// import
-// com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.CourseSchedulingDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-// public interface SchedulingService {
-// CourseSchedulingDTO createSimpleScheduling(CourseSchedulingCreateRequest
-// request);
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.SchedulingDTO;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.TimeSlotDTO;
 
-// ExamSchedulingDTO createExamScheduling(ExamSchedulingCreateRequest request);
+public interface SchedulingService<T extends SchedulingDTO> {
+    T createScheduling(T request);
 
-// List<SchedulingDTO> getSchedulesByRoom(String roomId);
+    List<T> getSchedulesByRoom(String roomId);
 
-// List<SchedulingDTO> getSchedulesForTeacher(String teacherId);
+    List<T> getSchedulesByTeacherOrProctor(String userId);
 
-// List<SchedulingDTO> getSchedulesForLevel(String levelId);
+    List<T> getSchedulesByLevel(String levelId);
 
-// void deleteScheduling(String id, SessionType type);
+    Page<T> getScheduleByBranch(String branchId, Pageable page);
 
-// CourseSchedulingDTO updateSimpleScheduling(String id,
-// SimpleSchedulingUpdateRequest request);
+    List<T> getSchedulesByTimetable(String timetableId);
 
-// ExamSchedulingDTO updateExamScheduling(String id, ExamSchedulingUpdateRequest
-// request);
+    List<T> getSchedulesByTimeSlot(String timeSlot);
 
-// boolean checkForSchedulingConflicts(SchedulingConflictCheckRequest request);
-// }
+    void deleteScheduling(String id);
+
+    T updateScheduling(String id,
+            T request);
+
+    List<TimeSlotDTO> getTimeSlots();
+}

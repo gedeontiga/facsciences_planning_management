@@ -1,24 +1,48 @@
 package com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces;
 
+import java.time.Year;
 import java.util.List;
 
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Timetable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.SessionType;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.TimetableDTO;
 
 public interface TimetableService {
-    // TimetableDTO createTimetable(TimetableCreateRequest request);
+	// TimetableDTO createTimetable(TimetableDTO request);
 
-    TimetableDTO getTimetableById(String id);
+	TimetableDTO getTimetableById(String id);
 
-    Timetable getTimetableEntityById(String id);
+	// List<TimetableDTO> getAllTimetablesByAcademicYear(String academicYear,
+	// Pageable
+	// page);
 
-    List<TimetableDTO> getAllTimetables();
+	// List<TimetableDTO> getTimetablesBySemester(String academicYear,
+	// String semester);
 
-    // PlanningDTO getCurrentPlanning();
+	Page<TimetableDTO> getTimetablesByBranch(String academicYear,
+			String branchId, SessionType sessionType, Pageable page);
 
-    // TimetableDTO updateTimetable(String id, TimetableUpdateRequest request);
+	// List<TimetableDTO> getTimetablesByBranchAndSemester(Year
+	// academicYear, String branchId,
+	// String semester);
 
-    void deleteTimetable(String id);
+	// TimetableDTO getTimetablesByLevel(String academicYear, String
+	// levelId,
+	// SessionType sessionType);
 
-    TimetableDTO getDetailedTimetableById(String id);
+	TimetableDTO generateTimetableForLevel(String academicYear, String semester, String levelId,
+			SessionType sessionType);
+
+	TimetableDTO getTimetableByLevelAndSemester(String academicYear, String levelId, String semester,
+			SessionType sessionType);
+
+	// TimetableDTO updateTimetable(String id, TimetableDTO request);
+
+	// void deleteTimetable(String id);
+
+	List<Year> getAllAcademicYears();
+
+	List<String> getSessionTypes();
 }

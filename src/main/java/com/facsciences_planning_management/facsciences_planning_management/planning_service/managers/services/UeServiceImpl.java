@@ -5,12 +5,12 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.facsciences_planning_management.facsciences_planning_management.exceptions.CustomBusinessException;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Level;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Ue;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.LevelRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.UeRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.UeDTO;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.exceptions.ResourceNotFoundException;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces.UeService;
 
 import lombok.RequiredArgsConstructor;
@@ -24,7 +24,7 @@ public class UeServiceImpl implements UeService {
     @Override
     public UeDTO createUe(UeDTO request) {
         Level level = levelRepository.findById(request.levelId())
-                .orElseThrow(() -> new ResourceNotFoundException("Level not found with id: " + request.levelId()));
+                .orElseThrow(() -> new CustomBusinessException("Level not found with id: " + request.levelId()));
 
         Ue ue = Ue.builder()
                 .name(request.name())
@@ -42,21 +42,14 @@ public class UeServiceImpl implements UeService {
     public UeDTO getUeById(String id) {
         return ueRepository.findById(id)
                 .map(Ue::toDTO)
-                .orElseThrow(() -> new ResourceNotFoundException("UE not found with id: " + id));
+                .orElseThrow(() -> new CustomBusinessException("UE not found with id: " + id));
     }
 
     @Override
     public UeDTO getUeByCode(String code) {
         return ueRepository.findByCode(code)
                 .map(Ue::toDTO)
-                .orElseThrow(() -> new ResourceNotFoundException("UE not found with code: " + code));
-    }
-
-    @Override
-    public List<UeDTO> getUesByCategory(String category) {
-        return ueRepository.findByCategory(category).stream()
-                .map(Ue::toDTO)
-                .collect(Collectors.toList());
+                .orElseThrow(() -> new CustomBusinessException("UE not found with code: " + code));
     }
 
     @Override
@@ -90,7 +83,7 @@ public class UeServiceImpl implements UeService {
     @Override
     public UeDTO updateUe(String id, UeDTO request) {
         Ue ue = ueRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("UE not found with id: " + id));
+                .orElseThrow(() -> new CustomBusinessException("UE not found with id: " + id));
 
         if (request.name() != null) {
             ue.setName(request.name());
@@ -114,7 +107,7 @@ public class UeServiceImpl implements UeService {
 
         if (request.levelId() != null) {
             Level level = levelRepository.findById(request.levelId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Level not found with id: " + request.levelId()));
+                    .orElseThrow(() -> new CustomBusinessException("Level not found with id: " + request.levelId()));
             ue.setLevel(level);
         }
 

@@ -15,8 +15,6 @@ public interface UeService {
 
     UeDTO getUeByCode(String code);
 
-    List<UeDTO> getUesByCategory(String category);
-
     List<UeDTO> getUesByCategoryAndLevel(String category, String levelId);
 
     List<UeDTO> getUesByCreditsAndLevel(Integer credits, String levelId);

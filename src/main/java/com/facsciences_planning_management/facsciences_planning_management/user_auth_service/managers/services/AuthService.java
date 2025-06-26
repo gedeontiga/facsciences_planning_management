@@ -4,7 +4,10 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.security.sasl.AuthenticationException;
+
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
@@ -17,7 +20,7 @@ import org.springframework.stereotype.Service;
 import com.facsciences_planning_management.facsciences_planning_management.entities.Users;
 import com.facsciences_planning_management.facsciences_planning_management.entities.repositories.UserRepository;
 import com.facsciences_planning_management.facsciences_planning_management.entities.types.RoleType;
-import com.facsciences_planning_management.facsciences_planning_management.exceptions.EntityNotFoundException;
+import com.facsciences_planning_management.facsciences_planning_management.exceptions.CustomBusinessException;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.entities.Role;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.entities.Validation;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.entities.repositories.RoleRepository;
@@ -25,11 +28,6 @@ import com.facsciences_planning_management.facsciences_planning_management.user_
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.LoginRequest;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.PasswordResetRequest;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.UserRequest;
-import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.exceptions.AccountNotActivatedException;
-import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.exceptions.EmailAlreadyExistsException;
-import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.exceptions.InvalidCredentialsException;
-import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.exceptions.InvalidTokenException;
-import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.exceptions.TokenExpiredException;
 
 import lombok.AllArgsConstructor;
 
@@ -70,10 +68,10 @@ public class AuthService {
     public void activate(String token) {
         Validation activation = validationRepository
                 .findByActivationTokenAndExpiredIsAfter(token, Instant.now())
-                .orElseThrow(() -> new TokenExpiredException("Invalid or expired activation link"));
+                .orElseThrow(() -> new CustomBusinessException("Invalid or expired activation link"));
 
         if (!activation.getActivationToken().equals(token)) {
-            throw new InvalidTokenException("Activation Failed: invalid token");
+            throw new CustomBusinessException("Activation Failed: invalid token");
         }
 
         Users user = activation.getUser();
@@ -82,7 +80,7 @@ public class AuthService {
         validationRepository.delete(activation);
     }
 
-    public Map<String, String> login(LoginRequest request) {
+    public Map<String, String> login(LoginRequest request) throws AuthenticationException {
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.email(), request.password()));
@@ -91,22 +89,22 @@ public class AuthService {
             if (authentication.isAuthenticated()) {
                 return jwtService.generate(request.email());
             }
-            throw new InvalidCredentialsException("Invalid login credentials");
+            throw new AuthenticationException("Invalid login credentials");
         } catch (BadCredentialsException e) {
-            throw new InvalidCredentialsException("Invalid login credentials");
+            throw new AuthenticationException("Invalid login credentials");
         } catch (DisabledException e) {
-            throw new AccountNotActivatedException("User not found or account is not activated");
+            throw new AuthenticationCredentialsNotFoundException("User not found or account is not activated");
         } catch (Exception e) {
-            throw new InvalidCredentialsException("Authentication failed: invalid login credentials");
+            throw new AuthenticationException("Authentication failed: invalid login credentials");
         }
     }
 
     public void requestPasswordReset(String email) {
         Users user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with email: " + email));
+                .orElseThrow(() -> new CustomBusinessException("User not found with email: " + email));
 
         if (!user.isEnabled()) {
-            throw new AccountNotActivatedException("Account not activated");
+            throw new CustomBusinessException("Account not activated");
         }
 
         String token = generateActivationToken();
@@ -117,7 +115,7 @@ public class AuthService {
     public void resetPassword(PasswordResetRequest request) {
         Validation resetValidation = validationRepository
                 .findByActivationTokenAndExpiredIsAfter(request.token(), Instant.now())
-                .orElseThrow(() -> new TokenExpiredException("Invalid or expired reset token"));
+                .orElseThrow(() -> new CustomBusinessException("Invalid or expired reset token"));
 
         Users user = resetValidation.getUser();
         user.setPassword(passwordEncoder.encode(request.newPassword()));
@@ -144,12 +142,12 @@ public class AuthService {
 
     private Role getRoleByType(RoleType roleType) {
         return roleRepository.findByType(roleType)
-                .orElseThrow(() -> new RuntimeException("Role not found: " + roleType));
+                .orElseThrow(() -> new CustomBusinessException("Role not found: " + roleType));
     }
 
     private void validateEmailUniqueness(String email) {
         if (isEmailAlreadyExists(email)) {
-            throw new EmailAlreadyExistsException("Email already registered");
+            throw new CustomBusinessException("Email already registered");
         }
     }
 }

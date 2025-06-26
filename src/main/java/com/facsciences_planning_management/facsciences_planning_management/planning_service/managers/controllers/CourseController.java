@@ -1,7 +1,8 @@
 package com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.controllers;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -27,14 +28,15 @@ public class CourseController {
     private final CourseService courseService;
 
     @GetMapping
-    public ResponseEntity<List<CourseDTO>> getAllCourses() {
-        List<CourseDTO> courses = courseService.getAllCourses();
+    public ResponseEntity<Page<CourseDTO>> getAllCourses(
+            @PageableDefault(size = 10) Pageable page) {
+        Page<CourseDTO> courses = courseService.getAllCourses(page);
         return ResponseEntity.ok(courses);
     }
 
     @GetMapping("/ue/{ueId}")
     public ResponseEntity<CourseDTO> getCourseByUeId(@PathVariable String ueId) {
-        CourseDTO course = courseService.getCourseByUeId(ueId);
+        CourseDTO course = courseService.getCourseByUe(ueId);
         return ResponseEntity.ok(course);
     }
 

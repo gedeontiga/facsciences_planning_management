@@ -10,10 +10,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.facsciences_planning_management.facsciences_planning_management.entities.Users;
 import com.facsciences_planning_management.facsciences_planning_management.entities.repositories.UserRepository;
-import com.facsciences_planning_management.facsciences_planning_management.exceptions.EntityNotFoundException;
-import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.UserResponse;
+import com.facsciences_planning_management.facsciences_planning_management.exceptions.CustomBusinessException;
+import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.UserDTO;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.UserUpdate;
-import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.exceptions.AccountNotActivatedException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -22,11 +21,11 @@ import lombok.RequiredArgsConstructor;
 public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
 
-    public UserResponse getUser() {
+    public UserDTO getUser() {
         String email = ((Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
         Users user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
-        return new UserResponse(user);
+                .orElseThrow(() -> new CustomBusinessException("User not found"));
+        return new UserDTO(user);
     }
 
     @Override
@@ -34,37 +33,35 @@ public class UserService implements UserDetailsService {
     public UserDetails loadUserByUsername(String email) {
         try {
             return userRepository.findByEmailAndEnabledIsTrue(email)
-                    .orElseThrow(() -> new AccountNotActivatedException("User is not activated"));
+                    .orElseThrow(() -> new CustomBusinessException("User is not activated"));
         } catch (Exception e) {
-            if (e instanceof AccountNotActivatedException) {
-                throw e;
+            Users user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new CustomBusinessException("User not found"));
+            if (!user.isEnabled()) {
+                throw new CustomBusinessException("User is not activated");
             }
-            // Check if user exists but is not activated
-            if (userRepository.findByEmail(email).isPresent()) {
-                throw new AccountNotActivatedException("User is not activated");
-            }
-            throw new EntityNotFoundException("User not found");
+            throw new CustomBusinessException("User not found");
         }
     }
 
     public Users getUserByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new EntityNotFoundException("User with email " + email + " not found."));
+                .orElseThrow(() -> new CustomBusinessException("User with email " + email + " not found."));
     }
 
-    public UserResponse updateUser(UserUpdate user) {
+    public UserDTO updateUser(UserUpdate user) {
         String email = ((Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
         Users updatedUser = getUserByEmail(email);
         updatedUser.setFirstName(Optional.ofNullable(user.firstName()).orElse(updatedUser.getFirstName()));
         updatedUser.setLastName(Optional.ofNullable(user.lastName()).orElse(updatedUser.getLastName()));
         updatedUser.setAddress(Optional.ofNullable(user.address()).orElse(updatedUser.getAddress()));
         updatedUser.setPhoneNumber(Optional.ofNullable(user.phoneNumber()).orElse(updatedUser.getPhoneNumber()));
-        return new UserResponse(userRepository.save(updatedUser));
+        return new UserDTO(userRepository.save(updatedUser));
     }
 
     public void deleteUser(String email) {
         if (!userRepository.findByEmail(email).isPresent()) {
-            throw new EntityNotFoundException("Cannot delete: User with email " + email + " not found");
+            throw new CustomBusinessException("Cannot delete: User with email " + email + " not found");
         }
         userRepository.deleteByEmail(email);
     }

@@ -1,5 +1,7 @@
 package com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
@@ -12,6 +14,10 @@ import java.util.Optional;
 @Repository
 public interface RoomRepository extends MongoRepository<Room, String> {
     boolean existsByCode(String code);
+
+    List<Room> findAllByAvailabilityTrue();
+
+    Page<Room> findAllByAvailabilityTrue(Pageable page);
 
     List<Room> findByCapacityIsGreaterThanEqualAndAvailabilityTrue(Long capacity);
 

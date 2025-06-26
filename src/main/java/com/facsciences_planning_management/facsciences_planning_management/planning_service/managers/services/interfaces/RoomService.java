@@ -2,10 +2,13 @@ package com.facsciences_planning_management.facsciences_planning_management.plan
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.RoomDTO;
 
 public interface RoomService {
-    List<RoomDTO> getAllRooms();
+    Page<RoomDTO> getAllRooms(Pageable page);
 
     RoomDTO getRoomById(String id);
 
@@ -13,18 +16,12 @@ public interface RoomService {
 
     RoomDTO updateRoom(String id, RoomDTO roomDTO);
 
-    void deleteRoom(String id);
+    void updateRoomAvailability(String id);
 
-    // List<RoomDTO> findAvailableRooms(AvailableRoomsRequestDTO request);
+    void deleteRoom(String id);
 
     List<RoomDTO> getRoomsByCapacity(Long minimumCapacity);
 
     List<RoomDTO> getRoomsByType(String type);
-
-    // boolean isRoomAvailable(String roomId, LocalTime startTime, LocalTime
-    // endTime, DayOfWeek day);
-
-    // boolean isRoomAvailableForDate(String roomId, LocalTime startTime, LocalTime
-    // endTime, LocalDateTime date);
 
 }

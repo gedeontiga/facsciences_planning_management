@@ -2,6 +2,7 @@ package com.facsciences_planning_management.facsciences_planning_management.plan
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.DocumentReference;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,4 +19,7 @@ public class Department {
     private String id;
     private String name;
     private String code;
+
+    @DocumentReference(lazy = true, collection = "branches")
+    private Branch branch;
 }

@@ -6,6 +6,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
 
 import com.facsciences_planning_management.facsciences_planning_management.entities.Users;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.TimeSlot;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.ExamSchedulingDTO;
 
 import lombok.AllArgsConstructor;
@@ -23,11 +24,12 @@ import lombok.experimental.SuperBuilder;
 @Document(collection = "exam_schedules")
 @EqualsAndHashCode(callSuper = false)
 public final class ExamScheduling extends Scheduling {
-    @DocumentReference(lazy = true, collection = "users")
+    @DocumentReference(collection = "users")
     private Users proctor;
     private LocalDateTime sessionDate;
-    @DocumentReference(lazy = true, collection = "ues")
+    @DocumentReference(collection = "ues")
     private Ue ue;
+    private TimeSlot.ExamTimeSlot timeSlot;
 
     @Override
     public ExamSchedulingDTO toDTO() {
