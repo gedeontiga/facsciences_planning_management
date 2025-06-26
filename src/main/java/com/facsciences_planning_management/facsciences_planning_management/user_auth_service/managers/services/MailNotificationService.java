@@ -111,11 +111,11 @@ public class MailNotificationService {
     }
 
     private String getFrontendUrl() {
-        return environment.getProperty("app.frontend-url", "https://app-planning-uy1-web.vercel.app");
+        return environment.getProperty("app.frontend-url");
     }
 
     private String getFromEmail() {
-        return environment.getProperty("mail.from", "gedeon.ambomo@facsciences-uy1.cm");
+        return environment.getProperty("mail.from");
     }
 
     private String buildAccountCreationEmailContent(String firstName, String email, String defaultPassword, String role,

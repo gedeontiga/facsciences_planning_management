@@ -9,8 +9,10 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 import java.util.List;
 
 @Repository
-public interface DepartmentRepository extends MongoRepository<Department, String> {
+public interface DepartmentRepository extends MongoRepository<Department, String>, DepartmentRepositoryCustom {
     Optional<Department> findByCode(String code);
+}
 
-    List<Department> findByBranch_Faculty_Id(String facultyId);
+interface DepartmentRepositoryCustom {
+    List<Department> findByBranchFacultyId(String facultyId);
 }

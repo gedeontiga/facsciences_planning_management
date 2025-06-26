@@ -1,6 +1,5 @@
 package com.facsciences_planning_management.facsciences_planning_management.planning_service.entities;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -31,14 +30,14 @@ public class Timetable {
     private String description;
     @Indexed
     private SessionType sessionType;
-    private LocalDate startDate;
     @DocumentReference
     private Set<Scheduling> schedules;
     @DocumentReference(collection = "levels")
     private Level level;
     @Indexed
     private String academicYear;
-    private String semester;
+    @Indexed
+    private Semester semester;
     @CreatedDate
     private LocalDateTime createdAt;
     @LastModifiedDate
@@ -46,6 +45,10 @@ public class Timetable {
     @Indexed
     @Builder.Default
     private boolean used = true;
+
+    public enum Semester {
+        SEMESTER_1, SEMESTER_2, SEMESTER_3, SEMESTER_4
+    };
 
     public TimetableDTO toDTO() {
         return TimetableDTO.fromTimetable(this);

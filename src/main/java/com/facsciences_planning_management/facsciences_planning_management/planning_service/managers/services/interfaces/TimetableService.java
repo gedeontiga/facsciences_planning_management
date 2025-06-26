@@ -1,12 +1,12 @@
 package com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces;
 
-import java.time.Year;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.SessionType;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.TimeSlotDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.TimetableDTO;
 
 public interface TimetableService {
@@ -23,6 +23,8 @@ public interface TimetableService {
 
 	Page<TimetableDTO> getTimetablesByBranch(String academicYear,
 			String branchId, SessionType sessionType, Pageable page);
+
+	String createAcademicYear(String label);
 
 	// List<TimetableDTO> getTimetablesByBranchAndSemester(Year
 	// academicYear, String branchId,
@@ -42,7 +44,15 @@ public interface TimetableService {
 
 	// void deleteTimetable(String id);
 
-	List<Year> getAllAcademicYears();
+	List<String> getAllAcademicYears();
 
 	List<String> getSessionTypes();
+
+	List<TimeSlotDTO> getCoursesTimeSlots();
+
+	List<TimeSlotDTO> getExamTimeSlots();
+
+	List<String> getSemestersForCourseTimetable();
+
+	List<String> getSemestersForExamTimetable();
 }

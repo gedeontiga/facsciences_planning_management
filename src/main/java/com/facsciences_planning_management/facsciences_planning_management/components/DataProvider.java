@@ -17,7 +17,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.facsciences_planning_management.facsciences_planning_management.entities.Teacher;
 import com.facsciences_planning_management.facsciences_planning_management.entities.Users;
+import com.facsciences_planning_management.facsciences_planning_management.entities.repositories.TeacherRepository;
 import com.facsciences_planning_management.facsciences_planning_management.entities.repositories.UserRepository;
 import com.facsciences_planning_management.facsciences_planning_management.entities.types.RoleType;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Branch;
@@ -47,6 +49,8 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 @RequiredArgsConstructor
 public class DataProvider {
+
+    private final TeacherRepository teacherRepository;
 
     private static final String FACULTY_CODE = "FACSCIENCES";
     private static final String FACULTY_NAME = "Faculté Des Sciences";
@@ -85,9 +89,9 @@ public class DataProvider {
             }
             Faculty faculty = createOrGetFaculty();
             Branch branch = createOrGetBranch(faculty);
-            createOrGetDepartment(branch);
+            Department department = createOrGetDepartment(branch);
             loadRoles();
-            loadUsersFromJson();
+            loadUsersFromJson(department);
             loadRoomsFromJson(faculty);
             loadSubjectsAndRelatedData(faculty, branch);
             log.info("Initial data loading completed successfully");
@@ -149,7 +153,7 @@ public class DataProvider {
         log.info("Roles loading completed");
     }
 
-    private void loadUsersFromJson() throws IOException {
+    private void loadUsersFromJson(Department department) throws IOException {
         if (userRepository.count() > 0) {
             log.info("Users already exist, skipping user initialization");
             return;
@@ -158,7 +162,7 @@ public class DataProvider {
         log.info("Loading users from data sources...");
 
         loadDefaultAdmins();
-        loadTeachersFromSubjectData();
+        loadTeachersFromSubjectData(department);
 
         log.info("Users loading completed");
     }
@@ -208,7 +212,7 @@ public class DataProvider {
         log.debug("Created admin user: {}", email);
     }
 
-    private void loadTeachersFromSubjectData() throws IOException {
+    private void loadTeachersFromSubjectData(Department department) throws IOException {
         log.info("Loading teachers from subject data...");
 
         Resource resource = new ClassPathResource("data/subjects.json");
@@ -221,7 +225,7 @@ public class DataProvider {
 
         log.info("Found {} unique teacher names", teacherNames.size());
 
-        createTeacherUsers(teacherNames, teacherRole);
+        createTeacherUsers(teacherNames, teacherRole, department);
 
         log.info("Teachers loading completed");
     }
@@ -310,13 +314,13 @@ public class DataProvider {
         }
     }
 
-    private void createTeacherUsers(Set<String> teacherNames, Role teacherRole) {
+    private void createTeacherUsers(Set<String> teacherNames, Role teacherRole, Department department) {
         int created = 0;
         int skipped = 0;
 
         for (String fullName : teacherNames) {
             try {
-                if (createTeacherUser(fullName, teacherRole)) {
+                if (createTeacherUser(fullName, teacherRole, department)) {
                     created++;
                 } else {
                     skipped++;
@@ -330,7 +334,7 @@ public class DataProvider {
         log.info("Teacher creation summary - Created: {}, Skipped: {}", created, skipped);
     }
 
-    private boolean createTeacherUser(String fullName, Role teacherRole) {
+    private boolean createTeacherUser(String fullName, Role teacherRole, Department department) {
         if (fullName == null || fullName.trim().isEmpty()) {
             return false;
         }
@@ -345,7 +349,7 @@ public class DataProvider {
             return false;
         }
 
-        Users teacher = Users.builder()
+        Teacher teacher = Teacher.builder()
                 .firstName(firstName)
                 .lastName(lastName)
                 .address(DEFAULT_ADDRESS)
@@ -353,10 +357,11 @@ public class DataProvider {
                 .email(email)
                 .enabled(true)
                 .password(passwordEncoder.encode(firstName.toLowerCase() + DEFAULT_PASSWORD_SUFFIX))
+                .department(department)
                 .role(teacherRole)
                 .build();
 
-        userRepository.save(teacher);
+        teacherRepository.save(teacher);
         log.debug("Created teacher user: {} ({})", email, fullName);
         return true;
     }

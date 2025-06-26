@@ -1,7 +1,5 @@
 package com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos;
 
-import java.time.LocalTime;
-
 public sealed interface SchedulingDTO permits CourseSchedulingDTO, ExamSchedulingDTO {
     String id();
 
@@ -17,7 +15,7 @@ public sealed interface SchedulingDTO permits CourseSchedulingDTO, ExamSchedulin
 
     String timeSlotLabel();
 
-    LocalTime startTime();
+    String startTime();
 
-    LocalTime endTime();
+    String endTime();
 }

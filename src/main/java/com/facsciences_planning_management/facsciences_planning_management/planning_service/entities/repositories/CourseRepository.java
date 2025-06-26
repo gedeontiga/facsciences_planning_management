@@ -13,14 +13,16 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 
 @Repository
 public interface CourseRepository extends
-        MongoRepository<Course, String> {
+        MongoRepository<Course, String>, CourseRepositoryCustom {
     Page<Course> findAllByObsoleteFalse(Pageable page);
 
     List<Course> findByObsoleteFalseAndTeacherId(String teacherId);
 
     Optional<Course> findByObsoleteFalseAndUeId(String ueId);
 
-    List<Course> findByUe_Level_IdAndObsoleteIsFalse(String levelId);
-
     boolean existsByUe(Ue ue);
+}
+
+interface CourseRepositoryCustom {
+    List<Course> findByObsoleteFalseAndUeLevelId(String levelId);
 }

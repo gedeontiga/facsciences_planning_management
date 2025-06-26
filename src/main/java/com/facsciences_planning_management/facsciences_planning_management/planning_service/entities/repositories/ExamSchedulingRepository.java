@@ -10,13 +10,16 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 
 @Repository
 public interface ExamSchedulingRepository extends
-        SchedulingRepository<ExamScheduling, String> {
+        SchedulingRepository<ExamScheduling, String>,
+        ExamSchedulingRepositoryCustom {
 
     List<ExamScheduling> findByTimetableUsedTrueAndTimeSlot(ExamTimeSlot timeSlot);
 
-    Page<ExamScheduling> findByTimetableUsedTrueAndUe_Level_Branch_Id(String branchId, Pageable page);
-
-    List<ExamScheduling> findByTimetableUsedTrueAndUe_Level_Id(String levelId);
-
     List<ExamScheduling> findByTimetableUsedTrueAndProctorId(String proctorId);
+}
+
+interface ExamSchedulingRepositoryCustom {
+    Page<ExamScheduling> findByTimetableUsedTrueAndUeLevelBranchId(String branchId, Pageable page);
+
+    List<ExamScheduling> findByTimetableUsedTrueAndUeLevelId(String levelId);
 }

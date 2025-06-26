@@ -5,6 +5,27 @@
       "type": "java.lang.String",
       "description": "A description for 'app.frontend-url'",
       "defaultValue": "https://app-planning-uy1-web.vercel.app"
+    },
+    {
+      "name": "mail.from",
+      "type": "java.lang.String",
+      "description": "A description for 'mail.from'",
+      "defaultValue": ""
+    },
+    {
+      "name": "jwt.secret",
+      "type": "java.lang.String",
+      "description": "A description for 'jwt.secret'"
+    },
+    {
+      "name": "jwt.expiration.hours",
+      "type": "java.lang.String",
+      "description": "A description for 'jwt.expiration.hours'"
+    },
+    {
+      "name": "app.default-password-end",
+      "type": "java.lang.String",
+      "description": "A description for 'app.default-password-end'"
     }
   ]
 }

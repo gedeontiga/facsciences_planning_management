@@ -4,15 +4,13 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.security.sasl.AuthenticationException;
-
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -89,13 +87,13 @@ public class AuthService {
             if (authentication.isAuthenticated()) {
                 return jwtService.generate(request.email());
             }
-            throw new AuthenticationException("Invalid login credentials");
+            throw new BadCredentialsException("Invalid login credentials");
         } catch (BadCredentialsException e) {
-            throw new AuthenticationException("Invalid login credentials");
+            throw new BadCredentialsException("Invalid login credentials");
         } catch (DisabledException e) {
-            throw new AuthenticationCredentialsNotFoundException("User not found or account is not activated");
+            throw new BadCredentialsException("User not found or account is not activated");
         } catch (Exception e) {
-            throw new AuthenticationException("Authentication failed: invalid login credentials");
+            throw new BadCredentialsException("Authentication failed: invalid login credentials");
         }
     }
 

@@ -1,6 +1,6 @@
 package com.facsciences_planning_management.facsciences_planning_management.planning_service.entities;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
@@ -26,7 +26,7 @@ import lombok.experimental.SuperBuilder;
 public final class ExamScheduling extends Scheduling {
     @DocumentReference(collection = "users")
     private Users proctor;
-    private LocalDateTime sessionDate;
+    private LocalDate sessionDate;
     @DocumentReference(collection = "ues")
     private Ue ue;
     private TimeSlot.ExamTimeSlot timeSlot;

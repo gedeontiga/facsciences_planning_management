@@ -1,9 +1,7 @@
 package com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos;
 
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.ExamScheduling;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.validators.interfaces.ValidDate;
 
 public record ExamSchedulingDTO(
 		String id,
@@ -13,11 +11,11 @@ public record ExamSchedulingDTO(
 		String ueCode,
 		String timetableId,
 		String timeSlotLabel,
-		LocalTime startTime,
-		LocalTime endTime,
+		String startTime,
+		String endTime,
 		String proctorId,
 		String proctorName,
-		LocalDateTime sessionDate) implements SchedulingDTO {
+		@ValidDate String sessionDate) implements SchedulingDTO {
 	public static ExamSchedulingDTO fromExamScheduling(ExamScheduling entity) {
 		return new ExamSchedulingDTO(
 				entity.getId(),
@@ -27,10 +25,10 @@ public record ExamSchedulingDTO(
 				entity.getUe().getCode(),
 				entity.getTimetable().getId(),
 				entity.getTimeSlot().name(),
-				entity.getTimeSlot().getStartTime(),
-				entity.getTimeSlot().getEndTime(),
+				entity.getTimeSlot().getStartTime().toString(),
+				entity.getTimeSlot().getEndTime().toString(),
 				entity.getProctor().getId(),
 				entity.getProctor().getFirstName() + " " + entity.getProctor().getLastName(),
-				entity.getSessionDate());
+				entity.getSessionDate().toString());
 	}
 }

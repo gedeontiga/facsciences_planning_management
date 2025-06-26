@@ -3,6 +3,7 @@ package com.facsciences_planning_management.facsciences_planning_management.user
 import org.springframework.web.bind.annotation.RestController;
 
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.RoleDTO;
+import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.TeacherDTO;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.UserDTO;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.services.AdminServices;
 import lombok.RequiredArgsConstructor;
@@ -12,11 +13,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PutMapping;
 
 @RestController
 @RequiredArgsConstructor
@@ -40,6 +44,25 @@ public class AdminController {
     @GetMapping("/roles")
     public ResponseEntity<List<RoleDTO>> getAllRoles() {
         return ResponseEntity.ok().body(adminServices.getAllRoles());
+    }
+
+    @PutMapping("disable-user/{id}")
+    public ResponseEntity<String> putMethodName(@PathVariable String id, @RequestBody String entity) {
+        adminServices.disableUser(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/delete-user/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable String id) {
+        adminServices.deleteUser(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/teachers/department/{departmentId}")
+    public ResponseEntity<Page<TeacherDTO>> getTeachersByDepartment(
+            @PathVariable String departmentId,
+            @PageableDefault(size = 10) Pageable page) {
+        return ResponseEntity.ok(adminServices.getTeachersByDepartment(departmentId, page));
     }
 
 }

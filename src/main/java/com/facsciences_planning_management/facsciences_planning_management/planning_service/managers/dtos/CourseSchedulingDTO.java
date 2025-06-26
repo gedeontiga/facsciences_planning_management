@@ -1,9 +1,7 @@
 package com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos;
 
-import java.time.DayOfWeek;
-import java.time.LocalTime;
-
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.CourseScheduling;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.validators.interfaces.ValidDayOfWeek;
 
 public record CourseSchedulingDTO(
 		String id,
@@ -13,11 +11,11 @@ public record CourseSchedulingDTO(
 		String ueCode,
 		String timetableId,
 		String timeSlotLabel,
-		LocalTime startTime,
-		LocalTime endTime,
+		String startTime,
+		String endTime,
 		String teacherId,
 		String teacherName,
-		DayOfWeek day) implements SchedulingDTO {
+		@ValidDayOfWeek String day) implements SchedulingDTO {
 	public static CourseSchedulingDTO fromEntity(CourseScheduling entity) {
 		return new CourseSchedulingDTO(
 				entity.getId(),
@@ -27,11 +25,11 @@ public record CourseSchedulingDTO(
 				entity.getAssignedCourse().getUe().getName(),
 				entity.getTimetable().getId(),
 				entity.getTimeSlot().name(),
-				entity.getTimeSlot().getStartTime(),
-				entity.getTimeSlot().getEndTime(),
+				entity.getTimeSlot().getStartTime().toString(),
+				entity.getTimeSlot().getEndTime().toString(),
 				entity.getAssignedCourse().getTeacher().getId(),
 				entity.getAssignedCourse().getTeacher().getFirstName() + " "
 						+ entity.getAssignedCourse().getTeacher().getLastName(),
-				entity.getDay());
+				entity.getDay().toString());
 	}
 }

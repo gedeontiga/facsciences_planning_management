@@ -6,6 +6,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Timetable;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Timetable.Semester;
 
 import java.util.List;
 import java.util.Optional;
@@ -13,15 +14,18 @@ import java.util.Optional;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.SessionType;
 
 @Repository
-public interface TimetableRepository extends MongoRepository<Timetable, String> {
-        List<Timetable> findByAcademicYearAndSemester(String academicYear, String semester);
+public interface TimetableRepository extends MongoRepository<Timetable, String>, TimetableRepositoryCustom {
+        List<Timetable> findByAcademicYearAndSemester(String academicYear, Semester semester);
 
-        Optional<Timetable> findByAcademicYearAndSemesterAndLevelIdAndSessionTypeAndUsedTrue(String academicYear,
-                        String semester,
+        boolean existsByAcademicYearAndSemesterAndLevelIdAndSessionType(String academicYear, Semester semester,
                         String levelId, SessionType sessionType);
 
-        Page<Timetable> findByAcademicYearAndSessionTypeAndUsedTrueAndLevel_Branch_Id(String academicYear,
-                        SessionType sessionType, String branchId, Pageable page);
+        Optional<Timetable> findByAcademicYearAndSemesterAndLevelIdAndSessionTypeAndUsedTrue(String academicYear,
+                        Semester semester,
+                        String levelId, SessionType sessionType);
+}
 
-        List<Integer> findDistinctByAcademicYearOrderByAcademicYearDesc();
+interface TimetableRepositoryCustom {
+        Page<Timetable> findByAcademicYearAndSessionTypeAndUsedTrueAndLevelBranchId(String academicYear,
+                        SessionType sessionType, String branchId, Pageable page);
 }

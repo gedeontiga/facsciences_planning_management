@@ -58,7 +58,7 @@ public class FacultyServiceImpl implements FacultyService {
         if (!facultyRepository.existsById(facultyId)) {
             throw new CustomBusinessException("Faculty not found with id: " + facultyId);
         }
-        return departmentRepository.findByBranch_Faculty_Id(facultyId)
+        return departmentRepository.findByBranchFacultyId(facultyId)
                 .stream()
                 .map(DepartmentDTO::fromDepartment)
                 .collect(Collectors.toList());

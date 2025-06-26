@@ -1,7 +1,5 @@
 package com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -17,11 +15,10 @@ public record TimetableDTO(
 		String levelId,
 		String levelCode,
 		String sessionType,
-		LocalDate startDate,
 		@Singular Set<SchedulingDTO> schedules,
 		String academicYear,
 		String semester,
-		LocalDateTime createdAt) {
+		String createdAt) {
 	public static TimetableDTO fromTimetable(final Timetable entity) {
 		return new TimetableDTO(entity.getId(),
 				entity.getName(),
@@ -29,12 +26,11 @@ public record TimetableDTO(
 				entity.getLevel().getId(),
 				entity.getLevel().getCode(),
 				entity.getSessionType().name(),
-				entity.getStartDate(),
 				entity.getSchedules().stream()
 						.map(Scheduling::toDTO)
 						.collect(Collectors.toSet()),
 				entity.getAcademicYear(),
-				entity.getSemester(),
-				entity.getCreatedAt());
+				entity.getSemester().name(),
+				entity.getCreatedAt().toString());
 	}
 }

@@ -10,15 +10,19 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 
 @Repository
 public interface CourseSchedulingRepository extends
-                SchedulingRepository<CourseScheduling, String> {
-        List<CourseScheduling> findByAssignedCourse_Teacher_IdAndAssignedCourse_ObsoleteFalse(
-                        String teacherId);
+		SchedulingRepository<CourseScheduling, String>,
+		CourseSchedulingRepositoryCustom {
 
-        List<CourseScheduling> findByAssignedCourse_ObsoleteFalseAndAssignedCourse_Ue_Level_Id(String levelId);
+	List<CourseScheduling> findByTimetableUsedTrueAndTimeSlot(CourseTimeSlot timeSlot);
 
-        Page<CourseScheduling> findByAssignedCourse_ObsoleteFalseAndAssignedCourse_Ue_Level_Branch_Id(
-                        String branchId,
-                        Pageable page);
+	List<CourseScheduling> findByAssignedCourseTeacherIdAndAssignedCourseObsoleteFalse(
+			String teacherId);
+}
 
-        List<CourseScheduling> findByTimetableUsedTrueAndTimeSlot(CourseTimeSlot timeSlot);
+interface CourseSchedulingRepositoryCustom {
+	List<CourseScheduling> findByAssignedCourseObsoleteFalseAndAssignedCourseUeLevelId(String levelId);
+
+	Page<CourseScheduling> findByAssignedCourseObsoleteFalseAndAssignedCourseUeLevelBranchId(
+			String branchId,
+			Pageable page);
 }

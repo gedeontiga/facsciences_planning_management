@@ -17,7 +17,10 @@ import com.google.ortools.sat.LinearExprBuilder;
 import com.google.ortools.sat.Literal;
 
 import java.time.DayOfWeek;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -67,8 +70,12 @@ public class TimetableSolverService {
 
         // Constraint 2: A level cannot have two classes at the same time.
         log.info("Applying Constraint 2: No conflicts for levels.");
-        Map<String, Level> levels = courses.stream().map(c -> c.getUe().getLevel()).distinct()
-                .collect(Collectors.toMap(Level::getId, l -> l));
+        // --- FIX APPLIED HERE ---
+        // Use a merge function to handle duplicate keys.
+        Map<String, Level> levels = courses.stream()
+                .map(c -> c.getUe().getLevel())
+                .collect(Collectors.toMap(Level::getId, l -> l, (existing, replacement) -> existing));
+
         for (Level level : levels.values()) {
             for (DayOfWeek day : days) {
                 for (CourseTimeSlot timeSlot : timeSlots) {
@@ -87,8 +94,12 @@ public class TimetableSolverService {
 
         // Constraint 3: A teacher cannot teach two classes at the same time.
         log.info("Applying Constraint 3: No conflicts for teachers.");
-        Map<String, Users> teachers = courses.stream().map(Course::getTeacher).distinct()
-                .collect(Collectors.toMap(Users::getId, t -> t));
+        // --- FIX APPLIED HERE ---
+        // Use a merge function to handle duplicate keys.
+        Map<String, Users> teachers = courses.stream()
+                .map(Course::getTeacher)
+                .collect(Collectors.toMap(Users::getId, t -> t, (existing, replacement) -> existing));
+
         for (Users teacher : teachers.values()) {
             for (DayOfWeek day : days) {
                 for (CourseTimeSlot timeSlot : timeSlots) {
@@ -126,7 +137,6 @@ public class TimetableSolverService {
         // --- OBJECTIVE FUNCTION (SOFT CONSTRAINTS) ---
         log.info("Defining Objective Function: Maximize morning schedules.");
         // Weights: Higher for earlier slots, penalty for the last slot
-        // p1 (COURSE_SLOT_1): 10, p2: 8, p3: 4, p4: 2, p5 (COURSE_SLOT_5): -5
         Map<CourseTimeSlot, Integer> slotWeights = Map.of(
                 CourseTimeSlot.COURSE_SLOT_1, 10,
                 CourseTimeSlot.COURSE_SLOT_2, 8,
@@ -149,6 +159,8 @@ public class TimetableSolverService {
         // --- SOLVE ---
         log.info("Starting solver...");
         CpSolver solver = new CpSolver();
+        // Set a time limit for the solver to avoid it running indefinitely
+        solver.getParameters().setMaxTimeInSeconds(30.0);
         CpSolverStatus status = solver.solve(model);
         log.info("Solver finished with status: {}", status);
 

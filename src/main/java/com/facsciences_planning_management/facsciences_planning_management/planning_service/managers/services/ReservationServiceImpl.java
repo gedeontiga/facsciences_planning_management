@@ -21,7 +21,9 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.ReservationResponseDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces.ReservationService;
 
+import java.time.DayOfWeek;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Service
 @RequiredArgsConstructor
@@ -48,9 +50,9 @@ public class ReservationServiceImpl implements ReservationService {
                 .sessionType(request.sessionType())
                 .status(RequestStatus.PENDING)
                 .preferredRoom(room)
-                .preferredStartTime(request.startTime())
-                .preferredEndTime(request.endTime())
-                .preferredDay(request.day())
+                .preferredStartTime(LocalTime.parse(request.startTime()))
+                .preferredEndTime(LocalTime.parse(request.endTime()))
+                .preferredDay(DayOfWeek.valueOf(request.day()))
                 .createdAt(LocalDateTime.now())
                 .build();
 

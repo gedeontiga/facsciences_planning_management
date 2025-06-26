@@ -12,16 +12,16 @@ import org.springframework.security.core.userdetails.UserDetails;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.entities.Role;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
 @Getter
 @Setter
-@Builder
+@SuperBuilder
 @NoArgsConstructor
 @RequiredArgsConstructor
 @AllArgsConstructor

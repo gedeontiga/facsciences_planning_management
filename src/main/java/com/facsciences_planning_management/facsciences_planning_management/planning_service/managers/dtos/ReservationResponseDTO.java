@@ -1,8 +1,6 @@
 package com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos;
 
 import java.time.DayOfWeek;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Reservation;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Reservation.RequestStatus;
@@ -16,13 +14,13 @@ public record ReservationResponseDTO(
 		RequestStatus status,
 		String preferredRoomId,
 		String roomCode,
-		LocalTime preferredStartTime,
-		LocalTime preferredEndTime,
+		String preferredStartTime,
+		String preferredEndTime,
 		DayOfWeek preferredDay,
 		String processedById,
 		String adminName,
-		LocalDateTime createdAt,
-		LocalDateTime processedAt,
+		String createdAt,
+		String processedAt,
 		String adminComment) {
 
 	public static ReservationResponseDTO fromReservation(Reservation reservation) {
@@ -38,13 +36,13 @@ public record ReservationResponseDTO(
 				reservation.getStatus(),
 				reservation.getPreferredRoom().getId(),
 				reservation.getPreferredRoom().getCode(),
-				reservation.getPreferredStartTime(),
-				reservation.getPreferredEndTime(),
+				reservation.getPreferredStartTime().toString(),
+				reservation.getPreferredEndTime().toString(),
 				reservation.getPreferredDay(),
 				reservation.getProcessedBy().getId(),
 				adminName,
-				reservation.getCreatedAt(),
-				reservation.getProcessedAt(),
+				reservation.getCreatedAt().toString(),
+				reservation.getProcessedAt().toString(),
 				reservation.getAdminComment());
 	}
 }

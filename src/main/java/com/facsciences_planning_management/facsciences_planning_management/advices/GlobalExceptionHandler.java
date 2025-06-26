@@ -54,7 +54,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleAuthenticationException(AuthenticationException ex) {
         ErrorResponse errorResponse = new ErrorResponse(
                 "Authentication Error",
-                "Invalid credentials or authentication failed",
+                "Invalid credentials",
                 HttpStatus.UNAUTHORIZED.value(),
                 LocalDateTime.now().toString());
         return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);

@@ -22,6 +22,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -51,7 +52,7 @@ public class ExamSchedulingServiceImpl implements SchedulingService<ExamScheduli
 				.timetable(timetable)
 				.room(room)
 				.timeSlot(TimeSlot.ExamTimeSlot.valueOf(request.timeSlotLabel()))
-				.sessionDate(request.sessionDate())
+				.sessionDate(LocalDate.parse(request.sessionDate()))
 				.ue(ue)
 				.proctor(proctor)
 				.build();
@@ -75,14 +76,14 @@ public class ExamSchedulingServiceImpl implements SchedulingService<ExamScheduli
 
 	@Override
 	public List<ExamSchedulingDTO> getSchedulesByLevel(String levelId) {
-		return schedulingRepository.findByTimetableUsedTrueAndUe_Level_Id(levelId).stream()
+		return schedulingRepository.findByTimetableUsedTrueAndUeLevelId(levelId).stream()
 				.map(ExamScheduling::toDTO)
 				.collect(Collectors.toList());
 	}
 
 	@Override
 	public Page<ExamSchedulingDTO> getScheduleByBranch(String branchId, Pageable page) {
-		return schedulingRepository.findByTimetableUsedTrueAndUe_Level_Branch_Id(branchId, page)
+		return schedulingRepository.findByTimetableUsedTrueAndUeLevelBranchId(branchId, page)
 				.map(ExamScheduling::toDTO);
 	}
 
@@ -121,7 +122,7 @@ public class ExamSchedulingServiceImpl implements SchedulingService<ExamScheduli
 		scheduling.setRoom(room);
 		scheduling.setProctor(proctor);
 		scheduling.setTimeSlot(TimeSlot.ExamTimeSlot.valueOf(request.timeSlotLabel()));
-		scheduling.setSessionDate(request.sessionDate());
+		scheduling.setSessionDate(LocalDate.parse(request.sessionDate()));
 
 		return schedulingRepository.save(scheduling).toDTO();
 	}
@@ -129,7 +130,7 @@ public class ExamSchedulingServiceImpl implements SchedulingService<ExamScheduli
 	@Override
 	public List<TimeSlotDTO> getTimeSlots() {
 		return Arrays.stream(TimeSlot.ExamTimeSlot.values())
-				.map(ts -> new TimeSlotDTO(ts.getStartTime(), ts.getEndTime(), ts.getDuration(), ts.name()))
+				.map(TimeSlotDTO::fromTimeSlot)
 				.collect(Collectors.toList());
 	}
 }
