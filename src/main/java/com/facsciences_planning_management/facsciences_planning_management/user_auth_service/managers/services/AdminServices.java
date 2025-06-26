@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class AdminServices {
 
-    @Value("${app.default-password-end}")
+    @Value("${app.password-suffix}")
     private String passwordEnd;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;

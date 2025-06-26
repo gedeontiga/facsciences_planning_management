@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.io.ClassPathResource;
@@ -60,7 +61,8 @@ public class DataProvider {
     private static final String BRANCH_NAME = "Informatique";
     private static final String DOMAIN_NAME = "@facsciences-uy1.cm";
 
-    private static final String DEFAULT_PASSWORD_SUFFIX = ".password123!";
+    @Value("${app.password-suffix}")
+    private String passwordSuffix;
     private static final String DEFAULT_ADDRESS = "UY1";
     private static final String DEFAULT_PHONE = "000000000";
 
@@ -82,9 +84,9 @@ public class DataProvider {
     @EventListener(ApplicationReadyEvent.class)
     public void loadInitialData() {
         try {
-            log.info("Starting initial data loading...");
+
             if (isDataAlreadyLoaded()) {
-                log.info("Data already loaded, skipping initialization");
+                log.info("Initial data already loaded");
                 return;
             }
             Faculty faculty = createOrGetFaculty();
@@ -104,14 +106,14 @@ public class DataProvider {
     private void createCourseFromNode(JsonNode subjectNode, Ue ue) {
         String teacherName = getTextValue(subjectNode, "Course Lecturer");
         if (teacherName == null || teacherName.trim().isEmpty() || teacherName.equalsIgnoreCase("null")) {
-            log.debug("No valid Course Lecturer for UE: {}, skipping course creation", ue.getCode());
+
             return;
         }
 
         String email = generateEmailFromName(teacherName) + DOMAIN_NAME;
         Users teacher = userRepository.findByEmail(email)
                 .orElseGet(() -> {
-                    log.warn("Teacher not found for email: {}, creating new teacher user", email);
+
                     Role teacherRole = roleRepository.findByType(RoleType.TEACHER)
                             .orElseThrow(() -> new RuntimeException("Teacher role not found"));
                     String[] nameParts = parseFullName(teacherName);
@@ -122,7 +124,7 @@ public class DataProvider {
                             .phoneNumber(DEFAULT_PHONE)
                             .email(email)
                             .enabled(true)
-                            .password(passwordEncoder.encode(nameParts[0].toLowerCase() + DEFAULT_PASSWORD_SUFFIX))
+                            .password(passwordEncoder.encode(nameParts[0].toLowerCase() + passwordSuffix))
                             .role(teacherRole)
                             .build();
                     return userRepository.save(newTeacher);
@@ -136,39 +138,33 @@ public class DataProvider {
                 .build();
 
         courseRepository.save(course);
-        log.debug("Created course for UE: {} with teacher: {}", ue.getCode(), teacher.getEmail());
+
     }
 
     private void loadRoles() {
-        log.info("Loading roles...");
 
         Arrays.stream(RoleType.values()).forEach(roleType -> {
             if (!roleRepository.existsByType(roleType)) {
                 Role role = new Role(roleType);
                 roleRepository.save(role);
-                log.debug("Created role: {}", roleType);
+
             }
         });
 
-        log.info("Roles loading completed");
     }
 
     private void loadUsersFromJson(Department department) throws IOException {
         if (userRepository.count() > 0) {
-            log.info("Users already exist, skipping user initialization");
+
             return;
         }
-
-        log.info("Loading users from data sources...");
 
         loadDefaultAdmins();
         loadTeachersFromSubjectData(department);
 
-        log.info("Users loading completed");
     }
 
     private void loadDefaultAdmins() {
-        log.info("Loading default administrators...");
 
         Role adminRole = roleRepository.findByType(RoleType.ADMIN)
                 .orElseThrow(() -> new RuntimeException("Admin role not found"));
@@ -179,11 +175,10 @@ public class DataProvider {
             try {
                 createAdminUser(username, adminRole);
             } catch (Exception e) {
-                log.warn("Failed to create admin user: {}", username, e);
+
             }
         });
 
-        log.info("Default administrators loading completed");
     }
 
     private void createAdminUser(String username, Role adminRole) {
@@ -193,7 +188,7 @@ public class DataProvider {
         String email = generateEmailFromName(username) + DOMAIN_NAME;
 
         if (userRepository.existsByEmail(email)) {
-            log.debug("Admin user already exists: {}", email);
+
             return;
         }
 
@@ -204,16 +199,15 @@ public class DataProvider {
                 .phoneNumber(DEFAULT_PHONE)
                 .email(email)
                 .enabled(true)
-                .password(passwordEncoder.encode(firstName.toLowerCase() + DEFAULT_PASSWORD_SUFFIX))
+                .password(passwordEncoder.encode(firstName.toLowerCase() + passwordSuffix))
                 .role(adminRole)
                 .build();
 
         userRepository.save(admin);
-        log.debug("Created admin user: {}", email);
+
     }
 
     private void loadTeachersFromSubjectData(Department department) throws IOException {
-        log.info("Loading teachers from subject data...");
 
         Resource resource = new ClassPathResource("data/subjects.json");
         JsonNode rootNode = objectMapper.readTree(resource.getInputStream());
@@ -223,11 +217,8 @@ public class DataProvider {
 
         Set<String> teacherNames = extractTeacherNames(rootNode);
 
-        log.info("Found {} unique teacher names", teacherNames.size());
-
         createTeacherUsers(teacherNames, teacherRole, department);
 
-        log.info("Teachers loading completed");
     }
 
     private Set<String> extractTeacherNames(JsonNode rootNode) {
@@ -235,7 +226,7 @@ public class DataProvider {
 
         JsonNode niveauNode = rootNode.get("niveau");
         if (niveauNode == null) {
-            log.warn("No 'niveau' node found in subjects data");
+
             return teacherNames;
         }
 
@@ -244,7 +235,7 @@ public class DataProvider {
                 JsonNode levelNode = niveauNode.get(levelCode);
                 processLevelForTeachers(levelNode, teacherNames);
             } catch (Exception e) {
-                log.warn("Error processing level: {}", levelCode, e);
+
             }
         });
 
@@ -264,7 +255,7 @@ public class DataProvider {
                     processSubjectsForTeachers(subjectsArray, teacherNames);
                 }
             } catch (Exception e) {
-                log.warn("Error processing semester: {}", semester, e);
+
             }
         });
     }
@@ -287,7 +278,7 @@ public class DataProvider {
                 });
 
             } catch (Exception e) {
-                log.warn("Error processing subject for teachers: {}", subjectNode.get("code"), e);
+
             }
         });
     }
@@ -315,23 +306,14 @@ public class DataProvider {
     }
 
     private void createTeacherUsers(Set<String> teacherNames, Role teacherRole, Department department) {
-        int created = 0;
-        int skipped = 0;
 
         for (String fullName : teacherNames) {
-            try {
-                if (createTeacherUser(fullName, teacherRole, department)) {
-                    created++;
-                } else {
-                    skipped++;
-                }
-            } catch (Exception e) {
-                log.warn("Failed to create teacher user: {}", fullName, e);
-                skipped++;
+            if (createTeacherUser(fullName, teacherRole, department)) {
+                continue;
+            } else {
+                continue;
             }
         }
-
-        log.info("Teacher creation summary - Created: {}, Skipped: {}", created, skipped);
     }
 
     private boolean createTeacherUser(String fullName, Role teacherRole, Department department) {
@@ -345,7 +327,7 @@ public class DataProvider {
         String email = generateEmailFromName(fullName) + DOMAIN_NAME;
 
         if (userRepository.existsByEmail(email)) {
-            log.debug("Teacher user already exists: {}", email);
+
             return false;
         }
 
@@ -356,13 +338,13 @@ public class DataProvider {
                 .phoneNumber(DEFAULT_PHONE)
                 .email(email)
                 .enabled(true)
-                .password(passwordEncoder.encode(firstName.toLowerCase() + DEFAULT_PASSWORD_SUFFIX))
+                .password(passwordEncoder.encode(firstName.toLowerCase() + passwordSuffix))
                 .department(department)
                 .role(teacherRole)
                 .build();
 
         teacherRepository.save(teacher);
-        log.debug("Created teacher user: {} ({})", email, fullName);
+
         return true;
     }
 
@@ -402,7 +384,7 @@ public class DataProvider {
     private Faculty createOrGetFaculty() {
         return facultyRepository.findByCode(FACULTY_CODE)
                 .orElseGet(() -> {
-                    log.info("Creating new faculty: {}", FACULTY_NAME);
+
                     Faculty faculty = Faculty.builder()
                             .name(FACULTY_NAME)
                             .code(FACULTY_CODE)
@@ -416,7 +398,7 @@ public class DataProvider {
     private Department createOrGetDepartment(Branch branch) {
         return departmentRepository.findByCode(DEPARTMENT_CODE)
                 .orElseGet(() -> {
-                    log.info("Creating new department: {}", DEPARTMENT_NAME);
+
                     Department department = departmentRepository.save(Department.builder()
                             .name(DEPARTMENT_NAME)
                             .code(DEPARTMENT_CODE)
@@ -431,7 +413,7 @@ public class DataProvider {
     private Branch createOrGetBranch(Faculty faculty) {
         return branchRepository.findByCode(BRANCH_CODE)
                 .orElseGet(() -> {
-                    log.info("Creating new branch: {}", BRANCH_NAME);
+
                     Branch branch = Branch.builder()
                             .name(BRANCH_NAME)
                             .code(BRANCH_CODE)
@@ -451,11 +433,10 @@ public class DataProvider {
     private void loadRoomsFromJson(Faculty faculty) {
         try {
             if (roomRepository.count() > 0) {
-                log.info("Rooms already loaded, skipping room initialization");
+
                 return;
             }
 
-            log.info("Loading rooms from JSON...");
             Resource resource = new ClassPathResource("data/rooms.json");
             JsonNode rootNode = objectMapper.readTree(resource.getInputStream());
 
@@ -464,11 +445,11 @@ public class DataProvider {
             if (!createdRooms.isEmpty()) {
                 faculty.getRooms().addAll(createdRooms);
                 facultyRepository.save(faculty);
-                log.info("Created {} rooms", createdRooms.size());
+
             }
 
         } catch (IOException e) {
-            log.error("Error loading rooms from JSON", e);
+
             throw new RuntimeException("Failed to load rooms", e);
         }
     }
@@ -485,7 +466,7 @@ public class DataProvider {
                         createdRooms.add(room);
                     }
                 } catch (Exception e) {
-                    log.warn("Failed to create room from node: {}", roomNode, e);
+
                 }
             });
         }
@@ -516,19 +497,19 @@ public class DataProvider {
     private void loadSubjectsAndRelatedData(Faculty faculty, Branch branch) {
         try {
             if (ueRepository.count() > 0) {
-                log.info("Subjects already loaded, skipping subject initialization");
+
                 return;
             }
-            log.info("Loading subjects and courses from JSON...");
+
             Resource resource = new ClassPathResource("data/subjects.json");
             JsonNode rootNode = objectMapper.readTree(resource.getInputStream());
             JsonNode niveauNode = rootNode.get("niveau");
             if (niveauNode != null) {
                 processLevelsAndSubjects(niveauNode, branch);
             }
-            log.info("Subjects and courses loading completed");
+
         } catch (IOException e) {
-            log.error("Error loading subjects from JSON", e);
+
             throw new RuntimeException("Failed to load subjects", e);
         }
     }
@@ -540,7 +521,7 @@ public class DataProvider {
                 JsonNode levelNode = niveauNode.get(levelCode);
                 processSemesters(levelNode, level);
             } catch (Exception e) {
-                log.warn("Failed to process level: {}", levelCode, e);
+
             }
         });
     }
@@ -554,7 +535,7 @@ public class DataProvider {
                     processSubjects(subjectsArray, level, semester);
                 }
             } catch (Exception e) {
-                log.warn("Failed to process semester: {} for level: {}", semester, level.getCode(), e);
+
             }
         });
     }
@@ -564,11 +545,11 @@ public class DataProvider {
             try {
                 Ue ue = createUeFromNode(subjectNode, level, semester);
                 if (ue != null) {
-                    log.debug("Created UE: {} for level: {}", ue.getCode(), level.getCode());
+
                     createCourseFromNode(subjectNode, ue);
                 }
             } catch (Exception e) {
-                log.warn("Failed to create UE or Course from node: {}", subjectNode, e);
+
             }
         });
     }
@@ -578,7 +559,7 @@ public class DataProvider {
 
         return levelRepository.findByCode(fullLevelCode)
                 .orElseGet(() -> {
-                    log.info("Creating new level: {}", fullLevelCode);
+
                     Level level = Level.builder()
                             .code(fullLevelCode)
                             .name("Informatique Niveau " + levelCode)
@@ -670,7 +651,7 @@ public class DataProvider {
             try {
                 return Long.parseLong(fieldNode.asText());
             } catch (NumberFormatException e) {
-                log.warn("Invalid number format for field {}: {}", fieldName, fieldNode.asText());
+
             }
         }
         return null;

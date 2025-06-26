@@ -28,7 +28,9 @@ import com.facsciences_planning_management.facsciences_planning_management.user_
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.UserRequest;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class AuthService {
@@ -83,6 +85,8 @@ public class AuthService {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.email(), request.password()));
             SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            log.debug("Authentication successful for user: {}", authentication.getCredentials());
 
             if (authentication.isAuthenticated()) {
                 return jwtService.generate(request.email());
