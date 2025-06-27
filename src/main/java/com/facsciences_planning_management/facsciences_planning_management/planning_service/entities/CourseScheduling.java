@@ -3,7 +3,6 @@ package com.facsciences_planning_management.facsciences_planning_management.plan
 import java.time.DayOfWeek;
 
 import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
 
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.TimeSlot;
@@ -20,7 +19,6 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "course_schedules")
 public final class CourseScheduling extends Scheduling {
     @Indexed
     protected DayOfWeek day;

@@ -2,7 +2,6 @@ package com.facsciences_planning_management.facsciences_planning_management.plan
 
 import java.time.LocalDate;
 
-import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
 
 import com.facsciences_planning_management.facsciences_planning_management.entities.Users;
@@ -21,7 +20,6 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "exam_schedules")
 @EqualsAndHashCode(callSuper = false)
 public final class ExamScheduling extends Scheduling {
     @DocumentReference(collection = "users")
