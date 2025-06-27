@@ -8,7 +8,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
 import com.facsciences_planning_management.facsciences_planning_management.entities.Users;
-import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.entities.Role;
+import com.facsciences_planning_management.facsciences_planning_management.entities.types.RoleType;
 
 @Repository
 public interface UserRepository extends MongoRepository<Users, String> {
@@ -18,9 +18,11 @@ public interface UserRepository extends MongoRepository<Users, String> {
 
     void deleteByEmail(String email);
 
-    Optional<Users> findByEmailAndRole(String email, Role role);
+    Optional<Users> findByEmailAndRoleId(String email, String roleId);
 
     Optional<Users> findByEmailAndEnabledIsTrue(String email);
 
     Page<Users> findByRoleId(String roleId, Pageable page);
+
+    Page<Users> findByRoleType(RoleType type, Pageable page);
 }

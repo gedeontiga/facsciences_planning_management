@@ -2,6 +2,9 @@ package com.facsciences_planning_management.facsciences_planning_management.plan
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.UeDTO;
 
 public interface UeService {
@@ -9,9 +12,9 @@ public interface UeService {
 
     UeDTO getUeById(String id);
 
-    List<UeDTO> getAllUes();
+    Page<UeDTO> getAllUes(Pageable page);
 
-    List<UeDTO> getUesByLevel(String levelId);
+    Page<UeDTO> getUesByLevel(String levelId, Pageable page);
 
     UeDTO getUeByCode(String code);
 

@@ -13,6 +13,8 @@ import org.springframework.web.context.request.WebRequest;
 import com.facsciences_planning_management.facsciences_planning_management.dto.ErrorResponse;
 import com.facsciences_planning_management.facsciences_planning_management.exceptions.CustomBusinessException;
 
+import io.jsonwebtoken.JwtException;
+
 import java.time.LocalDateTime;
 
 @ControllerAdvice
@@ -54,7 +56,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleAuthenticationException(AuthenticationException ex) {
         ErrorResponse errorResponse = new ErrorResponse(
                 "Authentication Error",
-                "Invalid credentials",
+                ex.getMessage(),
                 HttpStatus.UNAUTHORIZED.value(),
                 LocalDateTime.now().toString());
         return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
@@ -66,7 +68,18 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException ex) {
         ErrorResponse errorResponse = new ErrorResponse(
                 "Access Denied",
-                "You do not have permission to access this resource",
+                ex.getMessage(),
+                HttpStatus.FORBIDDEN.value(),
+                LocalDateTime.now().toString());
+        return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(JwtException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ResponseEntity<ErrorResponse> handleAccessTokenException(JwtException ex) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                "Access Denied",
+                ex.getMessage(),
                 HttpStatus.FORBIDDEN.value(),
                 LocalDateTime.now().toString());
         return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);

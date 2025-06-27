@@ -79,6 +79,11 @@ public class AdminServices {
         return userPage.map(UserDTO::new);
     }
 
+    public Page<UserDTO> getUserByRole(RoleType role, Pageable page) {
+        Page<Users> userPage = userRepository.findByRoleType(role, page);
+        return userPage.map(UserDTO::new);
+    }
+
     public List<RoleDTO> getAllRoles() {
         return roleRepository.findAll().stream().map(role -> role.toDTO()).collect(Collectors.toList());
     }

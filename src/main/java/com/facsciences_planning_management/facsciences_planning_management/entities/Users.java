@@ -5,7 +5,6 @@ import java.util.Collection;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.DocumentReference;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -39,8 +38,6 @@ public class Users implements UserDetails {
     private String lastName;
     private String address;
     private String phoneNumber;
-
-    @DocumentReference(collection = "roles")
     @NonNull
     private Role role;
 

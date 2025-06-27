@@ -47,7 +47,7 @@ public class TimetableController {
             @RequestParam @AcademicYearFormat String academicYear,
             @RequestParam SessionType sessionType,
             @RequestParam String branchId,
-            @PageableDefault(size = 20, sort = "academicYear") Pageable page) {
+            @PageableDefault(size = 10, sort = "academicYear") Pageable page) {
         return ResponseEntity.ok(timetableService.getTimetablesByBranch(academicYear, branchId, sessionType, page));
     }
 

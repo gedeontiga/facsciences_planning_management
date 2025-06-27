@@ -3,6 +3,8 @@ package com.facsciences_planning_management.facsciences_planning_management.plan
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
@@ -10,13 +12,11 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 
 @Repository
 public interface UeRepository extends MongoRepository<Ue, String> {
-    List<Ue> findByLevelId(String levelId);
+    Page<Ue> findByLevelId(String levelId, Pageable page);
 
     Optional<Ue> findByCode(String code);
 
     boolean existsByCode(String code);
-
-    List<Ue> findByLevelIdAndCategory(String levelId, String category);
 
     List<Ue> findByCreditsAndLevelId(Integer credits, String levelId);
 

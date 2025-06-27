@@ -66,7 +66,7 @@ public class JwtService {
         // Validate current token exists and is not expired
         Jwt currentJwt = getJwtByToken(token);
         if (currentJwt.getExpiredAt().isBefore(Instant.now())) {
-            throw new CustomBusinessException("Cannot refresh expired token");
+            throw new JwtException("Cannot refresh expired token");
         }
 
         // Invalidate current token
@@ -85,7 +85,7 @@ public class JwtService {
 
     public Jwt getJwtByToken(final String token) {
         return jwtRepository.findByToken(token)
-                .orElseThrow(() -> new CustomBusinessException(TOKEN_NOT_FOUND));
+                .orElseThrow(() -> new JwtException(TOKEN_NOT_FOUND));
     }
 
     public boolean isTokenValid(final String token) {
@@ -110,7 +110,7 @@ public class JwtService {
     public boolean isTokenExpired(final String token) {
         final Date expiration = getClaim(token, Claims::getExpiration);
         if (expiration != null && expiration.before(new Date())) {
-            throw new CustomBusinessException("Token has expired");
+            throw new JwtException("Token has expired");
         }
         return false;
     }
@@ -153,7 +153,7 @@ public class JwtService {
                     .parseSignedClaims(token)
                     .getPayload();
         } catch (JwtException e) {
-            throw new CustomBusinessException("Invalid JWT token: " + e.getMessage());
+            throw new JwtException("Invalid JWT token: " + e.getMessage());
         }
     }
 

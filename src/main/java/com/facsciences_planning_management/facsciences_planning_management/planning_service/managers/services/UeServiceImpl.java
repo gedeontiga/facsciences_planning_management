@@ -3,6 +3,8 @@ package com.facsciences_planning_management.facsciences_planning_management.plan
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.facsciences_planning_management.facsciences_planning_management.exceptions.CustomBusinessException;
@@ -67,17 +69,15 @@ public class UeServiceImpl implements UeService {
     }
 
     @Override
-    public List<UeDTO> getAllUes() {
-        return ueRepository.findAll().stream()
-                .map(Ue::toDTO)
-                .collect(Collectors.toList());
+    public Page<UeDTO> getAllUes(Pageable page) {
+        return ueRepository.findAll(page)
+                .map(Ue::toDTO);
     }
 
     @Override
-    public List<UeDTO> getUesByLevel(String levelId) {
-        return ueRepository.findByLevelId(levelId).stream()
-                .map(Ue::toDTO)
-                .collect(Collectors.toList());
+    public Page<UeDTO> getUesByLevel(String levelId, Pageable page) {
+        return ueRepository.findByLevelId(levelId, page)
+                .map(Ue::toDTO);
     }
 
     @Override

@@ -2,6 +2,9 @@ package com.facsciences_planning_management.facsciences_planning_management.plan
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -31,9 +34,8 @@ public class UeController {
     private final UeService ueService;
 
     @GetMapping
-    public ResponseEntity<List<UeDTO>> getAllUes() {
-        List<UeDTO> ues = ueService.getAllUes();
-        return ResponseEntity.ok(ues);
+    public ResponseEntity<Page<UeDTO>> getAllUes(@PageableDefault(size = 10) Pageable page) {
+        return ResponseEntity.ok(ueService.getAllUes(page));
     }
 
     @GetMapping("/{id}")
@@ -49,9 +51,10 @@ public class UeController {
     }
 
     @GetMapping("/level/{levelId}")
-    public ResponseEntity<List<UeDTO>> getUesByLevel(@PathVariable String levelId) {
-        List<UeDTO> ues = ueService.getUesByLevel(levelId);
-        return ResponseEntity.ok(ues);
+    public ResponseEntity<Page<UeDTO>> getUesByLevel(
+            @PathVariable String levelId,
+            @PageableDefault(size = 10) Pageable page) {
+        return ResponseEntity.ok(ueService.getUesByLevel(levelId, page));
     }
 
     @GetMapping("/category/{category}/level/{levelId}")
