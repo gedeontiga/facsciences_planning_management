@@ -21,4 +21,6 @@ public interface UeRepository extends MongoRepository<Ue, String> {
     List<Ue> findByCreditsAndLevelId(Integer credits, String levelId);
 
     List<Ue> findByCategoryAndLevelId(String category, String levelId);
+
+    Page<Ue> findByLevelIdAndAssignedFalse(String levelId, Pageable page);
 }

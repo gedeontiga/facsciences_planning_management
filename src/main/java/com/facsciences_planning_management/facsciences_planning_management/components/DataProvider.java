@@ -138,6 +138,8 @@ public class DataProvider {
                 .build();
 
         courseRepository.save(course);
+        ue.setAssigned(true);
+        ueRepository.save(ue);
 
     }
 

@@ -50,19 +50,26 @@ public class CourseServiceImpl implements CourseService {
 		Ue ue = ueRepository.findById(request.ueId())
 				.orElseThrow(() -> new CustomBusinessException("Ue not found for this Id"));
 
+		if (ue.getAssigned()) {
+			throw new CustomBusinessException("Ue is already assigned");
+		}
+
 		if (request.departmentId() != null && teacher.getDepartment() == null) {
 			teacher.setDepartment(departmentRepository.findById(request.departmentId())
 					.orElseThrow(() -> new CustomBusinessException("Department not found for this Id")));
 			teacherRepository.save(teacher);
 		}
-		Course course = Course.builder()
+		Course course = courseRepository.save(Course.builder()
 				.teacher(teacher)
 				.ue(ue)
 				.duration(Duration.ofHours(request.duration()))
 				.obsolete(false)
-				.build();
+				.build());
 
-		return courseRepository.save(course).toDTO();
+		ue.setAssigned(true);
+		ueRepository.save(ue);
+
+		return course.toDTO();
 	}
 
 	// Soft update: Mark old as obsolete, create a new one

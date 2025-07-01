@@ -81,6 +81,12 @@ public class UeServiceImpl implements UeService {
     }
 
     @Override
+    public Page<UeDTO> getUnassignedUesByLevel(String levelId, Pageable page) {
+        return ueRepository.findByLevelIdAndAssignedFalse(levelId, page)
+                .map(Ue::toDTO);
+    }
+
+    @Override
     public UeDTO updateUe(String id, UeDTO request) {
         Ue ue = ueRepository.findById(id)
                 .orElseThrow(() -> new CustomBusinessException("UE not found with id: " + id));

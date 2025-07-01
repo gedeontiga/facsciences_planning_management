@@ -11,13 +11,15 @@ public record UeDTO(
         Integer hourlyCharge,
         String levelId,
         String levelCode,
-        Long totalNumberOfStudents) {
+        Long totalNumberOfStudents,
+        Boolean assigned) {
     public static UeDTO fromUe(Ue ue) {
         return new UeDTO(
                 ue.getId(), ue.getName(), ue.getCode(),
                 ue.getCredits(), ue.getCategory(),
                 ue.getHourlyCharge(), ue.getLevel().getId(),
                 ue.getLevel().getCode(),
-                ue.getLevel().getTotalNumberOfStudents());
+                ue.getLevel().getTotalNumberOfStudents(),
+                ue.getAssigned());
     }
 }

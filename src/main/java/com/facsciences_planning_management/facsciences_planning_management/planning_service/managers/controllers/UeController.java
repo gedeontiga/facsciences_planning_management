@@ -50,6 +50,13 @@ public class UeController {
         return ResponseEntity.ok(ue);
     }
 
+    @GetMapping("/unassigned/level/{levelId}")
+    public ResponseEntity<Page<UeDTO>> getUnassignedUesByLevel(
+            @PathVariable String levelId,
+            @PageableDefault(size = 10) Pageable page) {
+        return ResponseEntity.ok(ueService.getUnassignedUesByLevel(levelId, page));
+    }
+
     @GetMapping("/level/{levelId}")
     public ResponseEntity<Page<UeDTO>> getUesByLevel(
             @PathVariable String levelId,

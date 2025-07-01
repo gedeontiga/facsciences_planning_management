@@ -16,6 +16,8 @@ public interface UeService {
 
     Page<UeDTO> getUesByLevel(String levelId, Pageable page);
 
+    Page<UeDTO> getUnassignedUesByLevel(String levelId, Pageable page);
+
     UeDTO getUeByCode(String code);
 
     List<UeDTO> getUesByCategoryAndLevel(String category, String levelId);

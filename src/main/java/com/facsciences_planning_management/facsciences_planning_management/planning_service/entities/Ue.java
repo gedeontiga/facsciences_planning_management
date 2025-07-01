@@ -24,6 +24,8 @@ public class Ue {
     private Integer credits;
     private String category;
     private Integer hourlyCharge;
+    @Builder.Default
+    private Boolean assigned = false;
 
     @DocumentReference(lazy = true, collection = "levels")
     private Level level;
