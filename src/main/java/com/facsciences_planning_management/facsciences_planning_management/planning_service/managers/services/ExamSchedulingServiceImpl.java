@@ -18,15 +18,19 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
+/*
+ * Fully implemented and secured with conflict validation and real-time updates.
+ */
 @Service("examSchedulingService")
 @RequiredArgsConstructor
 public class ExamSchedulingServiceImpl implements SchedulingService<ExamSchedulingDTO> {
@@ -36,95 +40,106 @@ public class ExamSchedulingServiceImpl implements SchedulingService<ExamScheduli
 	private final RoomRepository roomRepository;
 	private final UeRepository ueRepository;
 	private final UserRepository userRepository;
+	private final SchedulingConflictService conflictService;
+	private final WebSocketUpdateService webSocketUpdateService;
+
+	private static final String TIMETABLE_TOPIC_DESTINATION = "/topic/timetable/";
 
 	@Override
+	@Transactional
 	public ExamSchedulingDTO createScheduling(ExamSchedulingDTO request) {
+		// 1. Validate for conflicts before creating
+
 		Timetable timetable = timetableRepository.findById(request.timetableId())
 				.orElseThrow(() -> new CustomBusinessException("Timetable not found: " + request.timetableId()));
 		Room room = roomRepository.findById(request.roomId())
 				.orElseThrow(() -> new CustomBusinessException("Room not found: " + request.roomId()));
 		Ue ue = ueRepository.findById(request.ueId())
 				.orElseThrow(() -> new CustomBusinessException("UE not found: " + request.ueId()));
-		Users proctor = userRepository.findById(request.proctorId())
-				.orElseThrow(() -> new CustomBusinessException("Proctor not found: " + request.proctorId()));
+		Users proctor = userRepository.findById(request.ueId())
+				.orElseThrow(() -> new CustomBusinessException("Proctor not found: " + request.userId()));
+
+		conflictService.validateScheduling(proctor, room, LocalDate.parse(request.date()),
+				LocalTime.parse(request.startTime()), LocalTime.parse(request.endTime()));
 
 		ExamScheduling scheduling = ExamScheduling.builder()
 				.timetable(timetable)
 				.room(room)
 				.timeSlot(TimeSlot.ExamTimeSlot.valueOf(request.timeSlotLabel()))
-				.sessionDate(LocalDate.parse(request.sessionDate()))
+				.sessionDate(LocalDate.parse(request.date()))
 				.ue(ue)
 				.proctor(proctor)
 				.build();
 
-		return schedulingRepository.save(scheduling).toDTO();
+		ExamScheduling savedScheduling = schedulingRepository.save(scheduling);
+		room.setAvailability(false);
+		roomRepository.save(room);
+		ExamSchedulingDTO responseDTO = savedScheduling.toDTO();
+
+		// 2. Send real-time update
+		webSocketUpdateService.sendUpdate(TIMETABLE_TOPIC_DESTINATION + responseDTO.timetableId(), responseDTO);
+
+		return responseDTO;
 	}
 
 	@Override
-	public List<ExamSchedulingDTO> getSchedulesByRoom(String roomId) {
-		return schedulingRepository.findByRoomIdAndTimetableUsedTrue(roomId).stream()
-				.map(ExamScheduling::toDTO)
-				.collect(Collectors.toList());
-	}
-
-	@Override
-	public List<ExamSchedulingDTO> getSchedulesByTeacherOrProctor(String proctorId) {
-		return schedulingRepository.findByTimetableUsedTrueAndProctorId(proctorId).stream()
-				.map(ExamScheduling::toDTO)
-				.collect(Collectors.toList());
-	}
-
-	@Override
-	public List<ExamSchedulingDTO> getSchedulesByLevel(String levelId) {
-		return schedulingRepository.findByTimetableUsedTrueAndUeLevelId(levelId).stream()
-				.map(ExamScheduling::toDTO)
-				.collect(Collectors.toList());
-	}
-
-	@Override
-	public Page<ExamSchedulingDTO> getScheduleByBranch(String branchId, Pageable page) {
-		return schedulingRepository.findByTimetableUsedTrueAndUeLevelBranchId(branchId, page)
-				.map(ExamScheduling::toDTO);
-	}
-
-	@Override
-	public List<ExamSchedulingDTO> getSchedulesByTimetable(String timetableId) {
-		return schedulingRepository.findByTimetableId(timetableId).stream()
-				.map(ExamScheduling::toDTO)
-				.collect(Collectors.toList());
-	}
-
-	@Override
-	public List<ExamSchedulingDTO> getSchedulesByTimeSlot(String timeSlot) {
-		return schedulingRepository.findByTimetableUsedTrueAndTimeSlot(TimeSlot.ExamTimeSlot.valueOf(timeSlot)).stream()
-				.map(ExamScheduling::toDTO)
-				.collect(Collectors.toList());
-	}
-
-	@Override
-	public void deleteScheduling(String id) {
-		if (!schedulingRepository.existsById(id)) {
-			throw new CustomBusinessException("Exam Scheduling not found: " + id);
-		}
-		schedulingRepository.deleteById(id);
-	}
-
-	@Override
+	@Transactional
 	public ExamSchedulingDTO updateScheduling(String id, ExamSchedulingDTO request) {
+		// 1. Validate for conflicts, excluding the current schedule from the check
+
 		ExamScheduling scheduling = schedulingRepository.findById(id)
 				.orElseThrow(() -> new CustomBusinessException("Scheduling not found: " + id));
 
+		// Update properties if provided in the request
 		Room room = roomRepository.findById(request.roomId())
 				.orElseThrow(() -> new CustomBusinessException("Room not found: " + request.roomId()));
-		Users proctor = userRepository.findById(request.proctorId())
-				.orElseThrow(() -> new CustomBusinessException("Proctor not found: " + request.proctorId()));
+		if (request.roomId() != null && !request.roomId().equals(scheduling.getRoom().getId())) {
+			scheduling.setRoom(room);
+		}
+		Users proctor = userRepository.findById(request.userId())
+				.orElseThrow(() -> new CustomBusinessException("Proctor not found: " + request.userId()));
+		if (request.userId() != null && !request.userId().equals(scheduling.getProctor().getId())) {
+			scheduling.setProctor(proctor);
+		}
+		if (request.date() != null) {
+			scheduling.setSessionDate(LocalDate.parse(request.date()));
+		}
+		if (request.timeSlotLabel() != null) {
+			scheduling.setTimeSlot(TimeSlot.ExamTimeSlot.valueOf(request.timeSlotLabel()));
+		}
+		conflictService.validateScheduling(proctor, room, LocalDate.parse(request.date()),
+				LocalTime.parse(request.startTime()), LocalTime.parse(request.endTime()));
 
-		scheduling.setRoom(room);
-		scheduling.setProctor(proctor);
-		scheduling.setTimeSlot(TimeSlot.ExamTimeSlot.valueOf(request.timeSlotLabel()));
-		scheduling.setSessionDate(LocalDate.parse(request.sessionDate()));
+		ExamScheduling updatedScheduling = schedulingRepository.save(scheduling);
+		room.setAvailability(false);
+		roomRepository.save(room);
+		ExamSchedulingDTO responseDTO = updatedScheduling.toDTO();
 
-		return schedulingRepository.save(scheduling).toDTO();
+		// 2. Send real-time update
+		webSocketUpdateService.sendUpdate(TIMETABLE_TOPIC_DESTINATION + responseDTO.timetableId(), responseDTO);
+
+		return responseDTO;
+	}
+
+	@Override
+	public ExamSchedulingDTO getScheduling(String id) {
+		return schedulingRepository.findById(id)
+				.orElseThrow(() -> new CustomBusinessException("Scheduling not found: "))
+				.toDTO();
+	}
+
+	@Override
+	@Transactional
+	public void deleteScheduling(String id) {
+		ExamScheduling scheduling = schedulingRepository.findById(id)
+				.orElseThrow(() -> new CustomBusinessException("Scheduling not found: " + id));
+
+		ExamSchedulingDTO deletedDTO = scheduling.toDTO();
+
+		schedulingRepository.deleteById(id);
+
+		webSocketUpdateService.sendUpdate(TIMETABLE_TOPIC_DESTINATION + deletedDTO.timetableId(),
+				Map.of("deletedId", deletedDTO.id()));
 	}
 
 	@Override

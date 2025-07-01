@@ -1,7 +1,10 @@
 package com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos;
 
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.CourseScheduling;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Reservation;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.TimeSlot.CourseTimeSlot;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.validators.interfaces.ValidDayOfWeek;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.validators.interfaces.ValidTime;
 
 public record CourseSchedulingDTO(
 		String id,
@@ -11,9 +14,9 @@ public record CourseSchedulingDTO(
 		String ueCode,
 		String timetableId,
 		String timeSlotLabel,
-		String startTime,
-		String endTime,
-		String teacherId,
+		@ValidTime String startTime,
+		@ValidTime String endTime,
+		String userId,
 		String teacherName,
 		@ValidDayOfWeek String day) implements SchedulingDTO {
 	public static CourseSchedulingDTO fromEntity(CourseScheduling entity) {
@@ -31,5 +34,21 @@ public record CourseSchedulingDTO(
 				entity.getAssignedCourse().getTeacher().getFirstName() + " "
 						+ entity.getAssignedCourse().getTeacher().getLastName(),
 				entity.getDay().toString());
+	}
+
+	public static CourseSchedulingDTO fromReservation(Reservation reservation) {
+		return new CourseSchedulingDTO(
+				null,
+				reservation.getRoom().getId(),
+				null,
+				reservation.getUe().getId(),
+				null,
+				reservation.getTimetable().getId(),
+				CourseTimeSlot.get(reservation.getStartTime(), reservation.getEndTime()).name(),
+				reservation.getStartTime().toString(),
+				reservation.getEndTime().toString(),
+				reservation.getTeacher().getId(),
+				null,
+				reservation.getDate().getDayOfWeek().name());
 	}
 }

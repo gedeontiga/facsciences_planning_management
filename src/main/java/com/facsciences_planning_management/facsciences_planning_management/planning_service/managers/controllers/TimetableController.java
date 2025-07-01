@@ -6,14 +6,16 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.components.interfaces.AcademicYearFormat;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.SessionType;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.TimeSlotDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.TimetableDTO;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.TimetableRequest;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces.TimetableService;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.validators.interfaces.AcademicYearFormat;
 
 import java.util.List;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,15 +28,22 @@ public class TimetableController {
 
     private final TimetableService timetableService;
 
-    @PostMapping("/generate/level/{levelId}")
-    public ResponseEntity<TimetableDTO> generateTimetable(
-            @PathVariable String levelId,
-            @RequestParam @AcademicYearFormat String academicYear,
-            @RequestParam String semester,
-            @RequestParam SessionType sessionType) {
-        TimetableDTO generatedTimetable = timetableService.generateTimetableForLevel(academicYear, semester, levelId,
-                sessionType);
-        return ResponseEntity.ok(generatedTimetable);
+    @PostMapping("/create")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SECRETARY')")
+    public ResponseEntity<TimetableDTO> createTimetable(@RequestBody TimetableRequest request) {
+        if (request.sessionType().equals(SessionType.COURSE)) {
+            return ResponseEntity.status(201).body(timetableService.generateTimetableForLevel(request.academicYear(),
+                    request.semester(), request.levelId()));
+        } else {
+            if (List.of(SessionType.values()).contains(request.sessionType())) {
+                return ResponseEntity.status(201).body(timetableService.createTimetableForExam(
+                        request.levelId(),
+                        request.academicYear(),
+                        request.semester(),
+                        request.sessionType()));
+            }
+            throw new IllegalArgumentException("Invalid session type: " + request.sessionType());
+        }
     }
 
     @GetMapping("/{id}")
@@ -42,16 +51,18 @@ public class TimetableController {
         return ResponseEntity.ok(timetableService.getTimetableById(id));
     }
 
-    @GetMapping("/query")
+    @GetMapping
     public ResponseEntity<Page<TimetableDTO>> getTimetableByLevelAndSemester(
             @RequestParam @AcademicYearFormat String academicYear,
             @RequestParam SessionType sessionType,
             @RequestParam String branchId,
             @PageableDefault(size = 10, sort = "academicYear") Pageable page) {
-        return ResponseEntity.ok(timetableService.getTimetablesByBranch(academicYear, branchId, sessionType, page));
+        return ResponseEntity
+                .ok(timetableService.getTimetablesByBranch(academicYear, branchId, sessionType, page));
     }
 
     @PostMapping("/create-year")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<String> createAcademicYear(@RequestParam @AcademicYearFormat String academicYear) {
         return ResponseEntity.ok(timetableService.createAcademicYear(academicYear));
     }

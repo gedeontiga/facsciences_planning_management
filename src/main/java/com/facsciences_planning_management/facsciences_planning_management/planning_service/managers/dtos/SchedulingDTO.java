@@ -11,6 +11,8 @@ public sealed interface SchedulingDTO permits CourseSchedulingDTO, ExamSchedulin
 
     String ueCode();
 
+    String userId();
+
     String timetableId();
 
     String timeSlotLabel();

@@ -15,17 +15,17 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 
 @Repository
 public interface TimetableRepository extends MongoRepository<Timetable, String>, TimetableRepositoryCustom {
-        List<Timetable> findByAcademicYearAndSemester(String academicYear, Semester semester);
+	List<Timetable> findByAcademicYearAndSemester(String academicYear, Semester semester);
 
-        boolean existsByAcademicYearAndSemesterAndLevelIdAndSessionType(String academicYear, Semester semester,
-                        String levelId, SessionType sessionType);
+	boolean existsByAcademicYearAndSemesterAndLevelIdAndSessionType(String academicYear, Semester semester,
+			String levelId, SessionType sessionType);
 
-        Optional<Timetable> findByAcademicYearAndSemesterAndLevelIdAndSessionTypeAndUsedTrue(String academicYear,
-                        Semester semester,
-                        String levelId, SessionType sessionType);
+	Optional<Timetable> findByAcademicYearAndSemesterAndLevelIdAndSessionTypeAndUsedTrue(String academicYear,
+			Semester semester,
+			String levelId, SessionType sessionType);
 }
 
 interface TimetableRepositoryCustom {
-        Page<Timetable> findByAcademicYearAndSessionTypeAndUsedTrueAndLevelBranchId(String academicYear,
-                        SessionType sessionType, String branchId, Pageable page);
+	Page<Timetable> findByAcademicYearAndSessionTypeAndUsedTrueAndLevelBranchId(String academicYear,
+			SessionType sessionType, String branchId, Pageable page);
 }

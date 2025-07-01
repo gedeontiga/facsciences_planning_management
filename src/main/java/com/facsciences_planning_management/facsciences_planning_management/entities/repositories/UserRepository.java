@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import com.facsciences_planning_management.facsciences_planning_management.entities.Users;
 import com.facsciences_planning_management.facsciences_planning_management.entities.types.RoleType;
+import java.util.List;
 
 @Repository
 public interface UserRepository extends MongoRepository<Users, String> {
@@ -25,4 +26,8 @@ public interface UserRepository extends MongoRepository<Users, String> {
     Page<Users> findByRoleId(String roleId, Pageable page);
 
     Page<Users> findByRoleType(RoleType type, Pageable page);
+
+    List<Users> findByRoleTypeAndEnabledTrue(RoleType roleType);
+
+    List<Users> findByRoleTypeInAndEnabledTrue(List<RoleType> roleType);
 }

@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.RoomDTO;
@@ -46,8 +47,8 @@ public class RoomController {
         return ResponseEntity.ok(room);
     }
 
-    @GetMapping("/type/{type}")
-    public ResponseEntity<List<RoomDTO>> findRoomsByType(@PathVariable String type) {
+    @GetMapping("/type")
+    public ResponseEntity<List<RoomDTO>> findRoomsByType(@RequestParam String type) {
         List<RoomDTO> rooms = roomService.getRoomsByType(type);
         return ResponseEntity.ok(rooms);
     }
@@ -75,44 +76,16 @@ public class RoomController {
         return ResponseEntity.noContent().build();
     }
 
-    // @PostMapping("/available")
-    // public ResponseEntity<List<RoomDTO>> findAvailableRooms(
-    // @Valid @RequestBody AvailableRoomsRequestDTO request) {
-    // List<RoomDTO> availableRooms = roomService.findAvailableRooms(request);
-    // return ResponseEntity.ok(availableRooms);
-    // }
-
-    @GetMapping("/capacity/{minimumCapacity}")
+    @GetMapping("/capacity")
     public ResponseEntity<List<RoomDTO>> findRoomsByCapacity(
-            @PathVariable @Min(1) Long minimumCapacity) {
-        List<RoomDTO> rooms = roomService.getRoomsByCapacity(minimumCapacity);
+            @RequestParam @Min(1) Long minCapacity) {
+        List<RoomDTO> rooms = roomService.getRoomsByCapacity(minCapacity);
         return ResponseEntity.ok(rooms);
     }
 
-    // @GetMapping("/{roomId}/availability/weekly")
-    // public ResponseEntity<Boolean> isRoomAvailable(
-    // @PathVariable String roomId,
-    // @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.TIME) LocalTime
-    // startTime,
-    // @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.TIME) LocalTime
-    // endTime,
-    // @RequestParam DayOfWeek day) {
-    // boolean available = roomService.isRoomAvailable(roomId, startTime, endTime,
-    // day);
-    // return ResponseEntity.ok(available);
-    // }
-
-    // @GetMapping("/{roomId}/availability/date")
-    // public ResponseEntity<Boolean> isRoomAvailableForDate(
-    // @PathVariable String roomId,
-    // @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.TIME) LocalTime
-    // startTime,
-    // @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.TIME) LocalTime
-    // endTime,
-    // @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    // LocalDateTime date) {
-    // boolean available = roomService.isRoomAvailableForDate(roomId, startTime,
-    // endTime, date);
-    // return ResponseEntity.ok(available);
-    // }
+    @GetMapping("/types")
+    public ResponseEntity<List<String>> getAllRoomTypes() {
+        List<String> roomTypes = roomService.getAllRoomTypes();
+        return ResponseEntity.ok(roomTypes);
+    }
 }

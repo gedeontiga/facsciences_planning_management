@@ -1,6 +1,6 @@
 package com.facsciences_planning_management.facsciences_planning_management.planning_service.entities;
 
-import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
@@ -31,12 +31,14 @@ public class Reservation {
     @DocumentReference(lazy = true, collection = "users")
     private Users teacher;
     private SessionType sessionType;
+    @DocumentReference(lazy = true, collection = "ues")
+    private Ue ue;
     private RequestStatus status;
     @DocumentReference(lazy = true, collection = "rooms")
-    private Room preferredRoom;
-    private LocalTime preferredStartTime;
-    private LocalTime preferredEndTime;
-    private DayOfWeek preferredDay;
+    private Room room;
+    private LocalTime startTime;
+    private LocalTime endTime;
+    private LocalDate date;
     @DocumentReference(lazy = true, collection = "timetables")
     private Timetable timetable;
     @CreatedDate

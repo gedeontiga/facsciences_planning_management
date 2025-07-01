@@ -11,9 +11,9 @@ public interface CourseService {
 
     Page<CourseDTO> getAllCourses(Pageable page);
 
-    CourseDTO createCourse(String teacherId, String ueId, Long duration);
+    CourseDTO createCourse(CourseDTO course);
 
-    CourseDTO updateCourseTeacher(String courseId, String teacherId);
+    CourseDTO updateCourseTeacher(String courseId, String teacherId, String departmentId);
 
     CourseDTO updateCourseUe(String courseId, String ueId);
 

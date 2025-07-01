@@ -11,10 +11,12 @@ import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.stereotype.Repository;
 
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.ExamScheduling;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.TimeSlot;
 
 import java.util.List;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 
 import org.bson.types.ObjectId;
@@ -33,6 +35,52 @@ public class ExamSchedulingRepositoryImpl implements ExamSchedulingRepositoryCus
 		public long getTotal() {
 			return total;
 		}
+	}
+
+	@Override
+	public List<ExamScheduling> findByUeLevelIdAndSessionDateAndTimeSlotAndTimetableUsedTrue(
+			String levelId, LocalDate sessionDate, TimeSlot.ExamTimeSlot timeSlot) {
+		if (!ObjectId.isValid(levelId)) {
+			return Collections.emptyList();
+		}
+
+		TypedAggregation<ExamScheduling> aggregation = Aggregation.newAggregation(ExamScheduling.class,
+				// First, match on root document fields
+				Aggregation.match(Criteria.where("sessionDate").is(sessionDate).and("timeSlot").is(timeSlot)),
+				// Then, join and filter
+				Aggregation.lookup("timetables", "timetable", "_id", "joinedTimetable"),
+				Aggregation.unwind("$joinedTimetable"),
+				Aggregation.match(Criteria.where("joinedTimetable.used").is(true)),
+				Aggregation.lookup("ues", "ue", "_id", "joinedUe"),
+				Aggregation.unwind("$joinedUe"),
+				Aggregation.lookup("levels", "joinedUe.level", "_id", "joinedLevel"),
+				Aggregation.unwind("$joinedLevel"),
+				Aggregation.match(Criteria.where("joinedLevel._id").is(new ObjectId(levelId))),
+				Aggregation.project("id", "proctor", "sessionDate", "ue", "timeSlot", "room", "timetable", "createdAt",
+						"updatedAt").and("_id").as("id"));
+
+		return mongoTemplate.aggregate(aggregation, ExamScheduling.class).getMappedResults();
+	}
+
+	@Override
+	public List<ExamScheduling> findByUeLevelIdAndSessionDateAndTimetableUsedTrue(
+			String levelId, LocalDate sessionDate) {
+		if (!ObjectId.isValid(levelId)) {
+			return Collections.emptyList();
+		}
+
+		TypedAggregation<ExamScheduling> aggregation = Aggregation.newAggregation(ExamScheduling.class,
+				Aggregation.match(Criteria.where("sessionDate").is(sessionDate)),
+				Aggregation.lookup("timetables", "timetable", "_id", "joinedTimetable"),
+				Aggregation.unwind("$joinedTimetable"),
+				Aggregation.match(Criteria.where("joinedTimetable.used").is(true)),
+				Aggregation.lookup("ues", "ue", "_id", "joinedUe"),
+				Aggregation.unwind("$joinedUe"),
+				Aggregation.lookup("levels", "joinedUe.level", "_id", "joinedLevel"),
+				Aggregation.unwind("$joinedLevel"),
+				Aggregation.match(Criteria.where("joinedLevel._id").is(new ObjectId(levelId))));
+
+		return mongoTemplate.aggregate(aggregation, ExamScheduling.class).getMappedResults();
 	}
 
 	@Override

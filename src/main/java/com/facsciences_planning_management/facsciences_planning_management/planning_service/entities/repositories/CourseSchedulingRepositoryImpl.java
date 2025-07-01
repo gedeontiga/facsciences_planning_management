@@ -11,12 +11,14 @@ import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.CourseScheduling;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.TimeSlot;
 
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.stereotype.Repository;
 
+import java.time.DayOfWeek;
 import java.util.ArrayList;
 
 import org.bson.types.ObjectId;
@@ -39,24 +41,57 @@ public class CourseSchedulingRepositoryImpl implements CourseSchedulingRepositor
 	}
 
 	@Override
-	public List<CourseScheduling> findByAssignedCourseObsoleteFalseAndAssignedCourseUeLevelId(String levelId) {
+	public List<CourseScheduling> findByTimetableUsedTrue() {
+		TypedAggregation<CourseScheduling> aggregation = Aggregation.newAggregation(CourseScheduling.class,
+				Aggregation.lookup("timetables", "timetable", "_id", "joinedTimetable"),
+				Aggregation.unwind("$joinedTimetable"),
+				Aggregation.match(Criteria.where("joinedTimetable.used").is(true))
+		// Consider projecting only necessary fields if performance is an issue
+		);
+		return mongoTemplate.aggregate(aggregation, CourseScheduling.class).getMappedResults();
+	}
+
+	@Override
+	public List<CourseScheduling> findByAssignedCourseObsoleteFalseAndAssignedCourseUeLevelIdAndDayAndTimeSlot(
+			String levelId, DayOfWeek day, TimeSlot.CourseTimeSlot timeSlot) {
 		if (!ObjectId.isValid(levelId)) {
 			return Collections.emptyList();
 		}
 
 		TypedAggregation<CourseScheduling> aggregation = Aggregation.newAggregation(CourseScheduling.class,
+				// First, match on the fields in the root document for efficiency
+				Aggregation.match(Criteria.where("day").is(day).and("timeSlot").is(timeSlot)),
+				// Then perform the joins and filtering on related collections
 				Aggregation.lookup("courses", "assignedCourse", "_id", "joinedCourse"),
 				Aggregation.unwind("joinedCourse"),
 				Aggregation.match(Criteria.where("joinedCourse.obsolete").is(false)),
 				Aggregation.lookup("ues", "joinedCourse.ue", "_id", "joinedUe"),
 				Aggregation.unwind("joinedUe"),
-				// Match against the ObjectId of the level in the Ue document
 				Aggregation.match(Criteria.where("joinedUe.level").is(new ObjectId(levelId))),
-				// Project back to the original shape
-				Aggregation
-						.project("id", "day", "assignedCourse", "timeSlot", "room", "timetable", "createdAt",
-								"updatedAt")
-						.and("_id").as("id"));
+				Aggregation.project("id", "day", "assignedCourse", "timeSlot", "room", "timetable", "createdAt",
+						"updatedAt").and("_id").as("id"));
+
+		return mongoTemplate.aggregate(aggregation, CourseScheduling.class).getMappedResults();
+	}
+
+	@Override
+	public List<CourseScheduling> findByAssignedCourseObsoleteFalseAndAssignedCourseUeLevelIdAndDay(
+			String levelId, DayOfWeek day) {
+		if (!ObjectId.isValid(levelId)) {
+			return Collections.emptyList();
+		}
+
+		TypedAggregation<CourseScheduling> aggregation = Aggregation.newAggregation(CourseScheduling.class,
+				Aggregation.match(Criteria.where("day").is(day)),
+				Aggregation.lookup("courses", "assignedCourse", "_id", "joinedCourse"),
+				Aggregation.unwind("joinedCourse"),
+				Aggregation.match(Criteria.where("joinedCourse.obsolete").is(false)),
+				Aggregation.lookup("ues", "joinedCourse.ue", "_id", "joinedUe"),
+				Aggregation.unwind("joinedUe"),
+				Aggregation.match(Criteria.where("joinedUe.level").is(new ObjectId(levelId)))
+		// No projection needed if you just need the timeSlot, but returning the full
+		// object is more consistent.
+		);
 
 		return mongoTemplate.aggregate(aggregation, CourseScheduling.class).getMappedResults();
 	}
@@ -106,5 +141,24 @@ public class CourseSchedulingRepositoryImpl implements CourseSchedulingRepositor
 								.getUniqueMappedResult())
 						.map(CountResult::getTotal)
 						.orElse(0L));
+	}
+
+	@Override
+	public List<CourseScheduling> findByAssignedCourseObsoleteFalseAndAssignedCourseUeLevelIdAndTimeSlot(
+			String levelId, TimeSlot.CourseTimeSlot timeSlot) {
+		if (!ObjectId.isValid(levelId)) {
+			return Collections.emptyList();
+		}
+
+		TypedAggregation<CourseScheduling> aggregation = Aggregation.newAggregation(CourseScheduling.class,
+				Aggregation.match(Criteria.where("timeSlot").is(timeSlot)),
+				Aggregation.lookup("courses", "assignedCourse", "_id", "joinedCourse"),
+				Aggregation.unwind("joinedCourse"),
+				Aggregation.match(Criteria.where("joinedCourse.obsolete").is(false)),
+				Aggregation.lookup("ues", "joinedCourse.ue", "_id", "joinedUe"),
+				Aggregation.unwind("joinedUe"),
+				Aggregation.match(Criteria.where("joinedUe.level").is(new ObjectId(levelId))));
+
+		return mongoTemplate.aggregate(aggregation, CourseScheduling.class).getMappedResults();
 	}
 }

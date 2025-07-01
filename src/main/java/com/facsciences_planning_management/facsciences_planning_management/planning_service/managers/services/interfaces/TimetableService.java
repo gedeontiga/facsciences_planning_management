@@ -10,7 +10,7 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.TimetableDTO;
 
 public interface TimetableService {
-	// TimetableDTO createTimetable(TimetableDTO request);
+	TimetableDTO createTimetableForExam(String levelId, String academicYear, String semester, SessionType sessionType);
 
 	TimetableDTO getTimetableById(String id);
 
@@ -34,8 +34,7 @@ public interface TimetableService {
 	// levelId,
 	// SessionType sessionType);
 
-	TimetableDTO generateTimetableForLevel(String academicYear, String semester, String levelId,
-			SessionType sessionType);
+	TimetableDTO generateTimetableForLevel(String academicYear, String semester, String levelId);
 
 	TimetableDTO getTimetableByLevelAndSemester(String academicYear, String levelId, String semester,
 			SessionType sessionType);

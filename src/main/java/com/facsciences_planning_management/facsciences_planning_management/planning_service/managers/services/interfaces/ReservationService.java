@@ -1,5 +1,7 @@
 package com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -12,9 +14,11 @@ public interface ReservationService {
 
     ReservationResponseDTO processRequest(String requestId, ReservationProcessingDTO request);
 
-    Page<ReservationResponseDTO> getReservations(String teacherId, Pageable page);
+    Page<ReservationResponseDTO> getReservations(Pageable page);
 
     Page<ReservationResponseDTO> getAllRequests(String status, Pageable page);
 
     void deleteRequest(String id);
+
+    List<String> getAllReservationStatuses();
 }

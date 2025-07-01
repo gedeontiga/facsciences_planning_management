@@ -20,7 +20,7 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @NoArgsConstructor
 @Document(collection = "schedulings")
-public sealed abstract class Scheduling permits CourseScheduling, ExamScheduling {
+public abstract class Scheduling {
     @Id
     private String id;
     @DocumentReference(collection = "rooms")

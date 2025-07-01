@@ -24,4 +24,6 @@ public interface RoomService {
 
     List<RoomDTO> getRoomsByType(String type);
 
+    List<String> getAllRoomTypes();
+
 }

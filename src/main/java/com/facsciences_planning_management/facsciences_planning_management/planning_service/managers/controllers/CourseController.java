@@ -8,9 +8,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.CourseDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces.CourseService;
 
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import lombok.RequiredArgsConstructor;
 
 @Validated
@@ -49,23 +50,23 @@ public class CourseController {
     @PostMapping
     @PreAuthorize("hasAuthority('ADMIN', 'DEPARTMENT_HEAD')")
     public ResponseEntity<CourseDTO> createCourse(
-            @RequestParam String teacherId,
-            @RequestParam String ueId,
-            @RequestParam(defaultValue = "3") Long duration) {
-        CourseDTO course = courseService.createCourse(teacherId, ueId, duration);
-        return ResponseEntity.ok(course);
+            @RequestBody CourseDTO request,
+            @RequestParam(required = false) String departmentId) {
+        CourseDTO response = courseService.createCourse(request.withDepartment(departmentId));
+        return ResponseEntity.status(201).body(response);
     }
 
-    @PutMapping("/teacher/{courseId}")
+    @PatchMapping("/teacher/{courseId}")
     @PreAuthorize("hasAuthority('ADMIN', 'DEPARTMENT_HEAD')")
     public ResponseEntity<CourseDTO> updateCourseTeacher(
             @PathVariable String courseId,
-            @RequestParam String teacherId) {
-        CourseDTO course = courseService.updateCourseTeacher(courseId, teacherId);
+            @RequestParam String teacherId,
+            @RequestParam(required = false) String departmentId) {
+        CourseDTO course = courseService.updateCourseTeacher(courseId, teacherId, departmentId);
         return ResponseEntity.ok(course);
     }
 
-    @PutMapping("/ue/{courseId}")
+    @PatchMapping("/ue/{courseId}")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'DEPARTMENT_HEAD')")
     public ResponseEntity<CourseDTO> updateCourseUe(
             @PathVariable String courseId,
@@ -74,7 +75,7 @@ public class CourseController {
         return ResponseEntity.ok(course);
     }
 
-    @PutMapping("/duration/{courseId}")
+    @PatchMapping("/duration/{courseId}")
     @PreAuthorize("hasAuthority('ADMIN', 'DEPARTMENT_HEAD')")
     public ResponseEntity<CourseDTO> updateCourseDuration(
             @PathVariable String courseId,

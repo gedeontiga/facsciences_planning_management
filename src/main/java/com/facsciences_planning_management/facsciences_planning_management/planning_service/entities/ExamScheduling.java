@@ -21,7 +21,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-public final class ExamScheduling extends Scheduling {
+public class ExamScheduling extends Scheduling {
     @DocumentReference(collection = "users")
     private Users proctor;
     private LocalDate sessionDate;

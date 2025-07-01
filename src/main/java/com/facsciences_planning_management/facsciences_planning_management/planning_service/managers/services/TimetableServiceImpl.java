@@ -1,6 +1,7 @@
 package com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -36,10 +37,11 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TimetableServiceImpl implements TimetableService {
-
+	// ... (repository declarations)
 	private final AcademicYearRepository academicYearRepository;
 	private final TimetableRepository timetableRepository;
 	private final TimetableSolverService timetableSolverService;
@@ -50,54 +52,63 @@ public class TimetableServiceImpl implements TimetableService {
 
 	@Override
 	@Transactional
-	public TimetableDTO generateTimetableForLevel(String academicYear, String semester, String levelId,
-			SessionType sessionType) {
+	public TimetableDTO generateTimetableForLevel(String academicYear, String semester, String levelId) {
 		Level level = levelRepository.findById(levelId)
 				.orElseThrow(() -> new CustomBusinessException("Level not found with id: " + levelId));
 
-		// 1. Gather all necessary data for the solver
+		// Prevent regeneration if a timetable already exists and is in use for this
+		// exact context
+		Optional<Timetable> existingTimetable = timetableRepository
+				.findByAcademicYearAndSemesterAndLevelIdAndSessionTypeAndUsedTrue(academicYear,
+						Semester.valueOf(semester), levelId, SessionType.COURSE);
+		if (existingTimetable.isPresent()) {
+			log.warn(
+					"An active timetable already exists for Level '{}', Year '{}', Semester '{}'. Returning existing timetable.",
+					level.getCode(), academicYear, semester);
+			return existingTimetable.get().toDTO();
+		}
+
+		// 1. Get all active courses that MUST be scheduled for this level.
 		List<Course> coursesToSchedule = courseRepository.findByObsoleteFalseAndUeLevelId(levelId);
 		if (coursesToSchedule.isEmpty()) {
-			throw new IllegalStateException(
-					"No active courses found for level " + level.getName() + " to schedule.");
+			throw new IllegalStateException("No active courses found for level " + level.getName() + " to schedule.");
 		}
+		log.info("Found {} courses to schedule for Level '{}'.", coursesToSchedule.size(), level.getCode());
 
+		// 2. Get all available rooms.
 		List<Room> availableRooms = roomRepository.findAllByAvailabilityTrue();
 		if (availableRooms.isEmpty()) {
-			throw new IllegalStateException("No available rooms for scheduling.");
+			throw new IllegalStateException("No available rooms in the system for scheduling.");
 		}
 
-		List<DayOfWeek> days = List.of(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY,
-				DayOfWeek.THURSDAY,
+		// 3. Get ALL existing, active course schedules from the ENTIRE system.
+		// This is the crucial step to handle resource conflicts across different
+		// levels.
+		List<CourseScheduling> existingSchedules = courseSchedulingRepository.findByTimetableUsedTrue();
+
+		List<DayOfWeek> days = List.of(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY,
 				DayOfWeek.FRIDAY, DayOfWeek.SATURDAY);
 		List<CourseTimeSlot> timeSlots = Arrays.asList(CourseTimeSlot.values());
 
-		// 2. Call the solver
+		// 4. Call the solver with all required information.
+		log.info("Invoking timetable solver...");
+		List<CourseScheduling> solvedSchedules = timetableSolverService.solve(
+				coursesToSchedule, availableRooms, days, timeSlots, existingSchedules);
 
-		Optional<Timetable> timetable = timetableRepository
-				.findByAcademicYearAndSemesterAndLevelIdAndSessionTypeAndUsedTrue(academicYear,
-						Semester.valueOf(semester), levelId, sessionType);
-		if (timetable.isPresent()) {
-			return timetable.get().toDTO();
-		}
-		List<CourseScheduling> solvedSchedules = timetableSolverService.solve(coursesToSchedule, availableRooms,
-				days,
-				timeSlots);
-
-		getOrcreateAcademicYear(academicYear);
-
+		// 5. Create and save the new timetable and its generated schedules.
+		getOrCreateAcademicYear(academicYear);
 		Timetable newTimetable = Timetable.builder()
 				.academicYear(academicYear)
 				.semester(Semester.valueOf(semester))
 				.level(level)
 				.name("Timetable for " + level.getCode())
-				.description("Timetable for " + level.getName() + " __" + academicYear + "__" + semester)
-				.sessionType(sessionType)
-				.schedules(new HashSet<>())
+				.description("Auto-generated for " + level.getName() + " | " + academicYear + " | " + semester)
+				.sessionType(SessionType.COURSE)
+				.used(true) // New timetables are active by default.
 				.build();
+
 		Timetable savedTimetable = timetableRepository.save(newTimetable);
 
-		// Link schedules to the new timetable and save them
 		Set<Scheduling> finalSchedules = new HashSet<>();
 		for (CourseScheduling schedule : solvedSchedules) {
 			schedule.setTimetable(savedTimetable);
@@ -105,20 +116,37 @@ public class TimetableServiceImpl implements TimetableService {
 		}
 
 		savedTimetable.setSchedules(finalSchedules);
+		log.info("Successfully generated and saved new timetable with ID '{}' containing {} schedules.",
+				savedTimetable.getId(), finalSchedules.size());
+
 		return timetableRepository.save(savedTimetable).toDTO();
 	}
 
-	private AcademicYear getOrcreateAcademicYear(String label) {
-		if (!academicYearRepository.existsByLabel(label)) {
-			academicYearRepository.save(new AcademicYear(label));
-		}
+	private AcademicYear getOrCreateAcademicYear(String label) {
 		return academicYearRepository.findByLabel(label)
-				.orElseThrow(() -> new CustomBusinessException("Academic year not fount"));
+				.orElseGet(() -> academicYearRepository.save(new AcademicYear(label)));
 	}
 
 	@Override
 	public String createAcademicYear(String label) {
-		return getOrcreateAcademicYear(label).getLabel();
+		return getOrCreateAcademicYear(label).getLabel();
+	}
+
+	@Override
+	public TimetableDTO createTimetableForExam(String levelId, String academicYear, String semester,
+			SessionType sessionType) {
+		Level level = levelRepository.findById(levelId)
+				.orElseThrow(() -> new CustomBusinessException("Level not found with id: " + levelId));
+		return Timetable.builder()
+				.academicYear(academicYear)
+				.semester(Semester.valueOf(semester))
+				.level(level)
+				.name("Exam Planning for " + level.getCode())
+				.description("Timetable for " + level.getName() + " __" + academicYear + "__" + semester)
+				.sessionType(sessionType)
+				.schedules(new HashSet<>())
+				.build()
+				.toDTO();
 	}
 
 	@Override
@@ -156,7 +184,7 @@ public class TimetableServiceImpl implements TimetableService {
 	@Override
 	public List<String> getAllAcademicYears() {
 		return academicYearRepository.findAll().stream()
-				.map(AcademicYear::getId)
+				.map(AcademicYear::getLabel)
 				.collect(Collectors.toList());
 	}
 
@@ -167,7 +195,7 @@ public class TimetableServiceImpl implements TimetableService {
 
 	@Override
 	public List<TimeSlotDTO> getExamTimeSlots() {
-		return Arrays.stream(TimeSlot.CourseTimeSlot.values()).map(TimeSlotDTO::fromTimeSlot)
+		return Arrays.stream(TimeSlot.ExamTimeSlot.values()).map(TimeSlotDTO::fromTimeSlot)
 				.collect(Collectors.toList());
 	}
 
@@ -187,6 +215,4 @@ public class TimetableServiceImpl implements TimetableService {
 		return Arrays.stream(Semester.values()).map(Enum::name).collect(Collectors.toList());
 	}
 
-	// Implement other get, update, delete methods as straightforward repository
-	// calls
 }

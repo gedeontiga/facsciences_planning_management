@@ -19,7 +19,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-public final class CourseScheduling extends Scheduling {
+public class CourseScheduling extends Scheduling {
     @Indexed
     protected DayOfWeek day;
     @DocumentReference(collection = "courses")

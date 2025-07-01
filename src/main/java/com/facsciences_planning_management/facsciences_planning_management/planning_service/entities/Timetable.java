@@ -30,7 +30,7 @@ public class Timetable {
     private String description;
     @Indexed
     private SessionType sessionType;
-    @DocumentReference
+    @DocumentReference(lazy = true)
     private Set<Scheduling> schedules;
     @DocumentReference(collection = "levels")
     private Level level;

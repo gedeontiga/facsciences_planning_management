@@ -1,11 +1,11 @@
-package com.facsciences_planning_management.facsciences_planning_management.planning_service.components;
+package com.facsciences_planning_management.facsciences_planning_management.planning_service.validators;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
 import java.util.regex.Pattern;
 
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.components.interfaces.AcademicYearFormat;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.validators.interfaces.AcademicYearFormat;
 
 public class AcademicYearValidator implements ConstraintValidator<AcademicYearFormat, String> {
 

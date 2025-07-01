@@ -42,25 +42,34 @@ public class AdminServices {
         Role role = roleRepository.findByType(RoleType.valueOf(userInfo.role()))
                 .orElseThrow(() -> new RuntimeException("Role not found"));
         final String DEFAULT_PASSWORD = userInfo.firstName().toLowerCase() + passwordEnd;
+        Users savedUser;
 
-        // Create user with encoded default password
-        Users user = Users.builder()
-                .firstName(userInfo.firstName())
-                .lastName(userInfo.lastName())
-                .email(userInfo.email())
-                .address(userInfo.address())
-                .phoneNumber(userInfo.phoneNumber())
-                .password(passwordEncoder.encode(DEFAULT_PASSWORD))
-                .role(role)
-                .enabled(true)
-                .build();
+        if (userInfo.role().equals("TEACHER")) {
+            Teacher user = Teacher.builder()
+                    .firstName(userInfo.firstName())
+                    .lastName(userInfo.lastName())
+                    .email(userInfo.email())
+                    .address(userInfo.address())
+                    .phoneNumber(userInfo.phoneNumber())
+                    .password(passwordEncoder.encode(DEFAULT_PASSWORD))
+                    .role(role)
+                    .enabled(true)
+                    .build();
+            savedUser = teacherRepository.save(user);
+        } else {
+            Users user = Users.builder()
+                    .firstName(userInfo.firstName())
+                    .lastName(userInfo.lastName())
+                    .email(userInfo.email())
+                    .address(userInfo.address())
+                    .phoneNumber(userInfo.phoneNumber())
+                    .password(passwordEncoder.encode(DEFAULT_PASSWORD))
+                    .role(role)
+                    .enabled(true)
+                    .build();
+            savedUser = userRepository.save(user);
+        }
 
-        log.debug(user.toString());
-
-        // Save user
-        Users savedUser = userRepository.save(user);
-
-        // Send account creation notification
         try {
             mailNotificationService.sendAccountCreationEmail(
                     savedUser.getEmail(),

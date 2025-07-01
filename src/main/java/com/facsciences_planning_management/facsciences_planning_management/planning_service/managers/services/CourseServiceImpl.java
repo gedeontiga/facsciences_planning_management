@@ -10,163 +10,177 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.facsciences_planning_management.facsciences_planning_management.entities.Users;
-import com.facsciences_planning_management.facsciences_planning_management.entities.repositories.UserRepository;
+import com.facsciences_planning_management.facsciences_planning_management.entities.Teacher;
+import com.facsciences_planning_management.facsciences_planning_management.entities.repositories.TeacherRepository;
 import com.facsciences_planning_management.facsciences_planning_management.exceptions.CustomBusinessException;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Course;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.CourseScheduling;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Timetable;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Ue;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.CourseRepository;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.DepartmentRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.TimetableRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.UeRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.CourseDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces.CourseService;
 
+import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class CourseServiceImpl implements CourseService {
-        private final CourseRepository courseRepository;
-        private final UeRepository ueRepository;
-        private final UserRepository userRepository;
-        private final TimetableRepository timetableRepository;
+	private final CourseRepository courseRepository;
+	private final UeRepository ueRepository;
+	private final TeacherRepository teacherRepository;
+	private final TimetableRepository timetableRepository;
+	private final DepartmentRepository departmentRepository;
 
-        @Override
-        public Page<CourseDTO> getAllCourses(Pageable page) {
-                return courseRepository.findAllByObsoleteFalse(page)
-                                .map(Course::toDTO);
-        }
+	@Override
+	public Page<CourseDTO> getAllCourses(Pageable page) {
+		return courseRepository.findAllByObsoleteFalse(page)
+				.map(Course::toDTO);
+	}
 
-        @Override
-        @Transactional
-        public CourseDTO createCourse(String teacherId, String ueId, Long duration) {
-                Users teacher = userRepository.findById(teacherId)
-                                .orElseThrow(() -> new CustomBusinessException("User not found with id: " + teacherId));
-                Ue ue = ueRepository.findById(ueId)
-                                .orElseThrow(() -> new CustomBusinessException("Ue not found with id: " + ueId));
+	@Override
+	@Transactional
+	public CourseDTO createCourse(CourseDTO request) {
+		Teacher teacher = teacherRepository.findById(request.teacherId())
+				.orElseThrow(() -> new CustomBusinessException("User not found for this Id"));
+		Ue ue = ueRepository.findById(request.ueId())
+				.orElseThrow(() -> new CustomBusinessException("Ue not found for this Id"));
 
-                Course course = Course.builder()
-                                .teacher(teacher)
-                                .ue(ue)
-                                .duration(Duration.ofHours(duration))
-                                .obsolete(false)
-                                .build();
+		if (request.departmentId() != null && teacher.getDepartment() == null) {
+			teacher.setDepartment(departmentRepository.findById(request.departmentId())
+					.orElseThrow(() -> new CustomBusinessException("Department not found for this Id")));
+			teacherRepository.save(teacher);
+		}
+		Course course = Course.builder()
+				.teacher(teacher)
+				.ue(ue)
+				.duration(Duration.ofHours(request.duration()))
+				.obsolete(false)
+				.build();
 
-                return courseRepository.save(course).toDTO();
-        }
+		return courseRepository.save(course).toDTO();
+	}
 
-        // Soft update: Mark old as obsolete, create a new one
-        @Override
-        @Transactional
-        public CourseDTO updateCourseTeacher(String courseId, String teacherId) {
-                Users newTeacher = userRepository.findById(teacherId)
-                                .orElseThrow(() -> new CustomBusinessException("User not found with id: " + teacherId));
-                Course oldCourse = courseRepository.findById(courseId)
-                                .orElseThrow(() -> new CustomBusinessException(
-                                                "Course not found with id: " + courseId));
+	// Soft update: Mark old as obsolete, create a new one
+	@Override
+	@Transactional
+	public CourseDTO updateCourseTeacher(String courseId, String teacherId, @Nullable String departmentId) {
+		Teacher newTeacher = teacherRepository.findById(teacherId)
+				.orElseThrow(() -> new CustomBusinessException("User not found with id: " + teacherId));
+		Course oldCourse = courseRepository.findById(courseId)
+				.orElseThrow(() -> new CustomBusinessException(
+						"Course not found with id: " + courseId));
 
-                oldCourse.setObsolete(true);
-                courseRepository.save(oldCourse);
+		if (departmentId != null && !newTeacher.getDepartment().getId().equals(departmentId)) {
+			newTeacher.setDepartment(departmentRepository.findById(departmentId)
+					.orElseThrow(() -> new CustomBusinessException("Department not found with id: " + departmentId)));
+			teacherRepository.save(newTeacher);
+		}
 
-                Course newCourse = Course.builder()
-                                .teacher(newTeacher)
-                                .ue(oldCourse.getUe())
-                                .duration(oldCourse.getDuration())
-                                .obsolete(false)
-                                .build();
+		oldCourse.setObsolete(true);
+		courseRepository.save(oldCourse);
 
-                return courseRepository.save(newCourse).toDTO();
-        }
+		Course newCourse = Course.builder()
+				.teacher(newTeacher)
+				.ue(oldCourse.getUe())
+				.duration(oldCourse.getDuration())
+				.obsolete(false)
+				.build();
 
-        // Soft update: Mark old as obsolete, create a new one
-        @Override
-        @Transactional
-        public CourseDTO updateCourseUe(String courseId, String ueId) {
-                Ue newUe = ueRepository.findById(ueId)
-                                .orElseThrow(() -> new CustomBusinessException("Ue not found with id: " + ueId));
-                Course oldCourse = courseRepository.findById(courseId)
-                                .orElseThrow(() -> new CustomBusinessException(
-                                                "Course not found with id: " + courseId));
+		return courseRepository.save(newCourse).toDTO();
+	}
 
-                oldCourse.setObsolete(true);
-                courseRepository.save(oldCourse);
+	// Soft update: Mark old as obsolete, create a new one
+	@Override
+	@Transactional
+	public CourseDTO updateCourseUe(String courseId, String ueId) {
+		Ue newUe = ueRepository.findById(ueId)
+				.orElseThrow(() -> new CustomBusinessException("Ue not found with id: " + ueId));
+		Course oldCourse = courseRepository.findById(courseId)
+				.orElseThrow(() -> new CustomBusinessException(
+						"Course not found with id: " + courseId));
 
-                Course newCourse = Course.builder()
-                                .teacher(oldCourse.getTeacher())
-                                .ue(newUe)
-                                .duration(oldCourse.getDuration())
-                                .obsolete(false)
-                                .build();
+		oldCourse.setObsolete(true);
+		courseRepository.save(oldCourse);
 
-                return courseRepository.save(newCourse).toDTO();
-        }
+		Course newCourse = Course.builder()
+				.teacher(oldCourse.getTeacher())
+				.ue(newUe)
+				.duration(oldCourse.getDuration())
+				.obsolete(false)
+				.build();
 
-        // Hard update for duration
-        @Override
-        public CourseDTO updateCourseDuration(String courseId, Long duration) {
-                Course course = courseRepository.findById(courseId)
-                                .orElseThrow(() -> new CustomBusinessException(
-                                                "Course not found with id: " + courseId));
-                course.setDuration(Duration.ofHours(duration));
-                return courseRepository.save(course).toDTO();
-        }
+		return courseRepository.save(newCourse).toDTO();
+	}
 
-        @Override
-        public CourseDTO getCourse(String courseId) {
-                return courseRepository.findById(courseId)
-                                .map(Course::toDTO)
-                                .orElseThrow(() -> new CustomBusinessException(
-                                                "Course not found with id: " + courseId));
-        }
+	// Hard update for duration
+	@Override
+	public CourseDTO updateCourseDuration(String courseId, Long duration) {
+		Course course = courseRepository.findById(courseId)
+				.orElseThrow(() -> new CustomBusinessException(
+						"Course not found with id: " + courseId));
+		course.setDuration(Duration.ofHours(duration));
+		return courseRepository.save(course).toDTO();
+	}
 
-        @Override
-        public CourseDTO getCourseByUe(String ueId) {
-                return courseRepository.findByObsoleteFalseAndUeId(ueId)
-                                .map(Course::toDTO)
-                                .orElseThrow(() -> new CustomBusinessException(
-                                                "Active course not found for UE id: " + ueId));
-        }
+	@Override
+	public CourseDTO getCourse(String courseId) {
+		return courseRepository.findById(courseId)
+				.map(Course::toDTO)
+				.orElseThrow(() -> new CustomBusinessException(
+						"Course not found with id: " + courseId));
+	}
 
-        @Override
-        public List<CourseDTO> getCourseByLevel(String levelId) {
-                return courseRepository.findByObsoleteFalseAndUeLevelId(levelId)
-                                .stream()
-                                .map(Course::toDTO)
-                                .collect(Collectors.toList());
-        }
+	@Override
+	public CourseDTO getCourseByUe(String ueId) {
+		return courseRepository.findByObsoleteFalseAndUeId(ueId)
+				.map(Course::toDTO)
+				.orElseThrow(() -> new CustomBusinessException(
+						"Active course not found for UE id: " + ueId));
+	}
 
-        @Override
-        public List<CourseDTO> getUnscheduledCourses(String levelId, String timetableId) {
-                // 1. Get all non-obsolete courses for the level
-                List<Course> allCoursesForLevel = courseRepository.findByObsoleteFalseAndUeLevelId(levelId);
+	@Override
+	public List<CourseDTO> getCourseByLevel(String levelId) {
+		return courseRepository.findByObsoleteFalseAndUeLevelId(levelId)
+				.stream()
+				.map(Course::toDTO)
+				.collect(Collectors.toList());
+	}
 
-                // 2. Get the timetable and its scheduled UEs
-                Timetable timetable = timetableRepository.findById(timetableId)
-                                .orElseThrow(() -> new CustomBusinessException(
-                                                "Timetable not found with id: " + timetableId));
+	@Override
+	public List<CourseDTO> getUnscheduledCourses(String levelId, String timetableId) {
+		// 1. Get all non-obsolete courses for the level
+		List<Course> allCoursesForLevel = courseRepository.findByObsoleteFalseAndUeLevelId(levelId);
 
-                // 3. Extract the UE IDs of the courses already scheduled in this timetable
-                Set<String> scheduledUeIds = timetable.getSchedules().stream()
-                                .filter(schedule -> schedule instanceof CourseScheduling)
-                                .map(schedule -> ((CourseScheduling) schedule).getAssignedCourse().getUe().getId())
-                                .collect(Collectors.toSet());
+		// 2. Get the timetable and its scheduled UEs
+		Timetable timetable = timetableRepository.findById(timetableId)
+				.orElseThrow(() -> new CustomBusinessException(
+						"Timetable not found with id: " + timetableId));
 
-                // 4. Filter to find courses whose UE is not yet scheduled
-                return allCoursesForLevel.stream()
-                                .filter(course -> !scheduledUeIds.contains(course.getUe().getId()))
-                                .map(Course::toDTO)
-                                .collect(Collectors.toList());
-        }
+		// 3. Extract the UE IDs of the courses already scheduled in this timetable
+		Set<String> scheduledUeIds = timetable.getSchedules().stream()
+				.filter(schedule -> schedule instanceof CourseScheduling)
+				.map(schedule -> ((CourseScheduling) schedule).getAssignedCourse().getUe().getId())
+				.collect(Collectors.toSet());
 
-        @Override
-        public void deleteCourse(String courseId) {
-                // This is a hard delete. Alternatively, could also be implemented as setting
-                // obsolete=true.
-                if (!courseRepository.existsById(courseId)) {
-                        throw new CustomBusinessException("Course not found with id: " + courseId);
-                }
-                courseRepository.deleteById(courseId);
-        }
+		// 4. Filter to find courses whose UE is not yet scheduled
+		return allCoursesForLevel.stream()
+				.filter(course -> !scheduledUeIds.contains(course.getUe().getId()))
+				.map(Course::toDTO)
+				.collect(Collectors.toList());
+	}
+
+	@Override
+	public void deleteCourse(String courseId) {
+		// This is a hard delete. Alternatively, could also be implemented as setting
+		// obsolete=true.
+		if (!courseRepository.existsById(courseId)) {
+			throw new CustomBusinessException("Course not found with id: " + courseId);
+		}
+		courseRepository.deleteById(courseId);
+	}
 }

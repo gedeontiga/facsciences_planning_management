@@ -23,6 +23,15 @@ public class TimeSlot {
         private LocalTime startTime;
         private LocalTime endTime;
         private Duration duration;
+
+        public static CourseTimeSlot get(LocalTime startTime, LocalTime endTime) {
+            for (CourseTimeSlot slot : CourseTimeSlot.values()) {
+                if (slot.startTime.equals(startTime) && slot.endTime.equals(endTime)) {
+                    return slot;
+                }
+            }
+            return null;
+        }
     }
 
     @Getter
@@ -40,5 +49,14 @@ public class TimeSlot {
         private final LocalTime startTime;
         private final LocalTime endTime;
         private final Duration duration;
+
+        public static ExamTimeSlot get(LocalTime startTime, LocalTime endTime) {
+            for (ExamTimeSlot slot : ExamTimeSlot.values()) {
+                if (slot.startTime.equals(startTime) && slot.endTime.equals(endTime)) {
+                    return slot;
+                }
+            }
+            return null;
+        }
     }
 }

@@ -1,5 +1,6 @@
 package com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -85,5 +86,10 @@ public class RoomServiceImpl implements RoomService {
         return roomRepository.findByTypeAndAvailabilityTrue(RoomType.valueOf(type)).stream()
                 .map(Room::toDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<String> getAllRoomTypes() {
+        return Arrays.stream(RoomType.values()).map(RoomType::name).collect(Collectors.toList());
     }
 }

@@ -24,13 +24,10 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class JwtService {
-
     private static final String TOKEN_NOT_FOUND = "Token not found";
     private static final String BEARER = "Bearer";
 
@@ -52,24 +49,26 @@ public class JwtService {
         final Users user = userRepository.findByEmailAndEnabledIsTrue(email)
                 .orElseThrow(() -> new CustomBusinessException("User not found"));
 
-        // Invalidate any existing tokens for this user
         invalidateUserTokens(user.getId());
 
         return this.generateJwt(user);
     }
 
     public Map<String, String> refreshToken(final String token) {
+
+        if (!isValidTokenFormat(token)) {
+            throw new JwtException("Invalid token format");
+        }
+
         final String email = getEmailFromToken(token);
         final Users user = userRepository.findByEmailAndEnabledIsTrue(email)
                 .orElseThrow(() -> new CustomBusinessException("User not found"));
 
-        // Validate current token exists and is not expired
         Jwt currentJwt = getJwtByToken(token);
         if (currentJwt.getExpiredAt().isBefore(Instant.now())) {
             throw new JwtException("Cannot refresh expired token");
         }
 
-        // Invalidate current token
         jwtRepository.delete(currentJwt);
 
         return this.generateJwt(user);
@@ -89,39 +88,71 @@ public class JwtService {
     }
 
     public boolean isTokenValid(final String token) {
-        try {
-            final Jwt jwtEntity = getJwtByToken(token);
 
-            // Check if token exists in database and is not expired
-            if (jwtEntity.getExpiredAt().isBefore(Instant.now())) {
-                return false;
-            }
+        if (!isValidTokenFormat(token)) {
 
-            // Validate JWT signature and expiration
-            final Date expiration = getClaim(token, Claims::getExpiration);
-            return expiration != null && !expiration.before(new Date());
-
-        } catch (Exception e) {
-            log.warn("Token validation failed: {}", e.getMessage());
-            return false;
+            throw new JwtException("Invalid token format");
         }
+
+        final Jwt jwtEntity = getJwtByToken(token);
+
+        if (jwtEntity.getExpiredAt().isBefore(Instant.now())) {
+
+            throw new JwtException("Token has expired");
+        }
+
+        final Date expiration = getClaim(token, Claims::getExpiration);
+        if (expiration == null || expiration.before(new Date())) {
+            throw new JwtException("Token has expired");
+        }
+
+        String tokenEmail = getEmailFromToken(token);
+        return jwtEntity.getUser().getEmail().equals(tokenEmail);
     }
 
     public boolean isTokenExpired(final String token) {
+        try {
+            if (!isValidTokenFormat(token)) {
+                return true;
+            }
+
+            final Date jwtExpiration = getClaim(token, Claims::getExpiration);
+            if (jwtExpiration != null && jwtExpiration.before(new Date())) {
+                return true;
+            }
+
+            final Jwt jwtEntity = getJwtByToken(token);
+            return jwtEntity.getExpiredAt().isBefore(Instant.now());
+
+        } catch (Exception e) {
+            return true;
+        }
+    }
+
+    public void validateTokenExpiration(final String token) {
+        if (!isValidTokenFormat(token)) {
+            throw new JwtException("Invalid token format");
+        }
+
         final Date expiration = getClaim(token, Claims::getExpiration);
         if (expiration != null && expiration.before(new Date())) {
             throw new JwtException("Token has expired");
         }
-        return false;
+
+        final Jwt jwtEntity = getJwtByToken(token);
+        if (jwtEntity.getExpiredAt().isBefore(Instant.now())) {
+            throw new JwtException("Token has expired");
+        }
     }
 
     public void invalidateToken(final String token) {
         try {
-            Jwt jwt = getJwtByToken(token);
-            jwtRepository.delete(jwt);
-            log.info("Token invalidated for user: {}", getEmailFromToken(token));
+            if (isValidTokenFormat(token)) {
+                Jwt jwt = getJwtByToken(token);
+                jwtRepository.delete(jwt);
+            }
         } catch (Exception e) {
-            log.warn("Failed to invalidate token: {}", e.getMessage());
+
         }
     }
 
@@ -129,15 +160,21 @@ public class JwtService {
         List<Jwt> userTokens = jwtRepository.findByUserId(userId);
         if (!userTokens.isEmpty()) {
             jwtRepository.deleteAll(userTokens);
-            log.info("Invalidated {} existing tokens for user: {}", userTokens.size());
         }
     }
 
     @Scheduled(cron = "@daily")
     public void removeExpiredTokens() {
-        log.info("Starting cleanup of expired tokens at {}", Instant.now());
         jwtRepository.deleteAllByExpiredAtIsBefore(Instant.now());
-        log.info("Removed {} expired tokens");
+    }
+
+    private boolean isValidTokenFormat(final String token) {
+        if (token == null || token.trim().isEmpty()) {
+            return false;
+        }
+
+        String[] parts = token.split("\\.");
+        return parts.length == 3;
     }
 
     private <T> T getClaim(final String token, final Function<Claims, T> claimsResolver) {
@@ -161,7 +198,6 @@ public class JwtService {
         final Instant now = Instant.now();
         final Instant expirationInstant = now.plusSeconds(tokenValidityHours * 3600);
 
-        // Convert to Date for JWT claims (JWT library expects Date objects)
         final Date issuedAt = Date.from(now);
         final Date expirationDate = Date.from(expirationInstant);
 
@@ -179,7 +215,6 @@ public class JwtService {
                 .signWith(getSigningKey())
                 .compact();
 
-        // Save token to database
         Jwt jwt = Jwt.builder()
                 .token(token)
                 .expiredAt(expirationInstant)
@@ -188,9 +223,6 @@ public class JwtService {
                 .build();
 
         jwt = jwtRepository.save(jwt);
-
-        log.info("Generated new JWT token for user: {}, expires at: {}",
-                user.getEmail(), expirationInstant);
 
         return Map.of(
                 BEARER, jwt.getToken(),

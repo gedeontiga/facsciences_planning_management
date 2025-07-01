@@ -1,4 +1,4 @@
-package com.facsciences_planning_management.facsciences_planning_management.planning_service.components.interfaces;
+package com.facsciences_planning_management.facsciences_planning_management.planning_service.validators.interfaces;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
@@ -7,7 +7,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.components.AcademicYearValidator;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.validators.AcademicYearValidator;
 
 @Target({ ElementType.FIELD, ElementType.PARAMETER, ElementType.ANNOTATION_TYPE }) // Where this can be used
 @Retention(RetentionPolicy.RUNTIME) // Available at runtime
