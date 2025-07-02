@@ -43,7 +43,7 @@ public record CourseSchedulingDTO(
 				null,
 				reservation.getUe().getId(),
 				null,
-				reservation.getTimetable().getId(),
+				reservation.getTimetableId(),
 				CourseTimeSlot.get(reservation.getStartTime(), reservation.getEndTime()).name(),
 				reservation.getStartTime().toString(),
 				reservation.getEndTime().toString(),

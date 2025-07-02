@@ -1,6 +1,7 @@
 package com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,13 +21,13 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces.SchedulingService;
 
 import java.time.DayOfWeek;
-import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service("courseSchedulingService")
 @RequiredArgsConstructor
 public class CourseSchedulingServiceImpl implements SchedulingService<CourseSchedulingDTO> {
@@ -53,8 +54,9 @@ public class CourseSchedulingServiceImpl implements SchedulingService<CourseSche
 		Course assignedCourse = courseRepository.findByUeIdAndObsoleteFalse(request.ueId())
 				.orElseThrow(() -> new CustomBusinessException("Active course for UE not found: " + request.ueId()));
 
+		// log.info("Creating scheduling: {}", request.day());
 		conflictService.validateCourseScheduling(assignedCourse.getTeacher(), assignedCourse, room,
-				LocalDate.parse(request.day()),
+				request.day(),
 				LocalTime.parse(request.startTime()), LocalTime.parse(request.endTime()));
 
 		CourseScheduling scheduling = CourseScheduling.builder()
@@ -100,7 +102,7 @@ public class CourseSchedulingServiceImpl implements SchedulingService<CourseSche
 		}
 		conflictService.validateCourseScheduling(course.getTeacher(),
 				course, room,
-				LocalDate.parse(request.day()),
+				request.day(),
 				LocalTime.parse(request.startTime()), LocalTime.parse(request.endTime()));
 
 		// Note: Changing the assigned course might be a complex operation, handled here

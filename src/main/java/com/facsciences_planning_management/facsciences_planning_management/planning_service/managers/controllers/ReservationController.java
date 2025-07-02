@@ -47,11 +47,12 @@ public class ReservationController {
         return ResponseEntity.ok(processedReservation);
     }
 
-    @GetMapping("/teacher")
+    @GetMapping("/teacher/{teacherId}")
     @PreAuthorize("hasAnyAuthority('TEACHER', 'DEPARTMENT_HEAD', 'ADMIN')")
     public ResponseEntity<Page<ReservationResponseDTO>> getReservationsByTeacher(
+            @PathVariable String teacherId,
             @PageableDefault(size = 10) Pageable pageable) {
-        Page<ReservationResponseDTO> reservations = reservationService.getReservations(pageable);
+        Page<ReservationResponseDTO> reservations = reservationService.getReservationByTeacher(teacherId, pageable);
         return ResponseEntity.ok(reservations);
     }
 

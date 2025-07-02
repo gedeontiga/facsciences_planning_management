@@ -1,6 +1,7 @@
 package com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,8 +15,10 @@ import com.facsciences_planning_management.facsciences_planning_management.excep
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Reservation;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Reservation.RequestStatus;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Room;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Ue;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.ReservationRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.RoomRepository;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.UeRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.SessionType;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.CourseSchedulingDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.ExamSchedulingDTO;
@@ -31,6 +34,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ReservationServiceImpl implements ReservationService {
@@ -38,6 +42,7 @@ public class ReservationServiceImpl implements ReservationService {
 	private final ReservationRepository reservationRepository;
 	private final UserRepository userRepository;
 	private final RoomRepository roomRepository;
+	private final UeRepository ueRepository;
 	private final CourseSchedulingServiceImpl courseSchedulingService;
 	private final ExamSchedulingServiceImpl examSchedulingService;
 	private final SchedulingConflictService schedulingConflictService;
@@ -47,19 +52,31 @@ public class ReservationServiceImpl implements ReservationService {
 	@Override
 	@Transactional
 	public ReservationResponseDTO createRequest(ReservationRequestDTO request) {
+		if (reservationRepository.existsByTeacherIdAndDateAndStartTimeAndEndTime(
+				request.teacherId(), LocalDate.parse(request.date()), LocalTime.parse(request.startTime()),
+				LocalTime.parse(request.endTime()))) {
+			throw new CustomBusinessException("A reservation already exists for this time slot.");
+
+		}
 		Users teacher = userRepository.findById(request.teacherId())
 				.orElseThrow(() -> new CustomBusinessException("Teacher not found with id: " + request.teacherId()));
 
 		Room room = roomRepository.findById(request.roomId())
 				.orElseThrow(() -> new CustomBusinessException("Room not found with id: " + request.roomId()));
 
-		schedulingConflictService.validateScheduling(teacher, room, LocalDate.parse(request.date()),
+		Ue ue = ueRepository.findById(request.ueId())
+				.orElseThrow(() -> new CustomBusinessException("UE not found with id: " + request.ueId()));
+
+		schedulingConflictService.validateScheduling(teacher, room, request.date(),
 				LocalTime.parse(request.startTime()), LocalTime.parse(request.endTime()));
 
+		// log.info("Creating reservation request: {}", teacher.getUsername());
 		Reservation reservation = Reservation.builder()
 				.teacher(teacher)
 				.sessionType(request.sessionType())
 				.status(RequestStatus.PENDING)
+				.timetableId(request.timetableId())
+				.ue(ue)
 				.room(room)
 				.startTime(LocalTime.parse(request.startTime()))
 				.endTime(LocalTime.parse(request.endTime()))
@@ -93,10 +110,11 @@ public class ReservationServiceImpl implements ReservationService {
 			}
 		}
 
+		log.info("Processing reservation request: {}", reservation.getId());
+
 		reservation.setStatus(request.status());
 		reservation.setAdminComment(request.message());
 		reservation.setProcessedBy(admin);
-		reservation.setProcessedAt(LocalDateTime.now());
 
 		Reservation updatedReservation = reservationRepository.save(reservation);
 		ReservationResponseDTO responseDTO = ReservationResponseDTO.fromReservation(updatedReservation);
@@ -107,10 +125,7 @@ public class ReservationServiceImpl implements ReservationService {
 	}
 
 	@Override
-	public Page<ReservationResponseDTO> getReservations(Pageable page) {
-		String email = ((Users) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
-		String teacherId = userRepository.findByEmail(email)
-				.orElseThrow(() -> new CustomBusinessException("User not found")).getId();
+	public Page<ReservationResponseDTO> getReservationByTeacher(String teacherId, Pageable page) {
 		return reservationRepository.findByTeacherId(teacherId, page)
 				.map(ReservationResponseDTO::fromReservation);
 	}

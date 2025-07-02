@@ -9,6 +9,8 @@ import org.springframework.stereotype.Repository;
 
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Reservation;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Reservation.RequestStatus;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 @Repository
 public interface ReservationRepository extends
@@ -16,6 +18,9 @@ public interface ReservationRepository extends
     Page<Reservation> findByTeacherId(String teacherId, Pageable page);
 
     Page<Reservation> findByStatusOrderByCreatedAt(RequestStatus status, Pageable page);
+
+    boolean existsByTeacherIdAndDateAndStartTimeAndEndTime(String teacherId, LocalDate date, LocalTime startTime,
+            LocalTime endTime);
 
     List<Reservation> findAllByOrderByCreatedAtDesc();
 }

@@ -24,7 +24,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @RequiredArgsConstructor
 @AllArgsConstructor
-@Document
+@Document(collection = "users")
 public class Users implements UserDetails {
     @Id
     private String id;

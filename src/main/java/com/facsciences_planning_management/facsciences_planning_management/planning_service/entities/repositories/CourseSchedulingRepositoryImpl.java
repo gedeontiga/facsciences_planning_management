@@ -9,10 +9,9 @@ import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.query.Criteria;
-
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.CourseScheduling;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.TimeSlot;
-
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.TimeSlot.CourseTimeSlot;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.support.PageableExecutionUtils;
@@ -31,7 +30,6 @@ public class CourseSchedulingRepositoryImpl implements CourseSchedulingRepositor
 
 	private final MongoTemplate mongoTemplate;
 
-	// Helper class for count result
 	private static class CountResult {
 		long total;
 
@@ -41,12 +39,31 @@ public class CourseSchedulingRepositoryImpl implements CourseSchedulingRepositor
 	}
 
 	@Override
+	public boolean existsByAssignedCourseTeacherIdAndDayAndTimeSlot(String teacherId, DayOfWeek day,
+			CourseTimeSlot timeSlot) {
+		if (!ObjectId.isValid(teacherId)) {
+			return false;
+		}
+
+		// Use aggregation to check teacher through course reference
+		TypedAggregation<CourseScheduling> aggregation = Aggregation.newAggregation(
+				CourseScheduling.class,
+				Aggregation.match(Criteria.where("day").is(day).and("timeSlot").is(timeSlot)),
+				Aggregation.lookup("courses", "assignedCourse", "_id", "courseDetails"),
+				Aggregation.unwind("courseDetails"),
+				Aggregation.match(Criteria.where("courseDetails.teacher.$id").is(new ObjectId(teacherId))),
+				Aggregation.limit(1));
+
+		return !mongoTemplate.aggregate(aggregation, CourseScheduling.class).getMappedResults().isEmpty();
+	}
+
+	@Override
 	public List<CourseScheduling> findByTimetableUsedTrue() {
 		TypedAggregation<CourseScheduling> aggregation = Aggregation.newAggregation(CourseScheduling.class,
 				Aggregation.lookup("timetables", "timetable", "_id", "joinedTimetable"),
 				Aggregation.unwind("$joinedTimetable"),
 				Aggregation.match(Criteria.where("joinedTimetable.used").is(true))
-		// Consider projecting only necessary fields if performance is an issue
+
 		);
 		return mongoTemplate.aggregate(aggregation, CourseScheduling.class).getMappedResults();
 	}
@@ -59,9 +76,9 @@ public class CourseSchedulingRepositoryImpl implements CourseSchedulingRepositor
 		}
 
 		TypedAggregation<CourseScheduling> aggregation = Aggregation.newAggregation(CourseScheduling.class,
-				// First, match on the fields in the root document for efficiency
+
 				Aggregation.match(Criteria.where("day").is(day).and("timeSlot").is(timeSlot)),
-				// Then perform the joins and filtering on related collections
+
 				Aggregation.lookup("courses", "assignedCourse", "_id", "joinedCourse"),
 				Aggregation.unwind("joinedCourse"),
 				Aggregation.match(Criteria.where("joinedCourse.obsolete").is(false)),
@@ -89,8 +106,7 @@ public class CourseSchedulingRepositoryImpl implements CourseSchedulingRepositor
 				Aggregation.lookup("ues", "joinedCourse.ue", "_id", "joinedUe"),
 				Aggregation.unwind("joinedUe"),
 				Aggregation.match(Criteria.where("joinedUe.level").is(new ObjectId(levelId)))
-		// No projection needed if you just need the timeSlot, but returning the full
-		// object is more consistent.
+
 		);
 
 		return mongoTemplate.aggregate(aggregation, CourseScheduling.class).getMappedResults();
@@ -103,7 +119,6 @@ public class CourseSchedulingRepositoryImpl implements CourseSchedulingRepositor
 			return Page.empty(pageable);
 		}
 
-		// Base pipeline for reuse in both data and count queries
 		List<AggregationOperation> basePipeline = List.of(
 				Aggregation.lookup("courses", "assignedCourse", "_id", "joinedCourse"),
 				Aggregation.unwind("joinedCourse"),
@@ -114,10 +129,9 @@ public class CourseSchedulingRepositoryImpl implements CourseSchedulingRepositor
 				Aggregation.unwind("joinedLevel"),
 				Aggregation.lookup("branches", "joinedLevel.branch", "_id", "joinedBranch"),
 				Aggregation.unwind("joinedBranch"),
-				// THE FIX: Match against an ObjectId
+
 				Aggregation.match(Criteria.where("joinedBranch._id").is(new ObjectId(branchId))));
 
-		// Aggregation for fetching the page content
 		List<AggregationOperation> dataPipeline = new ArrayList<>(basePipeline);
 		dataPipeline.add(Aggregation.sort(pageable.getSort()));
 		dataPipeline.add(Aggregation.skip(pageable.getOffset()));

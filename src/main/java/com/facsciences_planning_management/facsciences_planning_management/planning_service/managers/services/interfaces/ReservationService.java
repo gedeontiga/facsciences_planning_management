@@ -14,7 +14,7 @@ public interface ReservationService {
 
     ReservationResponseDTO processRequest(String requestId, ReservationProcessingDTO request);
 
-    Page<ReservationResponseDTO> getReservations(Pageable page);
+    Page<ReservationResponseDTO> getReservationByTeacher(String teacherId, Pageable page);
 
     Page<ReservationResponseDTO> getAllRequests(String status, Pageable page);
 

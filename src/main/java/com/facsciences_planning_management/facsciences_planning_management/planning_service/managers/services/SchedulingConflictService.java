@@ -25,7 +25,7 @@ public class SchedulingConflictService {
     private final CourseSchedulingRepository courseSchedulingRepository;
     private final ExamSchedulingRepository examSchedulingRepository;
 
-    public void validateScheduling(Users user, Room room, LocalDate date, LocalTime startTime, LocalTime endTime) {
+    public void validateScheduling(Users user, Room room, String date, LocalTime startTime, LocalTime endTime) {
         if (isRoomOccupied(room, date, startTime, endTime)) {
             throw new SchedulingConflictException("Room is occupied");
         }
@@ -34,7 +34,7 @@ public class SchedulingConflictService {
         }
     }
 
-    public void validateCourseScheduling(Users user, Course course, Room room, LocalDate date, LocalTime startTime,
+    public void validateCourseScheduling(Users user, Course course, Room room, String date, LocalTime startTime,
             LocalTime endTime) {
         if (isRoomOccupied(room, date, startTime, endTime)) {
             throw new SchedulingConflictException("Room is occupied");
@@ -47,33 +47,41 @@ public class SchedulingConflictService {
         }
     }
 
-    private boolean isRoomOccupied(Room room, LocalDate date, LocalTime startTime, LocalTime endTime) {
+    private boolean isRoomOccupied(Room room, String date, LocalTime startTime, LocalTime endTime) {
         CourseTimeSlot courseTimeSlot = CourseTimeSlot.get(startTime, endTime);
         ExamTimeSlot examTimeSlot = ExamTimeSlot.get(startTime, endTime);
-        DayOfWeek day = date.getDayOfWeek();
-        boolean isOccupiedForCourse = courseSchedulingRepository.existsByRoomAndDayAndTimeSlot(room, day,
-                courseTimeSlot);
-        boolean isOccupiedForExam = examSchedulingRepository.existsByRoomAndSessionDateAndTimeSlot(room, date,
-                examTimeSlot);
-        return isOccupiedForCourse || isOccupiedForExam;
+        boolean isOccupied = false;
+        if (courseTimeSlot != null) {
+            isOccupied = courseSchedulingRepository.existsByRoomIdAndDayAndTimeSlot(room.getId(),
+                    DayOfWeek.valueOf(date), courseTimeSlot);
+        } else if (examTimeSlot != null) {
+            isOccupied = examSchedulingRepository.existsByRoomIdAndSessionDateAndTimeSlot(room.getId(),
+                    LocalDate.parse(date),
+                    examTimeSlot);
+        }
+        return isOccupied;
     }
 
-    private boolean isTeacherOccupied(Users user, LocalDate date, LocalTime startTime, LocalTime endTime) {
+    private boolean isTeacherOccupied(Users user, String date, LocalTime startTime, LocalTime endTime) {
         CourseTimeSlot courseTimeSlot = CourseTimeSlot.get(startTime, endTime);
         ExamTimeSlot examTimeSlot = ExamTimeSlot.get(startTime, endTime);
-        DayOfWeek day = date.getDayOfWeek();
-        boolean isOccupiedForCourse = courseSchedulingRepository.existsByAssignedCourseTeacherAndDayAndTimeSlot(user,
-                day,
-                courseTimeSlot);
-        boolean isOccupiedForExam = examSchedulingRepository.existsByProctorAndSessionDateAndTimeSlot(user, date,
-                examTimeSlot);
-        return isOccupiedForCourse || isOccupiedForExam;
+        boolean isOccupied = false;
+        if (courseTimeSlot != null) {
+            isOccupied = courseSchedulingRepository.existsByAssignedCourseTeacherIdAndDayAndTimeSlot(user.getId(),
+                    DayOfWeek.valueOf(date),
+                    courseTimeSlot);
+        } else if (examTimeSlot != null) {
+            isOccupied = examSchedulingRepository.existsByProctorIdAndSessionDateAndTimeSlot(user.getId(),
+                    LocalDate.parse(date),
+                    examTimeSlot);
+        }
+        return isOccupied;
     }
 
     private boolean onlyOneCourseIsScheduledPerWeek(Course course) {
         Integer counter = 0;
         for (DayOfWeek day : DayOfWeek.values()) {
-            if (courseSchedulingRepository.existsByAssignedCourseAndDay(course, day))
+            if (courseSchedulingRepository.existsByAssignedCourseIdAndDay(course.getId(), day))
                 counter++;
         }
         return counter == 1;

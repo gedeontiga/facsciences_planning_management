@@ -6,7 +6,6 @@ import java.time.LocalTime;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
@@ -24,7 +23,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Document(collection = "teacher_requests")
+@Document(collection = "reservations")
 public class Reservation {
     @Id
     private String id;
@@ -39,13 +38,11 @@ public class Reservation {
     private LocalTime startTime;
     private LocalTime endTime;
     private LocalDate date;
-    @DocumentReference(lazy = true, collection = "timetables")
-    private Timetable timetable;
+    private String timetableId;
     @CreatedDate
     private LocalDateTime createdAt;
     @LastModifiedDate
     private LocalDateTime processedAt;
-    @LastModifiedBy
     @DocumentReference(lazy = true, collection = "users")
     private Users processedBy;
     private String adminComment;

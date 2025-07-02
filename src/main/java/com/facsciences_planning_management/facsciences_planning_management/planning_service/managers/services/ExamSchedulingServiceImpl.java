@@ -59,7 +59,7 @@ public class ExamSchedulingServiceImpl implements SchedulingService<ExamScheduli
 		Users proctor = userRepository.findById(request.ueId())
 				.orElseThrow(() -> new CustomBusinessException("Proctor not found: " + request.userId()));
 
-		conflictService.validateScheduling(proctor, room, LocalDate.parse(request.date()),
+		conflictService.validateScheduling(proctor, room, request.date(),
 				LocalTime.parse(request.startTime()), LocalTime.parse(request.endTime()));
 
 		ExamScheduling scheduling = ExamScheduling.builder()
@@ -107,7 +107,7 @@ public class ExamSchedulingServiceImpl implements SchedulingService<ExamScheduli
 		if (request.timeSlotLabel() != null) {
 			scheduling.setTimeSlot(TimeSlot.ExamTimeSlot.valueOf(request.timeSlotLabel()));
 		}
-		conflictService.validateScheduling(proctor, room, LocalDate.parse(request.date()),
+		conflictService.validateScheduling(proctor, room, request.date(),
 				LocalTime.parse(request.startTime()), LocalTime.parse(request.endTime()));
 
 		ExamScheduling updatedScheduling = schedulingRepository.save(scheduling);

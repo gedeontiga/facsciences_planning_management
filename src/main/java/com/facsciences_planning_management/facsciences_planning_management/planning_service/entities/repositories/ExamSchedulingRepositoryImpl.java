@@ -12,7 +12,6 @@ import org.springframework.stereotype.Repository;
 
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.ExamScheduling;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.TimeSlot;
-
 import java.util.List;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 
@@ -37,6 +36,22 @@ public class ExamSchedulingRepositoryImpl implements ExamSchedulingRepositoryCus
 		}
 	}
 
+	// @Override
+	// public boolean existsByProctorIdAndSessionDateAndTimeSlot(String proctorId,
+	// LocalDate sessionDate,
+	// ExamTimeSlot timeSlot) {
+	// if (!ObjectId.isValid(proctorId)) {
+	// return false;
+	// }
+
+	// Query query = new Query();
+	// query.addCriteria(Criteria.where("proctor.$id").is(new ObjectId(proctorId))
+	// .and("sessionDate").is(sessionDate)
+	// .and("timeSlot").is(timeSlot));
+
+	// return mongoTemplate.exists(query, ExamScheduling.class);
+	// }
+
 	@Override
 	public List<ExamScheduling> findByUeLevelIdAndSessionDateAndTimeSlotAndTimetableUsedTrue(
 			String levelId, LocalDate sessionDate, TimeSlot.ExamTimeSlot timeSlot) {
@@ -45,9 +60,9 @@ public class ExamSchedulingRepositoryImpl implements ExamSchedulingRepositoryCus
 		}
 
 		TypedAggregation<ExamScheduling> aggregation = Aggregation.newAggregation(ExamScheduling.class,
-				// First, match on root document fields
+
 				Aggregation.match(Criteria.where("sessionDate").is(sessionDate).and("timeSlot").is(timeSlot)),
-				// Then, join and filter
+
 				Aggregation.lookup("timetables", "timetable", "_id", "joinedTimetable"),
 				Aggregation.unwind("$joinedTimetable"),
 				Aggregation.match(Criteria.where("joinedTimetable.used").is(true)),
@@ -97,7 +112,7 @@ public class ExamSchedulingRepositoryImpl implements ExamSchedulingRepositoryCus
 				Aggregation.unwind("$joinedUe"),
 				Aggregation.lookup("levels", "joinedUe.level", "_id", "joinedLevel"),
 				Aggregation.unwind("$joinedLevel"),
-				// THE FIX: Match against an ObjectId
+
 				Aggregation.match(Criteria.where("joinedLevel._id").is(new ObjectId(levelId))),
 				Aggregation
 						.project("id", "proctor", "sessionDate", "ue", "timeSlot", "room", "timetable", "createdAt",
@@ -123,7 +138,7 @@ public class ExamSchedulingRepositoryImpl implements ExamSchedulingRepositoryCus
 				Aggregation.unwind("$joinedLevel"),
 				Aggregation.lookup("branches", "joinedLevel.branch", "_id", "joinedBranch"),
 				Aggregation.unwind("$joinedBranch"),
-				// THE FIX: Match against an ObjectId
+
 				Aggregation.match(Criteria.where("joinedBranch._id").is(new ObjectId(branchId))));
 
 		List<AggregationOperation> dataPipeline = new ArrayList<>(basePipeline);
