@@ -5,6 +5,7 @@ import com.facsciences_planning_management.facsciences_planning_management.user_
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.UserRequest;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.services.AuthService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.ResponseEntity;
@@ -22,6 +23,7 @@ import javax.security.sasl.AuthenticationException;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@SecurityRequirements()
 public class AuthController {
     private final AuthService authService;
 

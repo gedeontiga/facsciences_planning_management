@@ -20,6 +20,7 @@ import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.element.Text;
+import com.itextpdf.layout.properties.HorizontalAlignment;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
 import com.itextpdf.layout.properties.VerticalAlignment;
@@ -164,29 +165,67 @@ public class TimetableExportService {
 
     private void addHeader(Document document, String title, TimetableDTO timetable, String levelCode)
             throws IOException {
-        // ... (this method remains the same as before, no changes needed)
         PdfFont boldFont = PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD);
         PdfFont regularFont = PdfFontFactory.createFont(StandardFonts.HELVETICA);
 
-        Table headerTable = new Table(UnitValue.createPercentArray(new float[] { 1, 4, 1 }))
-                .setWidth(UnitValue.createPercentValue(100));
-        headerTable.addCell(new Cell()
-                .add(new Paragraph("UNIVERSITE DE YAOUNDE I\nFACULTE DES SCIENCES").setFont(regularFont).setFontSize(8))
-                .setBorder(null));
-        Image logo = new Image(ImageDataFactory.create("src/main/resources/images/uy1_logo.png")).setHeight(50);
-        headerTable.addCell(
-                new Cell().add(logo.setAutoScale(true)).setTextAlignment(TextAlignment.CENTER).setBorder(null));
-        headerTable.addCell(new Cell()
-                .add(new Paragraph("UNIVERSITY OF YAOUNDE I\nFACULTY OF SCIENCE").setFont(regularFont).setFontSize(8))
-                .setTextAlignment(TextAlignment.RIGHT).setBorder(null));
+        // Create header table with fixed height and equal columns for better centering
+        Table headerTable = new Table(UnitValue.createPercentArray(new float[] { 1, 1, 1 }))
+                .setWidth(UnitValue.createPercentValue(100))
+                .setHeight(UnitValue.createPointValue(60)); // Set fixed height for header
+
+        // Left cell with university info
+        Cell leftCell = new Cell()
+                .add(new Paragraph("UNIVERSITE DE YAOUNDE I\nFACULTE DES SCIENCES")
+                        .setFont(regularFont)
+                        .setFontSize(8))
+                .setBorder(null)
+                .setVerticalAlignment(VerticalAlignment.MIDDLE);
+        headerTable.addCell(leftCell);
+
+        // Center cell with logo - fixed size and proper centering
+        Image logo = new Image(ImageDataFactory.create("src/main/resources/images/uy1_logo.png"))
+                .setWidth(50) // Increased size
+                .setHeight(50) // Increased size
+                .setHorizontalAlignment(HorizontalAlignment.CENTER);
+
+        Cell logoCell = new Cell()
+                .add(logo)
+                .setTextAlignment(TextAlignment.CENTER)
+                .setVerticalAlignment(VerticalAlignment.MIDDLE)
+                .setBorder(null)
+                .setPadding(0); // Remove padding to ensure true centering
+        headerTable.addCell(logoCell);
+
+        // Right cell with English university info
+        Cell rightCell = new Cell()
+                .add(new Paragraph("UNIVERSITY OF YAOUNDE I\nFACULTY OF SCIENCE")
+                        .setFont(regularFont)
+                        .setFontSize(8))
+                .setTextAlignment(TextAlignment.RIGHT)
+                .setVerticalAlignment(VerticalAlignment.MIDDLE)
+                .setBorder(null);
+        headerTable.addCell(rightCell);
+
         document.add(headerTable);
 
-        document.add(new Paragraph(title).setFont(boldFont).setFontSize(18).setTextAlignment(TextAlignment.CENTER)
+        // Add title and other info
+        document.add(new Paragraph(title)
+                .setFont(boldFont)
+                .setFontSize(18)
+                .setTextAlignment(TextAlignment.CENTER)
                 .setMarginTop(10));
-        document.add(new Paragraph(levelCode).setFont(boldFont).setFontSize(14).setTextAlignment(TextAlignment.CENTER));
+
+        document.add(new Paragraph(levelCode)
+                .setFont(boldFont)
+                .setFontSize(14)
+                .setTextAlignment(TextAlignment.CENTER));
+
         document.add(new Paragraph(
                 String.format("Academic Year: %s | Semester: %s", timetable.academicYear(), timetable.semester()))
-                .setFont(regularFont).setFontSize(10).setTextAlignment(TextAlignment.CENTER).setMarginBottom(10));
+                .setFont(regularFont)
+                .setFontSize(10)
+                .setTextAlignment(TextAlignment.CENTER)
+                .setMarginBottom(10));
     }
 
     private Paragraph createScheduleParagraph(SchedulingDTO schedule) throws IOException {

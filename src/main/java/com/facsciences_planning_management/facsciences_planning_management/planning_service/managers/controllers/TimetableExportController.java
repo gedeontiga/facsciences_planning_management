@@ -3,7 +3,8 @@ package com.facsciences_planning_management.facsciences_planning_management.plan
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.io.InputStreamResource;
+
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -27,18 +28,17 @@ import java.io.IOException;
 @RequestMapping("/api/export/timetables")
 @RequiredArgsConstructor
 public class TimetableExportController {
-
 	private final TimetableExportService exportService;
 	private final TimetableService timetableService;
 
 	@GetMapping("/{timetableId}")
 	@Operation(summary = "Export a timetable as a PDF file")
-	public ResponseEntity<InputStreamResource> exportTimetableToPdf(
+	public ResponseEntity<ByteArrayResource> exportTimetableToPdf(
 			@PathVariable String timetableId,
-			@RequestParam @Valid ExportType type)
-			throws IOException {
+			@RequestParam @Valid ExportType type) throws IOException {
 
 		TimetableDTO timetable = timetableService.getTimetableById(timetableId);
+
 		MediaType mediaType = switch (type) {
 			case PDF -> MediaType.APPLICATION_PDF;
 			case CSV -> MediaType.parseMediaType("text/csv");
@@ -50,15 +50,23 @@ public class TimetableExportController {
 		};
 
 		HttpHeaders headers = new HttpHeaders();
-		String filename = String.format("%s_%s_%s_Timetable" + type.name().toLowerCase(),
+		String filename = String.format("%s_%s_%s_Timetable.%s",
 				timetable.levelCode().replace(" ", "_"),
 				timetable.academicYear(),
-				timetable.semester());
-		headers.add("Content-Disposition", "inline; filename=" + filename);
-		return ResponseEntity
-				.ok()
+				timetable.semester(),
+				type.name().toLowerCase());
+
+		// Key fixes:
+		headers.add("Content-Disposition", "attachment; filename=\"" + filename + "\"");
+		headers.add("Content-Length", String.valueOf(bis.available()));
+		headers.setCacheControl("no-cache, no-store, must-revalidate");
+		headers.setPragma("no-cache");
+		headers.setExpires(0);
+
+		byte[] data = bis.readAllBytes();
+		return ResponseEntity.ok()
 				.headers(headers)
 				.contentType(mediaType)
-				.body(new InputStreamResource(bis));
+				.body(new ByteArrayResource(data));
 	}
 }
