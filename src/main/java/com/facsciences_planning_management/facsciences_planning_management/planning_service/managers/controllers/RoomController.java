@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.RoomDTO;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.faculty.RoomRequest;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces.RoomService;
 
 import jakarta.validation.Valid;
@@ -55,8 +56,8 @@ public class RoomController {
 
     @PostMapping
     @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<RoomDTO> createRoom(@Valid @RequestBody RoomDTO roomDTO) {
-        RoomDTO createdRoom = roomService.createRoom(roomDTO);
+    public ResponseEntity<RoomDTO> createRoom(@Valid @RequestBody RoomRequest request) {
+        RoomDTO createdRoom = roomService.createRoom(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdRoom);
     }
 

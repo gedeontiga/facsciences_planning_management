@@ -25,7 +25,7 @@ public record CourseSchedulingDTO(
 				entity.getRoom().getId(),
 				entity.getRoom().getCode(),
 				entity.getAssignedCourse().getUe().getId(),
-				entity.getAssignedCourse().getUe().getName(),
+				entity.getAssignedCourse().getUe().getCode(),
 				entity.getTimetable().getId(),
 				entity.getTimeSlot().name(),
 				entity.getTimeSlot().getStartTime().toString(),

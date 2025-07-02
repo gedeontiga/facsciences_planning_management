@@ -5,28 +5,102 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.facsciences_planning_management.facsciences_planning_management.exceptions.CustomBusinessException;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Branch;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Department;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Faculty;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Level;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.BranchRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.DepartmentRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.FacultyRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.LevelRepository;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.BranchDTO;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.DepartmentDTO;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.FacultyDTO;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.LevelDTO;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.faculty.BranchDTO;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.faculty.BranchRequest;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.faculty.DepartmentDTO;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.faculty.FacultyDTO;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.faculty.LevelDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces.FacultyService;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class FacultyServiceImpl implements FacultyService {
 
     private final FacultyRepository facultyRepository;
     private final BranchRepository branchRepository;
     private final LevelRepository levelRepository;
     private final DepartmentRepository departmentRepository;
+
+    @Override
+    public FacultyDTO createFaculty(FacultyDTO facultyDTO) {
+        log.info("Creating faculty with name: {}", facultyDTO.name());
+        if (facultyRepository.existsByCode(facultyDTO.code())) {
+            throw new CustomBusinessException("Faculty with code " + facultyDTO.code() + " already exists.");
+        }
+        Faculty faculty = Faculty.builder()
+                .name(facultyDTO.name())
+                .code(facultyDTO.code())
+                .build();
+        return FacultyDTO.fromFaculty(facultyRepository.save(faculty));
+    }
+
+    @Override
+    public BranchDTO createBranch(BranchRequest request) {
+        log.info("Creating branch with name: {}", request.name());
+        Faculty faculty = facultyRepository.findById(request.facultyId())
+                .orElseThrow(() -> new CustomBusinessException("Faculty not found for this id"));
+        if (branchRepository.existsByCode(request.code())) {
+            throw new CustomBusinessException(
+                    "Branch with code " + request.code() + " already exists in this faculty.");
+        }
+        Branch branch = Branch.builder()
+                .name(request.name())
+                .code(request.code())
+                .faculty(faculty)
+                .build();
+        faculty.getBranches().add(branch);
+        facultyRepository.save(faculty);
+        return BranchDTO.fromBranch(branchRepository.save(branch));
+    }
+
+    @Override
+    public DepartmentDTO createDepartment(DepartmentDTO departmentDTO) {
+        log.info("Creating department with name: {}", departmentDTO.name());
+        Branch branch = branchRepository.findById(departmentDTO.branchId())
+                .orElseThrow(() -> new CustomBusinessException("Branch not found for this id"));
+        if (departmentRepository.existsByCode(departmentDTO.code())) {
+            throw new CustomBusinessException(
+                    "Department with code " + departmentDTO.code() + " already exists in this branch.");
+        }
+        Department department = departmentRepository.save(Department.builder()
+                .name(departmentDTO.name())
+                .code(departmentDTO.code())
+                .branch(branch)
+                .build());
+        branch.setDepartment(department);
+        branchRepository.save(branch);
+        return DepartmentDTO.fromDepartment(department);
+    }
+
+    @Override
+    public LevelDTO createLevel(LevelDTO levelDTO) {
+        log.info("Creating level with name: {}", levelDTO.name());
+        Branch branch = branchRepository.findById(levelDTO.branchId())
+                .orElseThrow(() -> new CustomBusinessException("Branch not found for this id"));
+        if (levelRepository.existsByCode(levelDTO.code())) {
+            throw new CustomBusinessException("Level with code " + levelDTO.code() + " already exists in this branch.");
+        }
+        Level level = levelRepository.save(Level.builder()
+                .name(levelDTO.name())
+                .code(levelDTO.code())
+                .branch(branch)
+                .build());
+        branch.getLevels().add(level);
+        branchRepository.save(branch);
+        return LevelDTO.fromLevel(level);
+    }
 
     @Override
     public List<LevelDTO> getLevelsByBranch(String branchId) {

@@ -9,10 +9,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.facsciences_planning_management.facsciences_planning_management.exceptions.CustomBusinessException;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Faculty;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Room;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.FacultyRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.RoomRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.RoomType;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.RoomDTO;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.faculty.RoomRequest;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces.RoomService;
 
 import lombok.RequiredArgsConstructor;
@@ -21,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class RoomServiceImpl implements RoomService {
     private final RoomRepository roomRepository;
+    private final FacultyRepository facultyRepository;
 
     @Override
     public Page<RoomDTO> getAllRooms(Pageable page) {
@@ -36,16 +40,26 @@ public class RoomServiceImpl implements RoomService {
     }
 
     @Override
-    public RoomDTO createRoom(RoomDTO roomDTO) {
-        Room room = Room.builder()
-                .code(roomDTO.code())
-                .type(roomDTO.type())
-                .capacity(roomDTO.capacity())
-                .building(roomDTO.building())
-                .availability(roomDTO.availability())
-                .build();
+    public RoomDTO createRoom(RoomRequest request) {
+        Faculty faculty = facultyRepository.findById(request.facultyId())
+                .orElseThrow(() -> new CustomBusinessException("Faculty not found with this id"));
 
-        return roomRepository.save(room).toDTO();
+        if (roomRepository.existsByCode(request.code())) {
+            throw new CustomBusinessException(
+                    "Room with code " + request.code() + " already exists in this faculty.");
+
+        }
+        Room room = roomRepository.save(Room.builder()
+                .code(request.code())
+                .type(request.type())
+                .capacity(request.capacity())
+                .building(request.building())
+                .availability(true)
+                .build());
+
+        faculty.getRooms().add(room);
+        facultyRepository.save(faculty);
+        return room.toDTO();
     }
 
     @Override

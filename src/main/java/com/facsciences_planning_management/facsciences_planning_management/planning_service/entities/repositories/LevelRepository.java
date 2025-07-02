@@ -13,4 +13,6 @@ public interface LevelRepository extends MongoRepository<Level, String> {
     Optional<Level> findByCode(String code);
 
     List<Level> findByBranchId(String branchId);
+
+    boolean existsByCode(String code);
 }

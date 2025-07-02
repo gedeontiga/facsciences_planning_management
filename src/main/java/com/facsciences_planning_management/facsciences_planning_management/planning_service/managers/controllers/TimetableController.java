@@ -8,8 +8,8 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
 
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Timetable.Semester;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.SessionType;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.TimeSlotDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.TimetableDTO;
@@ -18,7 +18,14 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.validators.interfaces.AcademicYearFormat;
 
 import java.util.List;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @Validated
 @RestController
@@ -51,14 +58,25 @@ public class TimetableController {
         return ResponseEntity.ok(timetableService.getTimetableById(id));
     }
 
-    @GetMapping
-    public ResponseEntity<Page<TimetableDTO>> getTimetableByLevelAndSemester(
+    @GetMapping("/branch/{branchId}")
+    public ResponseEntity<Page<TimetableDTO>> getTimetableByBranchAndSemester(
+            @PathVariable String branchId,
             @RequestParam @AcademicYearFormat String academicYear,
             @RequestParam SessionType sessionType,
-            @RequestParam String branchId,
             @PageableDefault(size = 10, sort = "academicYear") Pageable page) {
         return ResponseEntity
                 .ok(timetableService.getTimetablesByBranch(academicYear, branchId, sessionType, page));
+    }
+
+    @GetMapping("/level/{levelId}")
+    public ResponseEntity<TimetableDTO> getTimetableByLevelAndSemester(
+            @PathVariable String levelId,
+            @RequestParam @AcademicYearFormat String academicYear,
+            @RequestParam Semester semester,
+            @RequestParam SessionType sessionType) {
+        return ResponseEntity
+                .ok(timetableService.getTimetableByLevelAndSemester(academicYear, levelId, semester.name(),
+                        sessionType));
     }
 
     @PostMapping("/create-year")

@@ -11,6 +11,8 @@ import java.util.List;
 @Repository
 public interface DepartmentRepository extends MongoRepository<Department, String>, DepartmentRepositoryCustom {
     Optional<Department> findByCode(String code);
+
+    boolean existsByCode(String code);
 }
 
 interface DepartmentRepositoryCustom {

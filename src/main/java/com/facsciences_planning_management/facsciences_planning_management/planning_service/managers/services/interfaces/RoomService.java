@@ -6,13 +6,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.RoomDTO;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.faculty.RoomRequest;
 
 public interface RoomService {
     Page<RoomDTO> getAllRooms(Pageable page);
 
     RoomDTO getRoomById(String id);
 
-    RoomDTO createRoom(RoomDTO roomDTO);
+    RoomDTO createRoom(RoomRequest roomDTO);
 
     RoomDTO updateRoom(String id, RoomDTO roomDTO);
 

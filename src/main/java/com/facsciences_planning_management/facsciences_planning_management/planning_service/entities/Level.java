@@ -4,7 +4,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
 
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.LevelDTO;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.faculty.LevelDTO;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -2,12 +2,22 @@ package com.facsciences_planning_management.facsciences_planning_management.plan
 
 import java.util.List;
 
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.BranchDTO;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.DepartmentDTO;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.FacultyDTO;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.LevelDTO;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.faculty.BranchDTO;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.faculty.BranchRequest;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.faculty.DepartmentDTO;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.faculty.FacultyDTO;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.faculty.LevelDTO;
 
 public interface FacultyService {
+
+    FacultyDTO createFaculty(FacultyDTO facultyDTO);
+
+    BranchDTO createBranch(BranchRequest request);
+
+    LevelDTO createLevel(LevelDTO levelDTO);
+
+    DepartmentDTO createDepartment(DepartmentDTO departmentDTO);
+
     List<LevelDTO> getLevelsByBranch(String branchId);
 
     List<BranchDTO> getAllBranchesByFaculty(String facultyId);

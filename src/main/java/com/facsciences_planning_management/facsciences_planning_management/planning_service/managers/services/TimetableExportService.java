@@ -271,4 +271,8 @@ public class TimetableExportService {
             case ExamSchedulingDTO es -> LocalDateTime.parse(es.date()).toLocalDate();
         };
     }
+
+    public enum ExportType {
+        PDF, CSV
+    }
 }

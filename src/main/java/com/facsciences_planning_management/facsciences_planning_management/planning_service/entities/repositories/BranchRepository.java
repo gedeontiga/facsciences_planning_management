@@ -13,4 +13,6 @@ public interface BranchRepository extends MongoRepository<Branch, String> {
     Optional<Branch> findByCode(String code);
 
     List<Branch> findByFacultyId(String facultyId);
+
+    boolean existsByCode(String code);
 }

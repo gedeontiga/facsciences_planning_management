@@ -8,13 +8,16 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.BranchDTO;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.DepartmentDTO;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.FacultyDTO;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.LevelDTO;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.faculty.BranchDTO;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.faculty.BranchRequest;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.faculty.DepartmentDTO;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.faculty.FacultyDTO;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.faculty.LevelDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces.FacultyService;
 
 import java.util.List;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 @Validated
 @RestController
@@ -23,6 +26,26 @@ import java.util.List;
 public class FacultyController {
 
     private final FacultyService facultyService;
+
+    @PostMapping("/create")
+    public ResponseEntity<FacultyDTO> createFaculty(@RequestBody FacultyDTO facultyDTO) {
+        return ResponseEntity.ok(facultyService.createFaculty(facultyDTO));
+    }
+
+    @PostMapping("/create/branch")
+    public ResponseEntity<BranchDTO> createBranch(@RequestBody BranchRequest request) {
+        return ResponseEntity.ok(facultyService.createBranch(request));
+    }
+
+    @PostMapping("/create/department")
+    public ResponseEntity<DepartmentDTO> createDepartment(@RequestBody DepartmentDTO departmentDTO) {
+        return ResponseEntity.ok(facultyService.createDepartment(departmentDTO));
+    }
+
+    @PostMapping("/create/level")
+    public ResponseEntity<LevelDTO> createLevel(@RequestBody LevelDTO levelDTO) {
+        return ResponseEntity.ok(facultyService.createLevel(levelDTO));
+    }
 
     @GetMapping
     public ResponseEntity<List<FacultyDTO>> getAllFaculties() {

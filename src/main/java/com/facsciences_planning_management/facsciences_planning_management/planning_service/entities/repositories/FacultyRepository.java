@@ -10,4 +10,6 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 @Repository
 public interface FacultyRepository extends MongoRepository<Faculty, String> {
     Optional<Faculty> findByCode(String code);
+
+    boolean existsByCode(String code);
 }
