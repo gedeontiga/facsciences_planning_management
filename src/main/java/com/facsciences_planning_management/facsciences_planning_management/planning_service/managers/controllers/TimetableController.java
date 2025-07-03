@@ -1,5 +1,6 @@
 package com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.controllers;
 
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.domain.Page;
@@ -9,14 +10,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Timetable.Semester;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.Semester;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.SessionType;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.AcademicYearDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.TimeSlotDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.TimetableDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.TimetableRequest;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces.TimetableService;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.validators.interfaces.AcademicYearFormat;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Pattern;
 
 import java.util.List;
 
@@ -38,10 +40,13 @@ public class TimetableController {
 
     @PostMapping("/create")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'SECRETARY')")
-    public ResponseEntity<TimetableDTO> createTimetable(@RequestBody TimetableRequest request) {
+    public ResponseEntity<TimetableDTO> createTimetable(@Valid @RequestBody TimetableRequest request) {
         if (request.sessionType().equals(SessionType.COURSE)) {
-            return ResponseEntity.status(201).body(timetableService.generateTimetableForLevel(request.academicYear(),
-                    request.semester(), request.levelId()));
+            return ResponseEntity.status(201).body(timetableService.createTimetableForCourse(
+                    request.levelId(),
+                    request.academicYear(),
+                    request.semester(),
+                    request.sessionType()));
         } else {
             if (List.of(SessionType.values()).contains(request.sessionType())) {
                 return ResponseEntity.status(201).body(timetableService.createTimetableForExam(
@@ -54,16 +59,28 @@ public class TimetableController {
         }
     }
 
+    @PostMapping("/generate")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SECRETARY')")
+    public ResponseEntity<TimetableDTO> generateTimetableForLevel(@Valid @RequestBody TimetableRequest request) {
+        if (request.sessionType() != null && !request.sessionType().equals(SessionType.COURSE)) {
+            throw new IllegalArgumentException("Exam timetable is not yet supported");
+        }
+        return ResponseEntity.status(201).body(timetableService.generateTimetableForLevel(
+                request.academicYear(),
+                request.semester(),
+                request.levelId()));
+    }
+
     @GetMapping("/{id}")
-    public ResponseEntity<TimetableDTO> getTimetableById(@PathVariable String id) {
+    public ResponseEntity<TimetableDTO> getTimetableById(@NonNull @PathVariable String id) {
         return ResponseEntity.ok(timetableService.getTimetableById(id));
     }
 
     @GetMapping("/branch/{branchId}")
     public ResponseEntity<Page<TimetableDTO>> getTimetableByBranchAndSemester(
-            @PathVariable String branchId,
-            @RequestParam @AcademicYearFormat String academicYear,
-            @RequestParam SessionType sessionType,
+            @NonNull @PathVariable String branchId,
+            @Pattern(regexp = "^\\d{4}-\\d{4}$", message = "Academic year must be in the format YYYY-YYYY") @RequestParam String academicYear,
+            @Valid @RequestParam SessionType sessionType,
             @PageableDefault(size = 10, sort = "academicYear") Pageable page) {
         return ResponseEntity
                 .ok(timetableService.getTimetablesByBranch(academicYear, branchId, sessionType, page));
@@ -71,8 +88,8 @@ public class TimetableController {
 
     @GetMapping("/level/{levelId}")
     public ResponseEntity<TimetableDTO> getTimetableByLevelAndSemester(
-            @PathVariable String levelId,
-            @RequestParam @AcademicYearFormat String academicYear,
+            @NonNull @PathVariable String levelId,
+            @Pattern(regexp = "^\\d{4}-\\d{4}$", message = "Academic year must be in the format YYYY-YYYY") @RequestParam String academicYear,
             @RequestParam Semester semester,
             @RequestParam SessionType sessionType) {
         return ResponseEntity
@@ -80,33 +97,33 @@ public class TimetableController {
                         sessionType));
     }
 
-    @PostMapping("/create-year")
+    @PostMapping("/year")
     @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<String> createAcademicYear(@RequestBody AcademicYearDTO academicYear) {
+    public ResponseEntity<String> createAcademicYear(@Valid @RequestBody AcademicYearDTO academicYear) {
         return ResponseEntity.ok(timetableService.createAcademicYear(academicYear.label()));
     }
 
-    @GetMapping("/academic-years")
+    @GetMapping("/year")
     public ResponseEntity<List<String>> getAllAcademicYears() {
         return ResponseEntity.ok(timetableService.getAllAcademicYears());
     }
 
-    @GetMapping("/session-types")
+    @GetMapping("/session")
     public ResponseEntity<List<String>> getSessionTypes() {
         return ResponseEntity.ok(timetableService.getSessionTypes());
     }
 
-    @GetMapping("/time-slots")
+    @GetMapping("/timeslots")
     public ResponseEntity<List<TimeSlotDTO>> getCoursesTimeSlots() {
         return ResponseEntity.ok(timetableService.getCoursesTimeSlots());
     }
 
-    @GetMapping("/semesters")
+    @GetMapping("/semesters/course")
     public ResponseEntity<List<String>> getSemestersForCourseTimetable() {
         return ResponseEntity.ok(timetableService.getSemestersForCourseTimetable());
     }
 
-    @GetMapping("/semesters-exam")
+    @GetMapping("/semesters/exam")
     public ResponseEntity<List<String>> getSemestersForExamTimetable() {
         return ResponseEntity.ok(timetableService.getSemestersForExamTimetable());
     }

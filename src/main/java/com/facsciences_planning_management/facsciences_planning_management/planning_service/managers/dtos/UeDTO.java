@@ -1,9 +1,9 @@
 package com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos;
 
-import com.facsciences_planning_management.facsciences_planning_management.components.annotations.SafeMapping;
+import java.util.Optional;
+
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Ue;
 
-@SafeMapping
 public record UeDTO(
         String id,
         String name,
@@ -20,8 +20,8 @@ public record UeDTO(
                 ue.getId(), ue.getName(), ue.getCode(),
                 ue.getCredits(), ue.getCategory(),
                 ue.getHourlyCharge(), ue.getLevel().getId(),
-                ue.getLevel().getCode(),
-                ue.getLevel().getTotalNumberOfStudents(),
+                Optional.ofNullable(ue.getLevel()).map(l -> l.getCode()).orElse(null),
+                Optional.ofNullable(ue.getLevel()).map(l -> l.getHeadCount()).orElse(null),
                 ue.getAssigned());
     }
 }

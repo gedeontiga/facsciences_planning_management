@@ -38,6 +38,7 @@ public class Reservation {
     private LocalTime startTime;
     private LocalTime endTime;
     private LocalDate date;
+    private Long headCount;
     private String timetableId;
     @CreatedDate
     private LocalDateTime createdAt;

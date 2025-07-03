@@ -27,6 +27,8 @@ public abstract class Scheduling {
     private Room room;
     @DocumentReference(lazy = true, collection = "timetables")
     private Timetable timetable;
+    private Long headCount;
+    private String headCountLabel;
     @CreatedDate
     private LocalDateTime createdAt;
     @LastModifiedDate

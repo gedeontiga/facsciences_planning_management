@@ -48,12 +48,12 @@ public class SchedulingConflictService {
     }
 
     private boolean isRoomOccupied(Room room, String date, LocalTime startTime, LocalTime endTime) {
-        CourseTimeSlot courseTimeSlot = CourseTimeSlot.get(startTime, endTime);
-        ExamTimeSlot examTimeSlot = ExamTimeSlot.get(startTime, endTime);
+        CourseTimeSlot courseTimeSlot = CourseTimeSlot.fromTimeSlot(startTime, endTime);
+        ExamTimeSlot examTimeSlot = ExamTimeSlot.fromTimeSlot(startTime, endTime);
         boolean isOccupied = false;
         if (courseTimeSlot != null) {
             isOccupied = courseSchedulingRepository.existsByRoomIdAndDayAndTimeSlot(room.getId(),
-                    DayOfWeek.valueOf(date), courseTimeSlot);
+                    LocalDate.parse(date).getDayOfWeek(), courseTimeSlot);
         } else if (examTimeSlot != null) {
             isOccupied = examSchedulingRepository.existsByRoomIdAndSessionDateAndTimeSlot(room.getId(),
                     LocalDate.parse(date),
@@ -63,12 +63,12 @@ public class SchedulingConflictService {
     }
 
     private boolean isTeacherOccupied(Users user, String date, LocalTime startTime, LocalTime endTime) {
-        CourseTimeSlot courseTimeSlot = CourseTimeSlot.get(startTime, endTime);
-        ExamTimeSlot examTimeSlot = ExamTimeSlot.get(startTime, endTime);
+        CourseTimeSlot courseTimeSlot = CourseTimeSlot.fromTimeSlot(startTime, endTime);
+        ExamTimeSlot examTimeSlot = ExamTimeSlot.fromTimeSlot(startTime, endTime);
         boolean isOccupied = false;
         if (courseTimeSlot != null) {
             isOccupied = courseSchedulingRepository.existsByAssignedCourseTeacherIdAndDayAndTimeSlot(user.getId(),
-                    DayOfWeek.valueOf(date),
+                    LocalDate.parse(date).getDayOfWeek(),
                     courseTimeSlot);
         } else if (examTimeSlot != null) {
             isOccupied = examSchedulingRepository.existsByProctorIdAndSessionDateAndTimeSlot(user.getId(),

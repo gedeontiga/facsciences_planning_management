@@ -24,7 +24,7 @@ public class TimeSlot {
         private LocalTime endTime;
         private Duration duration;
 
-        public static CourseTimeSlot get(LocalTime startTime, LocalTime endTime) {
+        public static CourseTimeSlot fromTimeSlot(LocalTime startTime, LocalTime endTime) {
             for (CourseTimeSlot slot : CourseTimeSlot.values()) {
                 if (slot.startTime.equals(startTime) && slot.endTime.equals(endTime)) {
                     return slot;
@@ -50,7 +50,7 @@ public class TimeSlot {
         private final LocalTime endTime;
         private final Duration duration;
 
-        public static ExamTimeSlot get(LocalTime startTime, LocalTime endTime) {
+        public static ExamTimeSlot fromTimeSlot(LocalTime startTime, LocalTime endTime) {
             for (ExamTimeSlot slot : ExamTimeSlot.values()) {
                 if (slot.startTime.equals(startTime) && slot.endTime.equals(endTime)) {
                     return slot;

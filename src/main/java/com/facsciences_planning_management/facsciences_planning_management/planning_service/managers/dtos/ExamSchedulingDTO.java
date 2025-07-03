@@ -1,13 +1,16 @@
 package com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos;
 
-import com.facsciences_planning_management.facsciences_planning_management.components.annotations.SafeMapping;
+import java.util.Optional;
+
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.ExamScheduling;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Reservation;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.TimeSlot.ExamTimeSlot;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.types.HeadCountLabel;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.validators.interfaces.ValidDate;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.validators.interfaces.ValidTime;
 
-@SafeMapping
+import jakarta.annotation.Nonnull;
+
 public record ExamSchedulingDTO(
 		String id,
 		String roomId,
@@ -17,24 +20,34 @@ public record ExamSchedulingDTO(
 		String timetableId,
 		String timeSlotLabel,
 		@ValidTime String startTime,
-		@ValidTime String endTime,
-		String userId,
+		@ValidTime String endTime, String userId,
 		String proctorName,
-		@ValidDate String date) implements SchedulingDTO {
+		@ValidDate String date,
+		@Nonnull Long headCount,
+		HeadCountLabel headCountLabel) implements SchedulingDTO {
+
 	public static ExamSchedulingDTO fromExamScheduling(ExamScheduling entity) {
+		String teacherName = Optional.ofNullable(entity
+				.getProctor()).map(p -> p.getFirstName())
+				.orElse(null) + " "
+				+ Optional.ofNullable(entity.getProctor()).map(p -> p.getLastName()).orElse(null);
+		HeadCountLabel headCountLabel = Optional.ofNullable(entity.getHeadCountLabel())
+				.map(hcl -> HeadCountLabel.valueOf(hcl)).orElse(null);
 		return new ExamSchedulingDTO(
 				entity.getId(),
-				entity.getRoom().getId(),
-				entity.getRoom().getCode(),
-				entity.getUe().getId(),
-				entity.getUe().getCode(),
-				entity.getTimetable().getId(),
+				Optional.ofNullable(entity.getRoom()).map(r -> r.getId()).orElse(null),
+				Optional.ofNullable(entity.getRoom()).map(r -> r.getCode()).orElse(null),
+				Optional.ofNullable(entity.getUe()).map(ue -> ue.getId()).orElse(null),
+				Optional.ofNullable(entity.getUe()).map(ue -> ue.getCode()).orElse(null),
+				Optional.ofNullable(entity.getTimetable()).map(t -> t.getId()).orElse(null),
 				entity.getTimeSlot().name(),
 				entity.getTimeSlot().getStartTime().toString(),
 				entity.getTimeSlot().getEndTime().toString(),
-				entity.getProctor().getId(),
-				entity.getProctor().getFirstName() + " " + entity.getProctor().getLastName(),
-				entity.getSessionDate().toString());
+				Optional.ofNullable(entity.getProctor()).map(p -> p.getId()).orElse(null),
+				teacherName,
+				entity.getSessionDate().toString(),
+				entity.getHeadCount(),
+				headCountLabel);
 	}
 
 	public static ExamSchedulingDTO fromReservation(Reservation reservation) {
@@ -45,11 +58,13 @@ public record ExamSchedulingDTO(
 				reservation.getUe().getId(),
 				null,
 				reservation.getTimetableId(),
-				ExamTimeSlot.get(reservation.getStartTime(), reservation.getEndTime()).name(),
+				ExamTimeSlot.fromTimeSlot(reservation.getStartTime(), reservation.getEndTime()).name(),
 				reservation.getStartTime().toString(),
 				reservation.getEndTime().toString(),
 				reservation.getTeacher().getId(),
 				null,
-				reservation.getDate().toString());
+				reservation.getDate().toString(),
+				reservation.getHeadCount(),
+				null);
 	}
 }

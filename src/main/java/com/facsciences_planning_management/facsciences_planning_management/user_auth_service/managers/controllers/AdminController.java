@@ -32,7 +32,7 @@ public class AdminController {
 
     private final AdminServices adminServices;
 
-    @PostMapping("/create-user")
+    @PostMapping("/users/create")
     public ResponseEntity<UserDTO> createUser(@RequestBody UserDTO user) {
         return ResponseEntity.ok().body(adminServices.createUserWithRole(user));
     }
@@ -56,13 +56,13 @@ public class AdminController {
         return ResponseEntity.ok().body(adminServices.getAllRoles());
     }
 
-    @PutMapping("disable-user/{id}")
+    @PutMapping("/users/disable/{id}")
     public ResponseEntity<String> putMethodName(@PathVariable String id, @RequestBody String entity) {
         adminServices.disableUser(id);
         return ResponseEntity.ok().build();
     }
 
-    @DeleteMapping("/delete-user/{id}")
+    @DeleteMapping("/users/delete/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable String id) {
         adminServices.deleteUser(id);
         return ResponseEntity.noContent().build();

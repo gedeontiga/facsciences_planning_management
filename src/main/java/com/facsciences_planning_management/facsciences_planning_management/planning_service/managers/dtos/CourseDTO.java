@@ -1,9 +1,9 @@
 package com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos;
 
-import com.facsciences_planning_management.facsciences_planning_management.components.annotations.SafeMapping;
+import java.util.Optional;
+
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Course;
 
-@SafeMapping
 public record CourseDTO(
         String id,
         String teacherId,
@@ -16,11 +16,11 @@ public record CourseDTO(
     public static CourseDTO fromCourse(Course entity) {
         return new CourseDTO(
                 entity.getId(),
-                entity.getTeacher().getId(),
-                entity.getTeacher().getFirstName(),
-                entity.getTeacher().getLastName(),
-                entity.getUe().getId(),
-                entity.getUe().getCode(),
+                Optional.ofNullable(entity.getTeacher()).map(u -> u.getId()).orElse(null),
+                Optional.ofNullable(entity.getTeacher()).map(u -> u.getFirstName()).orElse(null),
+                Optional.ofNullable(entity.getTeacher()).map(u -> u.getLastName()).orElse(null),
+                Optional.ofNullable(entity.getUe()).map(ue -> ue.getId()).orElse(null),
+                Optional.ofNullable(entity.getUe()).map(ue -> ue.getCode()).orElse(null),
                 entity.getDuration().toHours(),
                 null);
     }

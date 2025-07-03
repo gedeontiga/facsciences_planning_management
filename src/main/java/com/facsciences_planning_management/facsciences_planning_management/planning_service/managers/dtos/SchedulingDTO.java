@@ -1,5 +1,7 @@
 package com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos;
 
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.types.HeadCountLabel;
+
 public sealed interface SchedulingDTO permits CourseSchedulingDTO, ExamSchedulingDTO {
     String id();
 
@@ -20,4 +22,8 @@ public sealed interface SchedulingDTO permits CourseSchedulingDTO, ExamSchedulin
     String startTime();
 
     String endTime();
+
+    Long headCount();
+
+    HeadCountLabel headCountLabel();
 }

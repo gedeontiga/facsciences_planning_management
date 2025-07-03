@@ -221,7 +221,8 @@ public class TimetableExportService {
                 .setTextAlignment(TextAlignment.CENTER));
 
         document.add(new Paragraph(
-                String.format("Academic Year: %s | Semester: %s", timetable.academicYear(), timetable.semester()))
+                String.format("Academic Year: %s | Semester: %s", timetable.academicYear(),
+                        timetable.semester().getLabel()))
                 .setFont(regularFont)
                 .setFontSize(10)
                 .setTextAlignment(TextAlignment.CENTER)

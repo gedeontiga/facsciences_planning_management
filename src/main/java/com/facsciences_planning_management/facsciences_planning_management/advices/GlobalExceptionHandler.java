@@ -15,22 +15,60 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
 
 import java.time.LocalDateTime;
+import java.util.stream.Collectors;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
+	@ExceptionHandler(IllegalArgumentException.class)
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
+	public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException ex) {
+		ErrorResponse errorResponse = new ErrorResponse(
+				"Invalid Argument",
+				ex.getMessage(),
+				HttpStatus.BAD_REQUEST.value(),
+				LocalDateTime.now().toString());
+		return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+	}
+
+	@ExceptionHandler(IllegalStateException.class)
+	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+	public ResponseEntity<ErrorResponse> handleIllegalStateException(IllegalStateException ex) {
+		ErrorResponse errorResponse = new ErrorResponse(
+				"Data Integrity Error",
+				ex.getMessage(),
+				HttpStatus.INTERNAL_SERVER_ERROR.value(),
+				LocalDateTime.now().toString());
+		return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+	}
+
+	@ExceptionHandler(ConstraintViolationException.class)
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
+	public ResponseEntity<ErrorResponse> handleConstraintViolationException(ConstraintViolationException ex) {
+		String message = ex.getConstraintViolations().stream()
+				.map(violation -> violation.getPropertyPath() + ": " + violation.getMessage())
+				.collect(Collectors.joining("; "));
+
+		ErrorResponse errorResponse = new ErrorResponse(
+				"Validation Error",
+				message,
+				HttpStatus.BAD_REQUEST.value(),
+				LocalDateTime.now().toString());
+		return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+	}
+
+	// Keep existing exception handlers...
 	@ExceptionHandler(AccessDeniedException.class)
 	public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException ex,
 			HttpServletRequest request) {
-
 		ErrorResponse error = new ErrorResponse(
 				"Access Denied",
 				ex.getMessage(),
 				HttpStatus.FORBIDDEN.value(),
 				LocalDateTime.now().toString());
-
 		return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
 	}
 
@@ -41,8 +79,22 @@ public class GlobalExceptionHandler {
 				ex.getMessage(),
 				HttpStatus.INTERNAL_SERVER_ERROR.value(),
 				LocalDateTime.now().toString());
-
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+	}
+
+	@ExceptionHandler(MethodArgumentNotValidException.class)
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
+	public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
+		String message = ex.getBindingResult().getFieldErrors().stream()
+				.map(error -> error.getField() + ": " + error.getDefaultMessage())
+				.collect(Collectors.joining("; "));
+
+		ErrorResponse errorResponse = new ErrorResponse(
+				"Validation Error",
+				message,
+				HttpStatus.BAD_REQUEST.value(),
+				LocalDateTime.now().toString());
+		return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
 	}
 
 	@ExceptionHandler(InsufficientAuthenticationException.class)
@@ -55,24 +107,6 @@ public class GlobalExceptionHandler {
 				HttpStatus.UNAUTHORIZED.value(),
 				LocalDateTime.now().toString());
 		return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
-	}
-
-	// Handle validation errors (e.g., @Valid failures)
-	@ExceptionHandler(MethodArgumentNotValidException.class)
-	@ResponseStatus(HttpStatus.BAD_REQUEST)
-	public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
-		String message = ex.getBindingResult().getFieldErrors()
-				.stream()
-				.map(error -> error.getField() + ": " + error.getDefaultMessage())
-				.reduce((msg1, msg2) -> msg1 + "; " + msg2)
-				.orElse("Validation failed");
-
-		ErrorResponse errorResponse = new ErrorResponse(
-				"Validation Error",
-				message,
-				HttpStatus.BAD_REQUEST.value(),
-				LocalDateTime.now().toString());
-		return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
 	}
 
 	// Handle Spring Security authentication exceptions

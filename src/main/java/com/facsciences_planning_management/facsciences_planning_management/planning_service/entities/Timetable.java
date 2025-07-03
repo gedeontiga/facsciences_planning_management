@@ -10,6 +10,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
 
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.Semester;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.SessionType;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.TimetableDTO;
 
@@ -45,10 +46,6 @@ public class Timetable {
     @Indexed
     @Builder.Default
     private boolean used = true;
-
-    public enum Semester {
-        SEMESTER_1, SEMESTER_2, SEMESTER_3, SEMESTER_4
-    };
 
     public TimetableDTO toDTO() {
         return TimetableDTO.fromTimetable(this);

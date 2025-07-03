@@ -36,7 +36,7 @@ public class FacultyServiceImpl implements FacultyService {
 
     @Override
     public FacultyDTO createFaculty(FacultyRequest request) {
-        log.info("Creating faculty with name: {}", request.name());
+
         if (facultyRepository.existsByCode(request.code())) {
             throw new CustomBusinessException("Faculty with code " + request.code() + " already exists.");
         }
@@ -49,7 +49,7 @@ public class FacultyServiceImpl implements FacultyService {
 
     @Override
     public BranchDTO createBranch(BranchRequest request) {
-        log.info("Creating branch with name: {}", request.name());
+
         Faculty faculty = facultyRepository.findById(request.facultyId())
                 .orElseThrow(() -> new CustomBusinessException("Faculty not found for this id"));
         if (branchRepository.existsByCode(request.code())) {
@@ -68,7 +68,7 @@ public class FacultyServiceImpl implements FacultyService {
 
     @Override
     public DepartmentDTO createDepartment(DepartmentDTO departmentDTO) {
-        log.info("Creating department with name: {}", departmentDTO.name());
+
         Branch branch = branchRepository.findById(departmentDTO.branchId())
                 .orElseThrow(() -> new CustomBusinessException("Branch not found for this id"));
         if (departmentRepository.existsByCode(departmentDTO.code())) {
@@ -87,7 +87,7 @@ public class FacultyServiceImpl implements FacultyService {
 
     @Override
     public LevelDTO createLevel(LevelDTO levelDTO) {
-        log.info("Creating level with name: {}", levelDTO.name());
+
         Branch branch = branchRepository.findById(levelDTO.branchId())
                 .orElseThrow(() -> new CustomBusinessException("Branch not found for this id"));
         if (levelRepository.existsByCode(levelDTO.code())) {
@@ -104,8 +104,17 @@ public class FacultyServiceImpl implements FacultyService {
     }
 
     @Override
+    public LevelDTO updateLevel(String levelId, Long headCount) {
+
+        Level level = levelRepository.findById(levelId)
+                .orElseThrow(() -> new CustomBusinessException("Level not found with id: " + levelId));
+        level.setHeadCount(headCount);
+        return LevelDTO.fromLevel(levelRepository.save(level));
+    }
+
+    @Override
     public List<LevelDTO> getLevelsByBranch(String branchId) {
-        log.info("Fetching levels for branch with ID: {}", branchId);
+
         if (!branchRepository.existsById(branchId)) {
             throw new CustomBusinessException("Branch not found with id: " + branchId);
         }
@@ -117,7 +126,7 @@ public class FacultyServiceImpl implements FacultyService {
 
     @Override
     public List<BranchDTO> getAllBranchesByFaculty(String facultyId) {
-        log.info("Fetching all branches for faculty with ID: {}", facultyId);
+
         if (!facultyRepository.existsById(facultyId)) {
             throw new CustomBusinessException("Faculty not found with id: " + facultyId);
         }
@@ -129,7 +138,7 @@ public class FacultyServiceImpl implements FacultyService {
 
     @Override
     public List<DepartmentDTO> getAllDepartmentsByFaculty(String facultyId) {
-        log.info("Fetching all departments for faculty with ID: {}", facultyId);
+
         if (!facultyRepository.existsById(facultyId)) {
             throw new CustomBusinessException("Faculty not found with id: " + facultyId);
         }
@@ -141,7 +150,7 @@ public class FacultyServiceImpl implements FacultyService {
 
     @Override
     public List<FacultyDTO> getAllFaculties() {
-        log.info("Fetching all faculties");
+
         return facultyRepository.findAll()
                 .stream()
                 .map(FacultyDTO::fromFaculty)

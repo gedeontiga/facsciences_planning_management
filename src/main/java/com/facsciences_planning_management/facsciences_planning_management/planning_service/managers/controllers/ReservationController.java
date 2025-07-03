@@ -1,5 +1,6 @@
 package com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.controllers;
 
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,6 +24,8 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.ReservationResponseDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces.ReservationService;
 
+import jakarta.validation.Valid;
+
 @Validated
 @RestController
 @RequestMapping("/api/reservations")
@@ -33,7 +36,7 @@ public class ReservationController {
 
     @PostMapping
     public ResponseEntity<ReservationResponseDTO> createReservationRequest(
-            @RequestBody ReservationRequestDTO request) {
+            @Valid @RequestBody ReservationRequestDTO request) {
         ReservationResponseDTO createdReservation = reservationService.createRequest(request);
         return new ResponseEntity<>(createdReservation, HttpStatus.CREATED);
     }
@@ -41,8 +44,8 @@ public class ReservationController {
     @PatchMapping("/process/{requestId}")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<ReservationResponseDTO> processReservationRequest(
-            @PathVariable String requestId,
-            @RequestBody ReservationProcessingDTO request) {
+            @NonNull @PathVariable String requestId,
+            @Valid @RequestBody ReservationProcessingDTO request) {
         ReservationResponseDTO processedReservation = reservationService.processRequest(requestId, request);
         return ResponseEntity.ok(processedReservation);
     }
@@ -50,7 +53,7 @@ public class ReservationController {
     @GetMapping("/teacher/{teacherId}")
     @PreAuthorize("hasAnyAuthority('TEACHER', 'DEPARTMENT_HEAD', 'ADMIN')")
     public ResponseEntity<Page<ReservationResponseDTO>> getReservationsByTeacher(
-            @PathVariable String teacherId,
+            @NonNull @PathVariable String teacherId,
             @PageableDefault(size = 10) Pageable pageable) {
         Page<ReservationResponseDTO> reservations = reservationService.getReservationByTeacher(teacherId, pageable);
         return ResponseEntity.ok(reservations);
@@ -67,7 +70,7 @@ public class ReservationController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<Void> deleteReservationRequest(@PathVariable String id) {
+    public ResponseEntity<Void> deleteReservationRequest(@NonNull @PathVariable String id) {
         reservationService.deleteRequest(id);
         return ResponseEntity.noContent().build();
     }

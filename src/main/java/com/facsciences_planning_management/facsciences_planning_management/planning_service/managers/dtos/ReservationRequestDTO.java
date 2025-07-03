@@ -4,8 +4,10 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.validators.interfaces.ValidDate;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.validators.interfaces.ValidTime;
 
+import jakarta.annotation.Nonnull;
 import jakarta.validation.Valid;
 
+@Nonnull
 public record ReservationRequestDTO(
 		String teacherId,
 		@Valid SessionType sessionType,
@@ -14,5 +16,6 @@ public record ReservationRequestDTO(
 		@ValidTime String startTime,
 		@ValidTime String endTime,
 		@ValidDate String date,
+		Long headCount,
 		String timetableId) {
 }

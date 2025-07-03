@@ -17,7 +17,7 @@ public record LevelDTO(
         return new LevelDTO(level.getId(),
                 level.getCode(),
                 level.getName(),
-                level.getTotalNumberOfStudents(),
+                level.getHeadCount(),
                 Optional.ofNullable(level.getBranch()).map(Branch::getId).orElse(null));
     }
 }

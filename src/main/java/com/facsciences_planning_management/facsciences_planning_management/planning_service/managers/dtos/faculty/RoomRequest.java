@@ -5,9 +5,9 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 import jakarta.validation.constraints.NotNull;
 
 public record RoomRequest(
-        String code,
-        RoomType type,
-        Long capacity,
-        String building,
-        @NotNull String facultyId) {
+		@NotNull String code,
+		@NotNull RoomType type,
+		Long capacity,
+		String building,
+		@NotNull String facultyId) {
 }

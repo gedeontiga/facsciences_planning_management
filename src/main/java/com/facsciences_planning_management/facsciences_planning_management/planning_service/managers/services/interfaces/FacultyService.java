@@ -17,6 +17,8 @@ public interface FacultyService {
 
     LevelDTO createLevel(LevelDTO levelDTO);
 
+    LevelDTO updateLevel(String levelId, Long headCount);
+
     DepartmentDTO createDepartment(DepartmentDTO departmentDTO);
 
     List<LevelDTO> getLevelsByBranch(String branchId);

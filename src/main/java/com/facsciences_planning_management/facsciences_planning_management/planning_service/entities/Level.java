@@ -21,7 +21,7 @@ public class Level {
     private String id;
     private String code;
     private String name;
-    private Long totalNumberOfStudents;
+    private Long headCount;
 
     @DocumentReference(lazy = true, collection = "branches")
     private Branch branch;

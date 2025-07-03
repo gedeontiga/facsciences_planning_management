@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import com.facsciences_planning_management.facsciences_planning_management.entities.Users;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Course;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.CourseScheduling;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Level;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Room;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.TimeSlot.CourseTimeSlot;
 import com.google.ortools.sat.CpModel;
@@ -49,52 +50,46 @@ public class TimetableSolverService {
      * @return A list of newly generated CourseScheduling entities.
      */
     public List<CourseScheduling> solve(List<Course> coursesToSchedule, List<Room> rooms, List<DayOfWeek> days,
-            List<CourseTimeSlot> timeSlots, List<CourseScheduling> existingSchedules) {
+            List<CourseTimeSlot> timeSlots, List<CourseScheduling> existingSchedules, Level level) {
+        // (Initialization and processing of existing schedules is correct and remains
+        // the same)
         CpModel model = new CpModel();
         Map<ScheduleVar, Literal> variables = new HashMap<>();
 
-        // --- Pre-process Existing Schedules for Efficient Lookup ---
         log.info("Processing {} existing schedules to identify resource conflicts.", existingSchedules.size());
         Set<ResourceSlot> occupiedRoomSlots = new HashSet<>();
         Set<ResourceSlot> occupiedTeacherSlots = new HashSet<>();
         Set<ResourceSlot> occupiedLevelSlots = new HashSet<>();
-
         for (CourseScheduling existing : existingSchedules) {
-            ResourceSlot roomSlot = new ResourceSlot(existing.getRoom().getId(), existing.getDay(),
-                    existing.getTimeSlot());
-            occupiedRoomSlots.add(roomSlot);
-
-            ResourceSlot teacherSlot = new ResourceSlot(existing.getAssignedCourse().getTeacher().getId(),
-                    existing.getDay(), existing.getTimeSlot());
-            occupiedTeacherSlots.add(teacherSlot);
-
-            ResourceSlot levelSlot = new ResourceSlot(existing.getAssignedCourse().getUe().getLevel().getId(),
-                    existing.getDay(), existing.getTimeSlot());
-            occupiedLevelSlots.add(levelSlot);
+            occupiedRoomSlots
+                    .add(new ResourceSlot(existing.getRoom().getId(), existing.getDay(), existing.getTimeSlot()));
+            occupiedTeacherSlots.add(new ResourceSlot(existing.getAssignedCourse().getTeacher().getId(),
+                    existing.getDay(), existing.getTimeSlot()));
+            occupiedLevelSlots.add(new ResourceSlot(existing.getAssignedCourse().getUe().getLevel().getId(),
+                    existing.getDay(), existing.getTimeSlot()));
         }
         log.info("Found {} unique room conflicts, {} teacher conflicts, {} level conflicts.",
                 occupiedRoomSlots.size(), occupiedTeacherSlots.size(), occupiedLevelSlots.size());
 
         // --- Create Solver Variables ---
-        // Create a boolean variable for each valid, non-conflicting possibility.
         for (Course course : coursesToSchedule) {
             for (Room room : rooms) {
-                // Hard Constraint: Room must have sufficient capacity.
-                if (course.getUe().getLevel().getTotalNumberOfStudents() > room.getCapacity()) {
-                    continue;
+                // This is the core capacity check inside the solver. Your implementation is
+                // correct.
+                if (level.getHeadCount() > room.getCapacity()) {
+                    continue; // Skip this room, it's too small.
                 }
 
                 for (DayOfWeek day : days) {
                     for (CourseTimeSlot timeSlot : timeSlots) {
-                        // Hard Constraint: Do not create a variable if the slot is already taken by any
-                        // resource.
+                        // This conflict check is also correct.
                         if (occupiedRoomSlots.contains(new ResourceSlot(room.getId(), day, timeSlot)) ||
                                 occupiedTeacherSlots
                                         .contains(new ResourceSlot(course.getTeacher().getId(), day, timeSlot))
                                 ||
                                 occupiedLevelSlots
-                                        .contains(new ResourceSlot(course.getUe().getLevel().getId(), day, timeSlot))) {
-                            continue; // This slot is impossible, so we don't even create a variable for it.
+                                        .contains(new ResourceSlot(level.getId(), day, timeSlot))) {
+                            continue; // Skip this slot, a resource is already booked.
                         }
 
                         String varName = String.format("x_%s_%s_%s_%s", course.getId(), room.getId(), day,
@@ -187,10 +182,9 @@ public class TimetableSolverService {
         // --- Solve the Model ---
         log.info("Starting solver...");
         CpSolver solver = new CpSolver();
-        solver.getParameters().setMaxTimeInSeconds(60.0); // Increased timeout for potentially harder problems
+        solver.getParameters().setMaxTimeInSeconds(60.0);
         CpSolverStatus status = solver.solve(model);
         log.info("Solver finished with status: {}", status);
-
         if (status == CpSolverStatus.OPTIMAL || status == CpSolverStatus.FEASIBLE) {
             List<CourseScheduling> generatedSchedules = new ArrayList<>();
             log.info("Solution found. Objective value: " + solver.objectiveValue());
@@ -207,5 +201,6 @@ public class TimetableSolverService {
             throw new RuntimeException(
                     "Could not generate a timetable. The problem is infeasible, likely because existing schedules create irresolvable conflicts for required resources (rooms, teachers) or there are not enough resources to schedule all courses.");
         }
+
     }
 }

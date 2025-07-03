@@ -16,12 +16,12 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Room;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Scheduling;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Timetable;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Timetable.Semester;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.CourseRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.CourseSchedulingRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.LevelRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.RoomRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.TimetableRepository;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.Semester;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.SessionType;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.TimeSlot;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.TimeSlot.CourseTimeSlot;
@@ -52,19 +52,24 @@ public class TimetableServiceImpl implements TimetableService {
 
 	@Override
 	@Transactional
-	public TimetableDTO generateTimetableForLevel(String academicYear, String semester, String levelId) {
+	public TimetableDTO generateTimetableForLevel(String academicYear, Semester semester, String levelId) {
 		Level level = levelRepository.findById(levelId)
 				.orElseThrow(() -> new CustomBusinessException("Level not found with id: " + levelId));
+
+		Long headCount = level.getHeadCount();
+		if (isExceededRoomCapacity(headCount)) {
+			throw new CustomBusinessException(
+					"Cannot generate timetable for Level '" + level.getCode() + "' due to room capacity limit.");
+
+		}
 
 		// Prevent regeneration if a timetable already exists and is in use for this
 		// exact context
 		Optional<Timetable> existingTimetable = timetableRepository
 				.findByAcademicYearAndSemesterAndLevelIdAndSessionTypeAndUsedTrue(academicYear,
-						Semester.valueOf(semester), levelId, SessionType.COURSE);
+						semester, levelId, SessionType.COURSE);
 		if (existingTimetable.isPresent()) {
-			log.warn(
-					"An active timetable already exists for Level '{}', Year '{}', Semester '{}'. Returning existing timetable.",
-					level.getCode(), academicYear, semester);
+
 			return existingTimetable.get().toDTO();
 		}
 
@@ -73,10 +78,10 @@ public class TimetableServiceImpl implements TimetableService {
 		if (coursesToSchedule.isEmpty()) {
 			throw new IllegalStateException("No active courses found for level " + level.getName() + " to schedule.");
 		}
-		log.info("Found {} courses to schedule for Level '{}'.", coursesToSchedule.size(), level.getCode());
 
 		// 2. Get all available rooms.
-		List<Room> availableRooms = roomRepository.findAllByAvailabilityTrue();
+		List<Room> availableRooms = roomRepository
+				.findByCapacityIsGreaterThanEqualAndAvailabilityTrueOrderByCapacityAsc(headCount);
 		if (availableRooms.isEmpty()) {
 			throw new IllegalStateException("No available rooms in the system for scheduling.");
 		}
@@ -91,18 +96,18 @@ public class TimetableServiceImpl implements TimetableService {
 		List<CourseTimeSlot> timeSlots = Arrays.asList(CourseTimeSlot.values());
 
 		// 4. Call the solver with all required information.
-		log.info("Invoking timetable solver...");
+
 		List<CourseScheduling> solvedSchedules = timetableSolverService.solve(
-				coursesToSchedule, availableRooms, days, timeSlots, existingSchedules);
+				coursesToSchedule, availableRooms, days, timeSlots, existingSchedules, level);
 
 		// 5. Create and save the new timetable and its generated schedules.
 		getOrCreateAcademicYear(academicYear);
 		Timetable newTimetable = Timetable.builder()
 				.academicYear(academicYear)
-				.semester(Semester.valueOf(semester))
+				.semester(semester)
 				.level(level)
-				.name("Timetable for " + level.getCode())
-				.description("Auto-generated for " + level.getName() + " | " + academicYear + " | " + semester)
+				.name("Course Planning for " + level.getCode())
+				.description("Timetable for " + level.getName() + " | " + academicYear + " | " + semester.getLabel())
 				.sessionType(SessionType.COURSE)
 				.used(true) // New timetables are active by default.
 				.build();
@@ -116,8 +121,6 @@ public class TimetableServiceImpl implements TimetableService {
 		}
 
 		savedTimetable.setSchedules(finalSchedules);
-		log.info("Successfully generated and saved new timetable with ID '{}' containing {} schedules.",
-				savedTimetable.getId(), finalSchedules.size());
 
 		return timetableRepository.save(savedTimetable).toDTO();
 	}
@@ -133,16 +136,35 @@ public class TimetableServiceImpl implements TimetableService {
 	}
 
 	@Override
-	public TimetableDTO createTimetableForExam(String levelId, String academicYear, String semester,
+	public TimetableDTO createTimetableForCourse(String levelId, String academicYear, Semester semester,
 			SessionType sessionType) {
 		Level level = levelRepository.findById(levelId)
 				.orElseThrow(() -> new CustomBusinessException("Level not found with id: " + levelId));
+		getOrCreateAcademicYear(academicYear);
 		return Timetable.builder()
 				.academicYear(academicYear)
-				.semester(Semester.valueOf(semester))
+				.semester(semester)
+				.level(level)
+				.name("Course Planning for " + level.getCode())
+				.description("Timetable for " + level.getName() + " __" + academicYear + "__" + semester.getLabel())
+				.sessionType(sessionType)
+				.schedules(new HashSet<>())
+				.build()
+				.toDTO();
+	}
+
+	@Override
+	public TimetableDTO createTimetableForExam(String levelId, String academicYear, Semester semester,
+			SessionType sessionType) {
+		Level level = levelRepository.findById(levelId)
+				.orElseThrow(() -> new CustomBusinessException("Level not found with id: " + levelId));
+		getOrCreateAcademicYear(academicYear);
+		return Timetable.builder()
+				.academicYear(academicYear)
+				.semester(semester)
 				.level(level)
 				.name("Exam Planning for " + level.getCode())
-				.description("Timetable for " + level.getName() + " __" + academicYear + "__" + semester)
+				.description("Timetable for " + level.getName() + " __" + academicYear + "__" + semester.getLabel())
 				.sessionType(sessionType)
 				.schedules(new HashSet<>())
 				.build()
@@ -215,4 +237,13 @@ public class TimetableServiceImpl implements TimetableService {
 		return Arrays.stream(Semester.values()).map(Enum::name).collect(Collectors.toList());
 	}
 
+	private boolean isExceededRoomCapacity(Long headCount) {
+		if (headCount == null) {
+			return false;
+		}
+		Long roomCapacity = roomRepository.findTopByAvailabilityTrueOrderByCapacityDesc()
+				.map(Room::getCapacity)
+				.orElse(0L);
+		return headCount > roomCapacity;
+	}
 }

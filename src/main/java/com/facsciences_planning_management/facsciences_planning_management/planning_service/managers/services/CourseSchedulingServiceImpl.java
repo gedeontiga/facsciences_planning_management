@@ -54,7 +54,10 @@ public class CourseSchedulingServiceImpl implements SchedulingService<CourseSche
 		Course assignedCourse = courseRepository.findByUeIdAndObsoleteFalse(request.ueId())
 				.orElseThrow(() -> new CustomBusinessException("Active course for UE not found: " + request.ueId()));
 
-		// log.info("Creating scheduling: {}", request.day());
+		if (request.headCount() != null && request.headCount() > room.getCapacity()) {
+			throw new CustomBusinessException("Level headcount exceeds room capacity: "
+					+ request.headCount() + " > " + room.getCapacity());
+		}
 		conflictService.validateCourseScheduling(assignedCourse.getTeacher(), assignedCourse, room,
 				request.day(),
 				LocalTime.parse(request.startTime()), LocalTime.parse(request.endTime()));
@@ -65,6 +68,7 @@ public class CourseSchedulingServiceImpl implements SchedulingService<CourseSche
 				.timeSlot(TimeSlot.CourseTimeSlot.valueOf(request.timeSlotLabel()))
 				.day(DayOfWeek.valueOf(request.day()))
 				.assignedCourse(assignedCourse)
+				.headCount(request.headCount())
 				.build();
 
 		CourseScheduling savedScheduling = schedulingRepository.save(scheduling);
@@ -91,6 +95,12 @@ public class CourseSchedulingServiceImpl implements SchedulingService<CourseSche
 				.orElseThrow(() -> new CustomBusinessException("Room not found: " + request.roomId()));
 		Course course = courseRepository.findByUeIdAndObsoleteFalse(request.ueId()).orElseThrow(
 				() -> new CustomBusinessException("Active course for UE not found: " + request.ueId()));
+
+		if (request.headCount() != null && request.headCount() > room.getCapacity()) {
+			throw new CustomBusinessException("Level headcount exceeds room capacity: "
+					+ request.headCount() + " > " + room.getCapacity());
+		}
+
 		if (request.roomId() != null && !request.roomId().equals(scheduling.getRoom().getId())) {
 			scheduling.setRoom(room);
 		}
@@ -99,6 +109,9 @@ public class CourseSchedulingServiceImpl implements SchedulingService<CourseSche
 		}
 		if (request.timeSlotLabel() != null) {
 			scheduling.setTimeSlot(TimeSlot.CourseTimeSlot.valueOf(request.timeSlotLabel()));
+		}
+		if (request.headCount() != null) {
+			scheduling.setHeadCount(request.headCount());
 		}
 		conflictService.validateCourseScheduling(course.getTeacher(),
 				course, room,

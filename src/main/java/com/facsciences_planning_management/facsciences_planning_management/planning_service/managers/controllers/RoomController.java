@@ -25,6 +25,7 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 @Validated
@@ -43,13 +44,13 @@ public class RoomController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<RoomDTO> getRoomById(@PathVariable String id) {
+    public ResponseEntity<RoomDTO> getRoomById(@NonNull @PathVariable String id) {
         RoomDTO room = roomService.getRoomById(id);
         return ResponseEntity.ok(room);
     }
 
     @GetMapping("/type")
-    public ResponseEntity<List<RoomDTO>> findRoomsByType(@RequestParam String type) {
+    public ResponseEntity<List<RoomDTO>> findRoomsByType(@NonNull @RequestParam String type) {
         List<RoomDTO> rooms = roomService.getRoomsByType(type);
         return ResponseEntity.ok(rooms);
     }
@@ -64,7 +65,7 @@ public class RoomController {
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<RoomDTO> updateRoom(
-            @PathVariable String id,
+            @NonNull @PathVariable String id,
             @Valid @RequestBody RoomDTO roomDTO) {
         RoomDTO updatedRoom = roomService.updateRoom(id, roomDTO);
         return ResponseEntity.ok(updatedRoom);
@@ -72,14 +73,14 @@ public class RoomController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<Void> deleteRoom(@PathVariable String id) {
+    public ResponseEntity<Void> deleteRoom(@NonNull @PathVariable String id) {
         roomService.deleteRoom(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/capacity")
     public ResponseEntity<List<RoomDTO>> findRoomsByCapacity(
-            @RequestParam @Min(1) Long minCapacity) {
+            @NonNull @RequestParam @Min(1) Long minCapacity) {
         List<RoomDTO> rooms = roomService.getRoomsByCapacity(minCapacity);
         return ResponseEntity.ok(rooms);
     }

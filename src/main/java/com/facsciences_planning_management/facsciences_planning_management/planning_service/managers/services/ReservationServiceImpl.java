@@ -18,6 +18,7 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Ue;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.ReservationRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.RoomRepository;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.TimetableRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.UeRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.SessionType;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.CourseSchedulingDTO;
@@ -43,6 +44,7 @@ public class ReservationServiceImpl implements ReservationService {
 	private final UserRepository userRepository;
 	private final RoomRepository roomRepository;
 	private final UeRepository ueRepository;
+	private final TimetableRepository timetableRepository;
 	private final CourseSchedulingServiceImpl courseSchedulingService;
 	private final ExamSchedulingServiceImpl examSchedulingService;
 	private final SchedulingConflictService schedulingConflictService;
@@ -56,7 +58,9 @@ public class ReservationServiceImpl implements ReservationService {
 				request.teacherId(), LocalDate.parse(request.date()), LocalTime.parse(request.startTime()),
 				LocalTime.parse(request.endTime()))) {
 			throw new CustomBusinessException("A reservation already exists for this time slot.");
-
+		}
+		if (!timetableRepository.existsById(request.timetableId())) {
+			throw new CustomBusinessException("Timetable not found with id: " + request.timetableId());
 		}
 		Users teacher = userRepository.findById(request.teacherId())
 				.orElseThrow(() -> new CustomBusinessException("Teacher not found with id: " + request.teacherId()));

@@ -442,7 +442,7 @@ public class DataProvider {
             Resource resource = new ClassPathResource("data/rooms.json");
             JsonNode rootNode = objectMapper.readTree(resource.getInputStream());
 
-            List<Room> createdRooms = processRoomNodes(rootNode);
+            List<Room> createdRooms = processRoomNodes(rootNode, faculty);
 
             if (!createdRooms.isEmpty()) {
                 faculty.getRooms().addAll(createdRooms);
@@ -456,14 +456,14 @@ public class DataProvider {
         }
     }
 
-    private List<Room> processRoomNodes(JsonNode rootNode) {
+    private List<Room> processRoomNodes(JsonNode rootNode, Faculty faculty) {
         List<Room> createdRooms = new ArrayList<>();
 
         JsonNode informatiqueNode = rootNode.get("Informatique");
         if (informatiqueNode != null && informatiqueNode.isArray()) {
             informatiqueNode.forEach(roomNode -> {
                 try {
-                    Room room = createRoomFromNode(roomNode);
+                    Room room = createRoomFromNode(roomNode, faculty);
                     if (room != null) {
                         createdRooms.add(room);
                     }
@@ -476,7 +476,7 @@ public class DataProvider {
         return createdRooms;
     }
 
-    private Room createRoomFromNode(JsonNode roomNode) {
+    private Room createRoomFromNode(JsonNode roomNode, Faculty faculty) {
         String roomCode = getTextValue(roomNode, "num");
         if (roomCode == null || roomRepository.existsByCode(roomCode)) {
             return null;
@@ -485,15 +485,18 @@ public class DataProvider {
         String buildingName = getTextValue(roomNode, "batiment");
         Long capacity = getLongValue(roomNode, "capacite");
 
-        Room room = Room.builder()
+        Room room = roomRepository.save(Room.builder()
                 .building(buildingName)
                 .code(roomCode)
                 .type(determineRoomType(buildingName))
                 .capacity(capacity != null ? capacity : 0L)
                 .availability(true)
-                .build();
+                .build());
 
-        return roomRepository.save(room);
+        faculty.getRooms().add(room);
+        facultyRepository.save(faculty);
+
+        return room;
     }
 
     private void loadSubjectsAndRelatedData(Faculty faculty, Branch branch) {
@@ -558,14 +561,14 @@ public class DataProvider {
 
     private Level createOrGetLevel(String levelCode, Branch branch) {
         String fullLevelCode = "INFO-L" + levelCode;
-
+        Double headCountRatio = (1 / Double.valueOf(levelCode)) * 600;
+        Long headCount = headCountRatio.longValue();
         return levelRepository.findByCode(fullLevelCode)
                 .orElseGet(() -> {
-
                     Level level = Level.builder()
                             .code(fullLevelCode)
                             .name("Informatique Niveau " + levelCode)
-                            .totalNumberOfStudents(0L)
+                            .headCount(headCount)
                             .branch(branch)
                             .build();
 

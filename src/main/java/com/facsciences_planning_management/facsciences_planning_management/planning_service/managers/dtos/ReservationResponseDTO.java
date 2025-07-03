@@ -3,13 +3,11 @@ package com.facsciences_planning_management.facsciences_planning_management.plan
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-import com.facsciences_planning_management.facsciences_planning_management.components.annotations.SafeMapping;
 import com.facsciences_planning_management.facsciences_planning_management.entities.Users;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Reservation;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Reservation.RequestStatus;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.SessionType;
 
-@SafeMapping
 public record ReservationResponseDTO(
 		String id,
 		String teacherId,
@@ -29,7 +27,9 @@ public record ReservationResponseDTO(
 		String processedAt,
 		String adminComment) {
 	public static ReservationResponseDTO fromReservation(Reservation reservation) {
-		String teacherName = reservation.getTeacher().getFirstName() + " " + reservation.getTeacher().getLastName();
+		String teacherName = Optional.ofNullable(reservation.getTeacher()).map(t -> t.getFirstName())
+				.orElse(null) + " "
+				+ Optional.ofNullable(reservation.getTeacher()).map(t -> t.getLastName()).orElse(null);
 
 		String processedById = Optional.ofNullable(reservation.getProcessedBy())
 				.map(Users::getId)
@@ -45,14 +45,14 @@ public record ReservationResponseDTO(
 
 		return new ReservationResponseDTO(
 				reservation.getId(),
-				reservation.getTeacher().getId(),
+				Optional.ofNullable(reservation.getTeacher()).map(t -> t.getId()).orElse(null),
 				teacherName,
 				reservation.getSessionType(),
 				reservation.getStatus(),
-				reservation.getRoom().getId(),
-				reservation.getRoom().getCode(),
-				reservation.getUe().getId(),
-				reservation.getUe().getCode(),
+				Optional.ofNullable(reservation.getRoom()).map(r -> r.getId()).orElse(null),
+				Optional.ofNullable(reservation.getRoom()).map(r -> r.getCode()).orElse(null),
+				Optional.ofNullable(reservation.getUe()).map(ue -> ue.getId()).orElse(null),
+				Optional.ofNullable(reservation.getUe()).map(ue -> ue.getCode()).orElse(null),
 				reservation.getStartTime().toString(),
 				reservation.getEndTime().toString(),
 				reservation.getDate().getDayOfWeek().name(),

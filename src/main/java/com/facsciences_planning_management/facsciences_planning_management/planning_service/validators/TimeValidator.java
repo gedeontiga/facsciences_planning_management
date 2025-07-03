@@ -9,7 +9,6 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
-// Validator implementations
 public class TimeValidator implements ConstraintValidator<ValidTime, String> {
     @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {

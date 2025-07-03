@@ -59,6 +59,11 @@ public class ExamSchedulingServiceImpl implements SchedulingService<ExamScheduli
 		Users proctor = userRepository.findById(request.ueId())
 				.orElseThrow(() -> new CustomBusinessException("Proctor not found: " + request.userId()));
 
+		if (request.headCount() != null && request.headCount() > room.getCapacity()) {
+			throw new CustomBusinessException("Level headcount exceeds room capacity: "
+					+ request.headCount() + " > " + room.getCapacity());
+		}
+
 		conflictService.validateScheduling(proctor, room, request.date(),
 				LocalTime.parse(request.startTime()), LocalTime.parse(request.endTime()));
 
@@ -68,6 +73,7 @@ public class ExamSchedulingServiceImpl implements SchedulingService<ExamScheduli
 				.timeSlot(TimeSlot.ExamTimeSlot.valueOf(request.timeSlotLabel()))
 				.sessionDate(LocalDate.parse(request.date()))
 				.ue(ue)
+				.headCount(request.headCount())
 				.proctor(proctor)
 				.build();
 
@@ -93,6 +99,11 @@ public class ExamSchedulingServiceImpl implements SchedulingService<ExamScheduli
 		// Update properties if provided in the request
 		Room room = roomRepository.findById(request.roomId())
 				.orElseThrow(() -> new CustomBusinessException("Room not found: " + request.roomId()));
+
+		if (request.headCount() != null && request.headCount() > room.getCapacity()) {
+			throw new CustomBusinessException("Level headcount exceeds room capacity: "
+					+ request.headCount() + " > " + room.getCapacity());
+		}
 		if (request.roomId() != null && !request.roomId().equals(scheduling.getRoom().getId())) {
 			scheduling.setRoom(room);
 		}
@@ -107,6 +118,10 @@ public class ExamSchedulingServiceImpl implements SchedulingService<ExamScheduli
 		if (request.timeSlotLabel() != null) {
 			scheduling.setTimeSlot(TimeSlot.ExamTimeSlot.valueOf(request.timeSlotLabel()));
 		}
+		if (request.headCount() != null) {
+			scheduling.setHeadCount(request.headCount());
+		}
+
 		conflictService.validateScheduling(proctor, room, request.date(),
 				LocalTime.parse(request.startTime()), LocalTime.parse(request.endTime()));
 
