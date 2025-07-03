@@ -115,6 +115,7 @@ public class SecurityConfig {
 		configuration.setAllowedOriginPatterns(Arrays.asList(
 				"https://facsciences-planning-management.netlify.app",
 				"https://facsciences-uy1-planning-management-gedeontiga-eabfb5d3.koyeb.app",
+				"http://facsciences-uy1-planning-management-gedeontiga-eabfb5d3.koyeb.app",
 				"https://app-planning-uy1-web.vercel.app",
 				"http://localhost:*"));
 		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
