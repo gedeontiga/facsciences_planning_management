@@ -12,6 +12,7 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.faculty.BranchRequest;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.faculty.DepartmentDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.faculty.FacultyDTO;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.faculty.FacultyRequest;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.faculty.LevelDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces.FacultyService;
 
@@ -28,8 +29,8 @@ public class FacultyController {
     private final FacultyService facultyService;
 
     @PostMapping("/create")
-    public ResponseEntity<FacultyDTO> createFaculty(@RequestBody FacultyDTO facultyDTO) {
-        return ResponseEntity.ok(facultyService.createFaculty(facultyDTO));
+    public ResponseEntity<FacultyDTO> createFaculty(@RequestBody FacultyRequest request) {
+        return ResponseEntity.ok(facultyService.createFaculty(request));
     }
 
     @PostMapping("/create/branch")

@@ -2,9 +2,11 @@ package com.facsciences_planning_management.facsciences_planning_management.plan
 
 import java.util.List;
 
+import com.facsciences_planning_management.facsciences_planning_management.components.annotations.SafeMapping;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Faculty;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.RoomDTO;
 
+@SafeMapping
 public record FacultyDTO(
         String id,
         String name,

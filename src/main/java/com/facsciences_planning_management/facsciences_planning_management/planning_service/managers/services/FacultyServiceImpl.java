@@ -17,6 +17,7 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.faculty.BranchRequest;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.faculty.DepartmentDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.faculty.FacultyDTO;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.faculty.FacultyRequest;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.faculty.LevelDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces.FacultyService;
 
@@ -34,14 +35,14 @@ public class FacultyServiceImpl implements FacultyService {
     private final DepartmentRepository departmentRepository;
 
     @Override
-    public FacultyDTO createFaculty(FacultyDTO facultyDTO) {
-        log.info("Creating faculty with name: {}", facultyDTO.name());
-        if (facultyRepository.existsByCode(facultyDTO.code())) {
-            throw new CustomBusinessException("Faculty with code " + facultyDTO.code() + " already exists.");
+    public FacultyDTO createFaculty(FacultyRequest request) {
+        log.info("Creating faculty with name: {}", request.name());
+        if (facultyRepository.existsByCode(request.code())) {
+            throw new CustomBusinessException("Faculty with code " + request.code() + " already exists.");
         }
         Faculty faculty = Faculty.builder()
-                .name(facultyDTO.name())
-                .code(facultyDTO.code())
+                .name(request.name())
+                .code(request.code())
                 .build();
         return FacultyDTO.fromFaculty(facultyRepository.save(faculty));
     }

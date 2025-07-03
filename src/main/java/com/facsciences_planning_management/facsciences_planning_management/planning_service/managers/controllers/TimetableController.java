@@ -11,6 +11,7 @@ import org.springframework.validation.annotation.Validated;
 
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Timetable.Semester;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.SessionType;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.AcademicYearDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.TimeSlotDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.TimetableDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.TimetableRequest;
@@ -81,8 +82,8 @@ public class TimetableController {
 
     @PostMapping("/create-year")
     @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<String> createAcademicYear(@RequestParam @AcademicYearFormat String academicYear) {
-        return ResponseEntity.ok(timetableService.createAcademicYear(academicYear));
+    public ResponseEntity<String> createAcademicYear(@RequestBody AcademicYearDTO academicYear) {
+        return ResponseEntity.ok(timetableService.createAcademicYear(academicYear.label()));
     }
 
     @GetMapping("/academic-years")

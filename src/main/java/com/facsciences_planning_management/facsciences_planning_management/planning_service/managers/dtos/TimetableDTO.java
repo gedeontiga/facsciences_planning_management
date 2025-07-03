@@ -4,10 +4,12 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Timetable;
+import com.facsciences_planning_management.facsciences_planning_management.components.annotations.SafeMapping;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Scheduling;
 
 import lombok.Singular;
 
+@SafeMapping
 public record TimetableDTO(
 		String id,
 		String name,

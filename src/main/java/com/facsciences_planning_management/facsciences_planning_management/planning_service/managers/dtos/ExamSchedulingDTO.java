@@ -1,11 +1,13 @@
 package com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos;
 
+import com.facsciences_planning_management.facsciences_planning_management.components.annotations.SafeMapping;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.ExamScheduling;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Reservation;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.TimeSlot.ExamTimeSlot;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.validators.interfaces.ValidDate;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.validators.interfaces.ValidTime;
 
+@SafeMapping
 public record ExamSchedulingDTO(
 		String id,
 		String roomId,

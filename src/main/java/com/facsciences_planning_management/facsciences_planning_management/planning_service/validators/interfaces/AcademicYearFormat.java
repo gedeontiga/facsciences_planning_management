@@ -9,17 +9,12 @@ import java.lang.annotation.Target;
 
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.validators.AcademicYearValidator;
 
-@Target({ ElementType.FIELD, ElementType.PARAMETER, ElementType.ANNOTATION_TYPE }) // Where this can be used
-@Retention(RetentionPolicy.RUNTIME) // Available at runtime
-@Constraint(validatedBy = AcademicYearValidator.class) // Link to the validator logic
+@Target({ ElementType.FIELD, ElementType.PARAMETER, ElementType.ANNOTATION_TYPE })
+@Retention(RetentionPolicy.RUNTIME)
+@Constraint(validatedBy = AcademicYearValidator.class)
 public @interface AcademicYearFormat {
+    String message() default "Invalid academic year format. Expected format is 20XX-20XX where the second year is one greater than the first (e.g., '2025-2026').";
 
-    // Default error message
-    String message()
-
-    default "Invalid academic year format. Expected format is YYYY-YYYY where the second year is one greater than the first (e.g., '2025-2026').";
-
-    // Standard validation annotation properties
     Class<?>[] groups() default {};
 
     Class<? extends Payload>[] payload() default {};

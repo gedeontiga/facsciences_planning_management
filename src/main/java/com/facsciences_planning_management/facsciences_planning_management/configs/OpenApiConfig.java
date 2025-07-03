@@ -16,15 +16,15 @@ import org.springframework.context.annotation.Configuration;
 @SecurityScheme(name = "bearerAuth", type = SecuritySchemeType.HTTP, bearerFormat = "JWT", scheme = "bearer")
 public class OpenApiConfig {
 
-    @Bean
-    OpenAPI customOpenAPI() {
-        return new OpenAPI()
-                .components(new Components()
-                        .addSecuritySchemes("bearerAuth",
-                                new io.swagger.v3.oas.models.security.SecurityScheme()
-                                        .type(io.swagger.v3.oas.models.security.SecurityScheme.Type.HTTP)
-                                        .scheme("bearer")
-                                        .bearerFormat("JWT")))
-                .addSecurityItem(new SecurityRequirement().addList("bearerAuth"));
-    }
+	@Bean
+	OpenAPI customOpenAPI() {
+		return new OpenAPI()
+				.components(new Components()
+						.addSecuritySchemes("bearerAuth",
+								new io.swagger.v3.oas.models.security.SecurityScheme()
+										.type(io.swagger.v3.oas.models.security.SecurityScheme.Type.HTTP)
+										.scheme("bearer")
+										.bearerFormat("JWT")))
+				.addSecurityItem(new SecurityRequirement().addList("bearerAuth"));
+	}
 }

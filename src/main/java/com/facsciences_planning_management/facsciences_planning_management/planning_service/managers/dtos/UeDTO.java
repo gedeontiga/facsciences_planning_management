@@ -1,7 +1,9 @@
 package com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos;
 
+import com.facsciences_planning_management.facsciences_planning_management.components.annotations.SafeMapping;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Ue;
 
+@SafeMapping
 public record UeDTO(
         String id,
         String name,

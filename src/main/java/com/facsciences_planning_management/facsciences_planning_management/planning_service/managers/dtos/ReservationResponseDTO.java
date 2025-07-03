@@ -3,11 +3,13 @@ package com.facsciences_planning_management.facsciences_planning_management.plan
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+import com.facsciences_planning_management.facsciences_planning_management.components.annotations.SafeMapping;
 import com.facsciences_planning_management.facsciences_planning_management.entities.Users;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Reservation;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Reservation.RequestStatus;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.SessionType;
 
+@SafeMapping
 public record ReservationResponseDTO(
 		String id,
 		String teacherId,
