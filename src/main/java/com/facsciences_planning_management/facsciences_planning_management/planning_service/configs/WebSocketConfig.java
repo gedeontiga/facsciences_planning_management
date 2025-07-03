@@ -30,6 +30,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns(
                         "https://facsciences-planning-management.netlify.app",
+                        "https://facsciences-uy1-planning-management-gedeontiga-eabfb5d3.koyeb.app",
                         "https://app-planning-uy1-web.vercel.app",
                         "http://localhost:*")
                 .withSockJS();

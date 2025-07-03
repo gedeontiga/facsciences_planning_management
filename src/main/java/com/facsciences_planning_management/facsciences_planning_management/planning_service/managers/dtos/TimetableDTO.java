@@ -37,6 +37,6 @@ public record TimetableDTO(
 						.collect(Collectors.toSet()),
 				entity.getAcademicYear(),
 				entity.getSemester(),
-				entity.getCreatedAt().toString());
+				Optional.ofNullable(entity.getCreatedAt()).map(e -> e.toString()).orElse(null));
 	}
 }

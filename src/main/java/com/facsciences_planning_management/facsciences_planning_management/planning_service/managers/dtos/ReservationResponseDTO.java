@@ -58,7 +58,7 @@ public record ReservationResponseDTO(
 				reservation.getDate().getDayOfWeek().name(),
 				processedById,
 				adminName,
-				reservation.getCreatedAt().toString(),
+				Optional.ofNullable(reservation.getCreatedAt()).map(e -> e.toString()).orElse(null),
 				processedAt,
 				reservation.getAdminComment());
 	}

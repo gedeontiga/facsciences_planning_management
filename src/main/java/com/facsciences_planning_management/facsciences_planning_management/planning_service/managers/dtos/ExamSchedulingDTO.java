@@ -45,7 +45,7 @@ public record ExamSchedulingDTO(
 				entity.getTimeSlot().getEndTime().toString(),
 				Optional.ofNullable(entity.getProctor()).map(p -> p.getId()).orElse(null),
 				teacherName,
-				entity.getSessionDate().toString(),
+				Optional.ofNullable(entity.getSessionDate()).map(e -> e.toString()).orElse(null),
 				entity.getHeadCount(),
 				headCountLabel);
 	}
@@ -63,7 +63,8 @@ public record ExamSchedulingDTO(
 				reservation.getEndTime().toString(),
 				reservation.getTeacher().getId(),
 				null,
-				reservation.getDate().toString(),
+				Optional.ofNullable(reservation.getDate()).map(e -> e.toString()).orElse(
+						null),
 				reservation.getHeadCount(),
 				null);
 	}

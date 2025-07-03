@@ -21,7 +21,7 @@ public record CourseDTO(
                 Optional.ofNullable(entity.getTeacher()).map(u -> u.getLastName()).orElse(null),
                 Optional.ofNullable(entity.getUe()).map(ue -> ue.getId()).orElse(null),
                 Optional.ofNullable(entity.getUe()).map(ue -> ue.getCode()).orElse(null),
-                entity.getDuration().toHours(),
+                Optional.ofNullable(entity.getDuration()).map(d -> d.toHours()).orElse(null),
                 null);
     }
 

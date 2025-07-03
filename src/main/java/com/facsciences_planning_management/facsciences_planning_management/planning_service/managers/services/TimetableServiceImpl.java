@@ -141,7 +141,7 @@ public class TimetableServiceImpl implements TimetableService {
 		Level level = levelRepository.findById(levelId)
 				.orElseThrow(() -> new CustomBusinessException("Level not found with id: " + levelId));
 		getOrCreateAcademicYear(academicYear);
-		return Timetable.builder()
+		return timetableRepository.save(Timetable.builder()
 				.academicYear(academicYear)
 				.semester(semester)
 				.level(level)
@@ -149,7 +149,7 @@ public class TimetableServiceImpl implements TimetableService {
 				.description("Timetable for " + level.getName() + " __" + academicYear + "__" + semester.getLabel())
 				.sessionType(sessionType)
 				.schedules(new HashSet<>())
-				.build()
+				.build())
 				.toDTO();
 	}
 
@@ -159,7 +159,7 @@ public class TimetableServiceImpl implements TimetableService {
 		Level level = levelRepository.findById(levelId)
 				.orElseThrow(() -> new CustomBusinessException("Level not found with id: " + levelId));
 		getOrCreateAcademicYear(academicYear);
-		return Timetable.builder()
+		return timetableRepository.save(Timetable.builder()
 				.academicYear(academicYear)
 				.semester(semester)
 				.level(level)
@@ -167,7 +167,7 @@ public class TimetableServiceImpl implements TimetableService {
 				.description("Timetable for " + level.getName() + " __" + academicYear + "__" + semester.getLabel())
 				.sessionType(sessionType)
 				.schedules(new HashSet<>())
-				.build()
+				.build())
 				.toDTO();
 	}
 
