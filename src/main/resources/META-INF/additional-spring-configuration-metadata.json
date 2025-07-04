@@ -26,6 +26,16 @@
       "name": "app.password-suffix",
       "type": "java.lang.String",
       "description": "A description for 'app.default-password-end'"
+    },
+    {
+      "name": "spring.servletmultipart.max-file-size",
+      "type": "java.lang.String",
+      "description": "A description for 'spring.servletmultipart.max-file-size'"
+    },
+    {
+      "name": "spring.servletmultipart.max-request-size",
+      "type": "java.lang.String",
+      "description": "A description for 'spring.servletmultipart.max-request-size'"
     }
   ]
 }
