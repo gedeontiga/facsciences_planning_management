@@ -33,7 +33,6 @@ import lombok.RequiredArgsConstructor;
 @EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-
 	private final JwtFilter jwtFilter;
 
 	@Bean
@@ -45,7 +44,6 @@ public class SecurityConfig {
 						.requestMatchers("/api/auth/**").permitAll()
 						.requestMatchers("/api/admin/**").hasAuthority("ADMIN")
 						.requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
-						.requestMatchers("/swagger-resources/**", "/webjars/**").permitAll() // Add these
 						.requestMatchers("/actuator/**").permitAll()
 						.anyRequest().authenticated())
 				.sessionManagement(session -> session
@@ -70,23 +68,18 @@ public class SecurityConfig {
 	@Bean
 	AuthenticationEntryPoint customAuthEntryPoint() {
 		return (request, response, authException) -> {
-
 			response.setContentType("application/json");
 			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-
 			String message = authException.getMessage() != null ? authException.getMessage()
 					: "Full authentication is required to access this resource";
-
 			if (authException.getCause() instanceof JwtException) {
 				message = "Invalid JWT token: " + authException.getCause().getMessage();
 			}
-
 			ErrorResponse errorResponse = new ErrorResponse(
 					"Authentication Error",
 					message,
 					HttpStatus.UNAUTHORIZED.value(),
 					LocalDateTime.now().toString());
-
 			ObjectMapper mapper = new ObjectMapper();
 			response.getWriter().write(mapper.writeValueAsString(errorResponse));
 		};
@@ -97,13 +90,11 @@ public class SecurityConfig {
 		return (request, response, accessDeniedException) -> {
 			response.setContentType("application/json");
 			response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-
 			ErrorResponse errorResponse = new ErrorResponse(
 					"Access Denied",
 					"You don't have permission to access this resource",
 					HttpStatus.FORBIDDEN.value(),
 					LocalDateTime.now().toString());
-
 			ObjectMapper mapper = new ObjectMapper();
 			response.getWriter().write(mapper.writeValueAsString(errorResponse));
 		};
@@ -112,23 +103,29 @@ public class SecurityConfig {
 	@Bean
 	CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
+
+		// Updated CORS configuration for production
 		configuration.setAllowedOriginPatterns(Arrays.asList(
 				"https://facsciences-planning-management.netlify.app",
 				"https://facsciences-uy1-planning-management-gedeontiga-eabfb5d3.koyeb.app",
-				"http://facsciences-uy1-planning-management-gedeontiga-eabfb5d3.koyeb.app",
 				"https://app-planning-uy1-web.vercel.app",
 				"http://localhost:*",
-				// Add these for Swagger UI to work in production
-				"https://petstore.swagger.io", // Common Swagger UI origin
-				"null" // For file:// protocol and some edge cases
-		));
+				"https://localhost:*"));
+
 		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"));
 		configuration.setAllowedHeaders(Arrays.asList("*"));
 		configuration.setAllowCredentials(true);
+		configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Type"));
+
+		// Important: Add preflight request handling
 		configuration.setMaxAge(3600L);
 
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-		source.registerCorsConfiguration("/**", configuration); // Changed from "/api/**" to "/**"
+		source.registerCorsConfiguration("/api/**", configuration);
+		// Also register for Swagger UI paths
+		source.registerCorsConfiguration("/swagger-ui/**", configuration);
+		source.registerCorsConfiguration("/v3/api-docs/**", configuration);
+
 		return source;
 	}
 

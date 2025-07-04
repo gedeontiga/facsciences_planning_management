@@ -8,6 +8,8 @@ import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 
+import java.util.Arrays;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -20,11 +22,17 @@ public class OpenApiConfig {
 	OpenAPI customOpenAPI() {
 		return new OpenAPI()
 				.components(new Components()
-						.addSecuritySchemes("bearerAuth",
-								new io.swagger.v3.oas.models.security.SecurityScheme()
-										.type(io.swagger.v3.oas.models.security.SecurityScheme.Type.HTTP)
-										.scheme("bearer")
-										.bearerFormat("JWT")))
-				.addSecurityItem(new SecurityRequirement().addList("bearerAuth"));
+						.addSecuritySchemes("bearerAuth", new io.swagger.v3.oas.models.security.SecurityScheme()
+								.type(io.swagger.v3.oas.models.security.SecurityScheme.Type.HTTP)
+								.scheme("bearer")
+								.bearerFormat("JWT")))
+				.addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
+				.servers(Arrays.asList(
+						new io.swagger.v3.oas.models.servers.Server()
+								.url("https://facsciences-uy1-planning-management-gedeontiga-eabfb5d3.koyeb.app")
+								.description("Production Server"),
+						new io.swagger.v3.oas.models.servers.Server()
+								.url("http://localhost:8080")
+								.description("Local Development Server")));
 	}
 }

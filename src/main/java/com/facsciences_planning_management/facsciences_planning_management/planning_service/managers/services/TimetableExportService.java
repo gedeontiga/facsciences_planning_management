@@ -1,9 +1,8 @@
 package com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services;
 
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
-import com.facsciences_planning_management.facsciences_planning_management.exceptions.CustomBusinessException;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.TimetableRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.CourseSchedulingDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.ExamSchedulingDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.SchedulingDTO;
@@ -33,6 +32,7 @@ import lombok.RequiredArgsConstructor;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
@@ -64,8 +64,6 @@ public class TimetableExportService {
 	private static final int MAX_BUFFER_SIZE = 1024 * 1024; // 1MB max buffer
 	private static final int INITIAL_BUFFER_SIZE = 64 * 1024; // 64KB initial
 
-	private final TimetableRepository timetableRepository;
-
 	// Cache fonts to avoid repeated loading
 	private final Map<String, PdfFont> fontCache = new ConcurrentHashMap<>();
 
@@ -73,9 +71,6 @@ public class TimetableExportService {
 	private volatile Image cachedLogo;
 
 	public ByteArrayInputStream generateTimetablePdf(TimetableDTO timetable, String levelCode) throws IOException {
-		if (!timetableRepository.existsById(timetable.id())) {
-			throw new CustomBusinessException("Timetable with ID " + timetable.id() + " does not exist.");
-		}
 
 		boolean isExamTimetable = timetable.schedules().stream()
 				.anyMatch(ExamSchedulingDTO.class::isInstance);
@@ -347,28 +342,6 @@ public class TimetableExportService {
 		});
 	}
 
-	// Image caching
-	private Image getCachedLogo() {
-		if (cachedLogo == null) {
-			synchronized (this) {
-				if (cachedLogo == null) {
-					try {
-						cachedLogo = new Image(ImageDataFactory.create("src/main/resources/images/uy1_logo.png"))
-								.setWidth(50)
-								.setHeight(50)
-								.setHorizontalAlignment(HorizontalAlignment.CENTER);
-					} catch (Exception e) {
-						// Return placeholder or handle gracefully
-						cachedLogo = new Image(ImageDataFactory.create(createPlaceholderImage()))
-								.setWidth(50)
-								.setHeight(50);
-					}
-				}
-			}
-		}
-		return cachedLogo;
-	}
-
 	private byte[] createPlaceholderImage() {
 		// Create a simple 1x1 transparent PNG as placeholder
 		return new byte[] { (byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
@@ -478,6 +451,42 @@ public class TimetableExportService {
 		} catch (IOException e) {
 			throw new RuntimeException("Failed to generate CSV", e);
 		}
+	}
+
+	private Image getCachedLogo() {
+		if (cachedLogo == null) {
+			synchronized (this) {
+				if (cachedLogo == null) {
+					try {
+						// Load from classpath resources instead of file system
+						ClassPathResource logoResource = new ClassPathResource("images/uy1_logo.png");
+
+						if (logoResource.exists()) {
+							try (InputStream logoStream = logoResource.getInputStream()) {
+								byte[] logoBytes = logoStream.readAllBytes();
+								cachedLogo = new Image(ImageDataFactory.create(logoBytes))
+										.setWidth(50)
+										.setHeight(50)
+										.setHorizontalAlignment(HorizontalAlignment.CENTER);
+							}
+						} else {
+							// Fallback to placeholder if logo not found
+							cachedLogo = new Image(ImageDataFactory.create(createPlaceholderImage()))
+									.setWidth(50)
+									.setHeight(50);
+						}
+					} catch (Exception e) {
+						// Log the error for debugging
+						System.err.println("Failed to load logo: " + e.getMessage());
+						// Use placeholder image as fallback
+						cachedLogo = new Image(ImageDataFactory.create(createPlaceholderImage()))
+								.setWidth(50)
+								.setHeight(50);
+					}
+				}
+			}
+		}
+		return cachedLogo;
 	}
 
 	private LocalDate getScheduleSortKey(SchedulingDTO schedule) {
