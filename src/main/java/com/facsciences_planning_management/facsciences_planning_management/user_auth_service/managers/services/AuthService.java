@@ -1,7 +1,6 @@
 package com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.services;
 
 import java.time.Instant;
-import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.scheduling.annotation.Scheduled;
@@ -24,6 +23,7 @@ import com.facsciences_planning_management.facsciences_planning_management.user_
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.entities.repositories.RoleRepository;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.entities.repositories.ValidationRepository;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.LoginRequest;
+import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.LoginResponse;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.PasswordResetRequest;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.UserRequest;
 
@@ -80,7 +80,7 @@ public class AuthService {
         validationRepository.delete(activation);
     }
 
-    public Map<String, String> login(LoginRequest request) throws AuthenticationException {
+    public LoginResponse login(LoginRequest request) throws AuthenticationException {
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.email(), request.password()));

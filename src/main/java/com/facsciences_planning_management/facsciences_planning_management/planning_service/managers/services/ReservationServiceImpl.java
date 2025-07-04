@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.facsciences_planning_management.facsciences_planning_management.entities.Users;
 import com.facsciences_planning_management.facsciences_planning_management.entities.repositories.UserRepository;
 import com.facsciences_planning_management.facsciences_planning_management.exceptions.CustomBusinessException;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.CourseScheduling;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.ExamScheduling;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Reservation;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Reservation.RequestStatus;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Room;
@@ -21,8 +24,11 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.TimetableRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.UeRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.SessionType;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.CourseSchedulingDTO;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.ExamSchedulingDTO;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.TimeSlot;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.TimeSlot.CourseTimeSlot;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.TimeSlot.ExamTimeSlot;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.CourseSchedulingRequest;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.ExamSchedulingRequest;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.ReservationProcessingDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.ReservationRequestDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.ReservationResponseDTO;
@@ -33,6 +39,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -49,14 +56,28 @@ public class ReservationServiceImpl implements ReservationService {
 	private final ExamSchedulingServiceImpl examSchedulingService;
 	private final SchedulingConflictService schedulingConflictService;
 	private final WebSocketUpdateService webSocketUpdateService;
-	private static final String WS_RESERVATION_TOPIC = "/topic/reservations";
+
+	private static final String WS_RESERVATION_TOPIC = "/topic/reservations/";
 
 	@Override
 	@Transactional
 	public ReservationResponseDTO createRequest(ReservationRequestDTO request) {
+		TimeSlot.TimeSlotResult result = TimeSlot.getTimeSlotWithType(request.timeSlotLabel());
+		LocalTime startTime;
+		LocalTime endTime;
+		if (result.isCourseTimeSlot()) {
+			CourseTimeSlot courseSlot = result.asCourseTimeSlot();
+			startTime = courseSlot.getStartTime();
+			endTime = courseSlot.getEndTime();
+		} else if (result.isExamTimeSlot()) {
+			ExamTimeSlot examSlot = result.asExamTimeSlot();
+			startTime = examSlot.getStartTime();
+			endTime = examSlot.getEndTime();
+		} else {
+			throw new CustomBusinessException("Invalid time slot type: " + request.timeSlotLabel());
+		}
 		if (reservationRepository.existsByTeacherIdAndDateAndStartTimeAndEndTime(
-				request.teacherId(), LocalDate.parse(request.date()), LocalTime.parse(request.startTime()),
-				LocalTime.parse(request.endTime()))) {
+				request.teacherId(), LocalDate.parse(request.date()), startTime, endTime)) {
 			throw new CustomBusinessException("A reservation already exists for this time slot.");
 		}
 		if (!timetableRepository.existsById(request.timetableId())) {
@@ -72,7 +93,7 @@ public class ReservationServiceImpl implements ReservationService {
 				.orElseThrow(() -> new CustomBusinessException("UE not found with id: " + request.ueId()));
 
 		schedulingConflictService.validateScheduling(teacher, room, request.date(),
-				LocalTime.parse(request.startTime()), LocalTime.parse(request.endTime()));
+				startTime, endTime);
 
 		// log.info("Creating reservation request: {}", teacher.getUsername());
 		Reservation reservation = Reservation.builder()
@@ -82,8 +103,9 @@ public class ReservationServiceImpl implements ReservationService {
 				.timetableId(request.timetableId())
 				.ue(ue)
 				.room(room)
-				.startTime(LocalTime.parse(request.startTime()))
-				.endTime(LocalTime.parse(request.endTime()))
+				.timeSlotLabel(request.timeSlotLabel())
+				.startTime(startTime)
+				.endTime(endTime)
 				.date(LocalDate.parse(request.date()))
 				.createdAt(LocalDateTime.now())
 				.build();
@@ -91,7 +113,7 @@ public class ReservationServiceImpl implements ReservationService {
 		Reservation savedReservation = reservationRepository.save(reservation);
 		ReservationResponseDTO responseDTO = ReservationResponseDTO.fromReservation(savedReservation);
 
-		webSocketUpdateService.sendUpdate(WS_RESERVATION_TOPIC, responseDTO);
+		webSocketUpdateService.sendUpdate(WS_RESERVATION_TOPIC + savedReservation.getId(), responseDTO);
 
 		return responseDTO;
 	}
@@ -106,24 +128,28 @@ public class ReservationServiceImpl implements ReservationService {
 		Users admin = userRepository.findByEmail(email)
 				.orElseThrow(() -> new CustomBusinessException("Admin not found with email: " + email));
 
-		if (request.status() == RequestStatus.APPROVED) {
-			if (reservation.getSessionType().equals(SessionType.COURSE)) {
-				courseSchedulingService.createScheduling(CourseSchedulingDTO.fromReservation(reservation));
-			} else {
-				examSchedulingService.createScheduling(ExamSchedulingDTO.fromReservation(reservation));
-			}
-		}
-
 		log.info("Processing reservation request: {}", reservation.getId());
 
 		reservation.setStatus(request.status());
 		reservation.setAdminComment(request.message());
 		reservation.setProcessedBy(admin);
 
+		if (request.status() == RequestStatus.APPROVED) {
+			if (reservation.getSessionType().equals(SessionType.COURSE)) {
+				CourseScheduling scheduling = courseSchedulingService.createCourseScheduling(
+						CourseSchedulingRequest.fromReservation(ReservationRequestDTO.fromReservation(reservation)));
+				reservation.setScheduling(scheduling);
+			} else {
+				ExamScheduling scheduling = examSchedulingService.createExamScheduling(
+						ExamSchedulingRequest.fromReservation(ReservationRequestDTO.fromReservation(reservation)));
+				reservation.setScheduling(scheduling);
+			}
+		}
+
 		Reservation updatedReservation = reservationRepository.save(reservation);
 		ReservationResponseDTO responseDTO = ReservationResponseDTO.fromReservation(updatedReservation);
 
-		webSocketUpdateService.sendUpdate(WS_RESERVATION_TOPIC, responseDTO);
+		webSocketUpdateService.sendUpdate(WS_RESERVATION_TOPIC + updatedReservation.getId(), responseDTO);
 
 		return responseDTO;
 	}
@@ -155,5 +181,21 @@ public class ReservationServiceImpl implements ReservationService {
 	@Override
 	public List<String> getAllReservationStatuses() {
 		return Arrays.stream(RequestStatus.values()).map(RequestStatus::name).collect(Collectors.toList());
+	}
+
+	@Scheduled(cron = "@hourly")
+	public void removeOldReservations() {
+		reservationRepository.findByDateBefore(LocalDate.now()).stream()
+				.forEach(reservation -> {
+					log.info("Removing old reservation: {}", reservation.getId());
+					reservationRepository.deleteById(reservation.getId());
+					if (reservation.getSessionType().equals(SessionType.COURSE)) {
+						courseSchedulingService.deleteScheduling(reservation.getScheduling().getId());
+					} else {
+						examSchedulingService.deleteScheduling(reservation.getScheduling().getId());
+					}
+					webSocketUpdateService.sendUpdate(WS_RESERVATION_TOPIC + reservation.getId(),
+							Map.of("reservationId", reservation.getId()));
+				});
 	}
 }

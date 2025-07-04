@@ -59,4 +59,110 @@ public class TimeSlot {
             return null;
         }
     }
+
+    /**
+     * Gets a CourseTimeSlot by its label name
+     * 
+     * @param timeSlotLabel the enum name (e.g., "COURSE_SLOT_1")
+     * @return the CourseTimeSlot enum instance
+     * @throws IllegalArgumentException if the label doesn't correspond to a valid
+     *                                  CourseTimeSlot
+     */
+    public static CourseTimeSlot getCourseTimeSlot(String timeSlotLabel) {
+        return CourseTimeSlot.valueOf(timeSlotLabel);
+    }
+
+    /**
+     * Gets an ExamTimeSlot by its label name
+     * 
+     * @param timeSlotLabel the enum name (e.g., "THREE_HOUR_SLOT_1")
+     * @return the ExamTimeSlot enum instance
+     * @throws IllegalArgumentException if the label doesn't correspond to a valid
+     *                                  ExamTimeSlot
+     */
+    public static ExamTimeSlot getExamTimeSlot(String timeSlotLabel) {
+        return ExamTimeSlot.valueOf(timeSlotLabel);
+    }
+
+    /**
+     * Gets either a CourseTimeSlot or ExamTimeSlot by its label name
+     * 
+     * @param timeSlotLabel the enum name
+     * @return the enum instance as Object (cast to appropriate type)
+     * @throws IllegalArgumentException if the label doesn't correspond to any valid
+     *                                  time slot
+     */
+    public static Object getTimeSlot(String timeSlotLabel) {
+        try {
+            return CourseTimeSlot.valueOf(timeSlotLabel);
+        } catch (IllegalArgumentException e) {
+            return ExamTimeSlot.valueOf(timeSlotLabel);
+        }
+    }
+
+    /**
+     * Gets either a CourseTimeSlot or ExamTimeSlot by its label name with type
+     * information
+     * 
+     * @param timeSlotLabel the enum name
+     * @return a TimeSlotResult containing the enum instance and its type
+     * @throws IllegalArgumentException if the label doesn't correspond to any valid
+     *                                  time slot
+     */
+    public static TimeSlotResult getTimeSlotWithType(String timeSlotLabel) {
+        try {
+            CourseTimeSlot courseSlot = CourseTimeSlot.valueOf(timeSlotLabel);
+            return new TimeSlotResult(courseSlot, TimeSlotResult.Type.COURSE);
+        } catch (IllegalArgumentException e) {
+            ExamTimeSlot examSlot = ExamTimeSlot.valueOf(timeSlotLabel);
+            return new TimeSlotResult(examSlot, TimeSlotResult.Type.EXAM);
+        }
+    }
+
+    /**
+     * Result wrapper for getTimeSlotWithType method
+     */
+    public static class TimeSlotResult {
+        public enum Type {
+            COURSE, EXAM
+        }
+
+        private final Object timeSlot;
+        private final Type type;
+
+        private TimeSlotResult(Object timeSlot, Type type) {
+            this.timeSlot = timeSlot;
+            this.type = type;
+        }
+
+        public Object getTimeSlot() {
+            return timeSlot;
+        }
+
+        public Type getType() {
+            return type;
+        }
+
+        public CourseTimeSlot asCourseTimeSlot() {
+            if (type != Type.COURSE) {
+                throw new IllegalStateException("TimeSlot is not a CourseTimeSlot");
+            }
+            return (CourseTimeSlot) timeSlot;
+        }
+
+        public ExamTimeSlot asExamTimeSlot() {
+            if (type != Type.EXAM) {
+                throw new IllegalStateException("TimeSlot is not an ExamTimeSlot");
+            }
+            return (ExamTimeSlot) timeSlot;
+        }
+
+        public boolean isCourseTimeSlot() {
+            return type == Type.COURSE;
+        }
+
+        public boolean isExamTimeSlot() {
+            return type == Type.EXAM;
+        }
+    }
 }

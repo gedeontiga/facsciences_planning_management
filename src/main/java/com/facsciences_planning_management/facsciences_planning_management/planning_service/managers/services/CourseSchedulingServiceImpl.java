@@ -16,12 +16,13 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.RoomRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.TimetableRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.TimeSlot;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.TimeSlot.CourseTimeSlot;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.CourseSchedulingDTO;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.CourseSchedulingRequest;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.TimeSlotDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces.SchedulingService;
 
 import java.time.DayOfWeek;
-import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +31,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service("courseSchedulingService")
 @RequiredArgsConstructor
-public class CourseSchedulingServiceImpl implements SchedulingService<CourseSchedulingDTO> {
+public class CourseSchedulingServiceImpl implements SchedulingService<CourseSchedulingDTO, CourseSchedulingRequest> {
 
 	private final CourseSchedulingRepository schedulingRepository;
 	private final TimetableRepository timetableRepository;
@@ -43,7 +44,11 @@ public class CourseSchedulingServiceImpl implements SchedulingService<CourseSche
 
 	@Override
 	@Transactional
-	public CourseSchedulingDTO createScheduling(CourseSchedulingDTO request) {
+	public CourseSchedulingDTO createScheduling(CourseSchedulingRequest request) {
+		return createCourseScheduling(request).toDTO();
+	}
+
+	public CourseScheduling createCourseScheduling(CourseSchedulingRequest request) {
 		// 1. Validate for conflicts before creating
 
 		Timetable timetable = timetableRepository.findById(request.timetableId())
@@ -60,7 +65,8 @@ public class CourseSchedulingServiceImpl implements SchedulingService<CourseSche
 		}
 		conflictService.validateCourseScheduling(assignedCourse.getTeacher(), assignedCourse, room,
 				request.day(),
-				LocalTime.parse(request.startTime()), LocalTime.parse(request.endTime()));
+				CourseTimeSlot.valueOf(request.timeSlotLabel()).getStartTime(),
+				CourseTimeSlot.valueOf(request.timeSlotLabel()).getEndTime());
 
 		CourseScheduling scheduling = CourseScheduling.builder()
 				.timetable(timetable)
@@ -78,13 +84,12 @@ public class CourseSchedulingServiceImpl implements SchedulingService<CourseSche
 
 		// 2. Send real-time update
 		webSocketUpdateService.sendUpdate(TIMETABLE_TOPIC_DESTINATION + responseDTO.timetableId(), responseDTO);
-
-		return responseDTO;
+		return savedScheduling;
 	}
 
 	@Override
 	@Transactional
-	public CourseSchedulingDTO updateScheduling(String id, CourseSchedulingDTO request) {
+	public CourseSchedulingDTO updateScheduling(String id, CourseSchedulingRequest request) {
 		// 1. Validate for conflicts, excluding the current schedule from the check
 
 		CourseScheduling scheduling = schedulingRepository.findById(id)
@@ -116,7 +121,8 @@ public class CourseSchedulingServiceImpl implements SchedulingService<CourseSche
 		conflictService.validateCourseScheduling(course.getTeacher(),
 				course, room,
 				request.day(),
-				LocalTime.parse(request.startTime()), LocalTime.parse(request.endTime()));
+				CourseTimeSlot.valueOf(request.timeSlotLabel()).getStartTime(),
+				CourseTimeSlot.valueOf(request.timeSlotLabel()).getEndTime());
 
 		// Note: Changing the assigned course might be a complex operation, handled here
 		// if needed.
@@ -146,7 +152,7 @@ public class CourseSchedulingServiceImpl implements SchedulingService<CourseSche
 		// 2. Send a notification of the deletion.
 		// The client can use this DTO to identify which schedule to remove from the UI.
 		webSocketUpdateService.sendUpdate(TIMETABLE_TOPIC_DESTINATION + deletedDTO.timetableId(),
-				Map.of("deletedId", deletedDTO.id()));
+				Map.of("schedulingId", deletedDTO.id()));
 	}
 
 	@Override
@@ -161,5 +167,18 @@ public class CourseSchedulingServiceImpl implements SchedulingService<CourseSche
 		return Arrays.stream(TimeSlot.CourseTimeSlot.values())
 				.map(TimeSlotDTO::fromTimeSlot)
 				.collect(Collectors.toList());
+	}
+
+	public CourseScheduling toEntity(CourseSchedulingDTO dto) {
+		return CourseScheduling.builder()
+				.id(dto.id())
+				.room(roomRepository.findById(dto.roomId())
+						.orElseThrow(() -> new CustomBusinessException("Room not found: " + dto.roomId())))
+				.timeSlot(TimeSlot.CourseTimeSlot.valueOf(dto.timeSlotLabel()))
+				.day(DayOfWeek.valueOf(dto.day()))
+				.assignedCourse(courseRepository.findById(dto.ueId())
+						.orElseThrow(() -> new CustomBusinessException("Course not found: " + dto.ueId())))
+				.headCount(dto.headCount())
+				.build();
 	}
 }

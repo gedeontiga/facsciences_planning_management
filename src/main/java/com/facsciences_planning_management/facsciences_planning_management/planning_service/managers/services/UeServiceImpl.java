@@ -75,6 +75,12 @@ public class UeServiceImpl implements UeService {
     }
 
     @Override
+    public Page<UeDTO> getAllUnassignedUes(Pageable page) {
+        return ueRepository.findByAssignedFalse(page)
+                .map(Ue::toDTO);
+    }
+
+    @Override
     public Page<UeDTO> getUesByLevel(String levelId, Pageable page) {
         return ueRepository.findByLevelId(levelId, page)
                 .map(Ue::toDTO);

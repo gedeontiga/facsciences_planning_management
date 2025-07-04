@@ -1,8 +1,8 @@
 package com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.faculty;
 
-import jakarta.annotation.Nonnull;
+import jakarta.validation.constraints.NotNull;
 
-@Nonnull
+@NotNull
 public record FacultyRequest(
 		String name,
 		String code) {

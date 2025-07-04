@@ -4,7 +4,6 @@ import java.time.Instant;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 import javax.crypto.SecretKey;
 
@@ -18,6 +17,7 @@ import com.facsciences_planning_management.facsciences_planning_management.entit
 import com.facsciences_planning_management.facsciences_planning_management.exceptions.CustomBusinessException;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.entities.Jwt;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.entities.repositories.JwtRepository;
+import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.LoginResponse;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -29,7 +29,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class JwtService {
     private static final String TOKEN_NOT_FOUND = "Token not found";
-    private static final String BEARER = "Bearer";
 
     @Value("${jwt.secret}")
     private String jwtSecret;
@@ -45,7 +44,7 @@ public class JwtService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public Map<String, String> generate(final String email) {
+    public LoginResponse generate(final String email) {
         final Users user = userRepository.findByEmailAndEnabledIsTrue(email)
                 .orElseThrow(() -> new CustomBusinessException("User not found"));
 
@@ -54,7 +53,7 @@ public class JwtService {
         return this.generateJwt(user);
     }
 
-    public Map<String, String> refreshToken(final String token) {
+    public LoginResponse refreshToken(final String token) {
 
         if (!isValidTokenFormat(token)) {
             throw new JwtException("Invalid token format");
@@ -194,7 +193,7 @@ public class JwtService {
         }
     }
 
-    private Map<String, String> generateJwt(final Users user) {
+    private LoginResponse generateJwt(final Users user) {
         final Instant now = Instant.now();
         final Instant expirationInstant = now.plusSeconds(tokenValidityHours * 3600);
 
@@ -224,9 +223,7 @@ public class JwtService {
 
         jwt = jwtRepository.save(jwt);
 
-        return Map.of(
-                BEARER, jwt.getToken(),
-                "expiresAt", expirationInstant.toString(),
-                "expiresIn", String.valueOf(tokenValidityHours * 3600));
+        return new LoginResponse(jwt.getToken(), user.getRole().getType().name(), expirationInstant.toString(),
+                String.valueOf(tokenValidityHours * 3600));
     }
 }

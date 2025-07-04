@@ -12,7 +12,9 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.TimetableRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.UeRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.TimeSlot;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.TimeSlot.ExamTimeSlot;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.ExamSchedulingDTO;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.ExamSchedulingRequest;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.TimeSlotDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces.SchedulingService;
 
@@ -22,7 +24,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +34,7 @@ import java.util.stream.Collectors;
  */
 @Service("examSchedulingService")
 @RequiredArgsConstructor
-public class ExamSchedulingServiceImpl implements SchedulingService<ExamSchedulingDTO> {
+public class ExamSchedulingServiceImpl implements SchedulingService<ExamSchedulingDTO, ExamSchedulingRequest> {
 
 	private final ExamSchedulingRepository schedulingRepository;
 	private final TimetableRepository timetableRepository;
@@ -47,8 +48,12 @@ public class ExamSchedulingServiceImpl implements SchedulingService<ExamScheduli
 
 	@Override
 	@Transactional
-	public ExamSchedulingDTO createScheduling(ExamSchedulingDTO request) {
-		// 1. Validate for conflicts before creating
+	public ExamSchedulingDTO createScheduling(ExamSchedulingRequest request) {
+		return createExamScheduling(request).toDTO();
+	}
+
+	public ExamScheduling createExamScheduling(ExamSchedulingRequest request) {
+		// 1. Validate for conflicts, excluding the current schedule from the check
 
 		Timetable timetable = timetableRepository.findById(request.timetableId())
 				.orElseThrow(() -> new CustomBusinessException("Timetable not found: " + request.timetableId()));
@@ -65,7 +70,8 @@ public class ExamSchedulingServiceImpl implements SchedulingService<ExamScheduli
 		}
 
 		conflictService.validateScheduling(proctor, room, request.date(),
-				LocalTime.parse(request.startTime()), LocalTime.parse(request.endTime()));
+				ExamTimeSlot.valueOf(request.timeSlotLabel()).getStartTime(),
+				ExamTimeSlot.valueOf(request.timeSlotLabel()).getEndTime());
 
 		ExamScheduling scheduling = ExamScheduling.builder()
 				.timetable(timetable)
@@ -84,13 +90,12 @@ public class ExamSchedulingServiceImpl implements SchedulingService<ExamScheduli
 
 		// 2. Send real-time update
 		webSocketUpdateService.sendUpdate(TIMETABLE_TOPIC_DESTINATION + responseDTO.timetableId(), responseDTO);
-
-		return responseDTO;
+		return savedScheduling;
 	}
 
 	@Override
 	@Transactional
-	public ExamSchedulingDTO updateScheduling(String id, ExamSchedulingDTO request) {
+	public ExamSchedulingDTO updateScheduling(String id, ExamSchedulingRequest request) {
 		// 1. Validate for conflicts, excluding the current schedule from the check
 
 		ExamScheduling scheduling = schedulingRepository.findById(id)
@@ -123,7 +128,8 @@ public class ExamSchedulingServiceImpl implements SchedulingService<ExamScheduli
 		}
 
 		conflictService.validateScheduling(proctor, room, request.date(),
-				LocalTime.parse(request.startTime()), LocalTime.parse(request.endTime()));
+				ExamTimeSlot.valueOf(request.timeSlotLabel()).getStartTime(),
+				ExamTimeSlot.valueOf(request.timeSlotLabel()).getEndTime());
 
 		ExamScheduling updatedScheduling = schedulingRepository.save(scheduling);
 		room.setAvailability(false);
@@ -154,7 +160,7 @@ public class ExamSchedulingServiceImpl implements SchedulingService<ExamScheduli
 		schedulingRepository.deleteById(id);
 
 		webSocketUpdateService.sendUpdate(TIMETABLE_TOPIC_DESTINATION + deletedDTO.timetableId(),
-				Map.of("deletedId", deletedDTO.id()));
+				Map.of("schedulingId", deletedDTO.id()));
 	}
 
 	@Override
@@ -162,5 +168,20 @@ public class ExamSchedulingServiceImpl implements SchedulingService<ExamScheduli
 		return Arrays.stream(TimeSlot.ExamTimeSlot.values())
 				.map(TimeSlotDTO::fromTimeSlot)
 				.collect(Collectors.toList());
+	}
+
+	public ExamScheduling toEntity(ExamSchedulingDTO dto) {
+		return ExamScheduling.builder()
+				.id(dto.id())
+				.room(roomRepository.findById(dto.roomId())
+						.orElseThrow(() -> new CustomBusinessException("Room not found: " + dto.roomId())))
+				.timeSlot(TimeSlot.ExamTimeSlot.valueOf(dto.timeSlotLabel()))
+				.sessionDate(LocalDate.parse(dto.date()))
+				.ue(ueRepository.findById(dto.ueId())
+						.orElseThrow(() -> new CustomBusinessException("Course not found: " + dto.ueId())))
+				.headCount(dto.headCount())
+				.proctor(userRepository.findById(dto.userId())
+						.orElseThrow(() -> new CustomBusinessException("Proctor not found: " + dto.userId())))
+				.build();
 	}
 }

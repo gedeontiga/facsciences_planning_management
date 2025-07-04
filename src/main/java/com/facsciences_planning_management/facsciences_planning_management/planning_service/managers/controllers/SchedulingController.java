@@ -15,7 +15,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.CourseSchedulingDTO;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.CourseSchedulingRequest;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.ExamSchedulingDTO;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.ExamSchedulingRequest;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces.SchedulingService;
 
 import jakarta.validation.Valid;
@@ -27,20 +29,20 @@ import jakarta.validation.Valid;
 public class SchedulingController {
 
     @Qualifier("courseSchedulingService")
-    private final SchedulingService<CourseSchedulingDTO> courseSchedulingService;
+    private final SchedulingService<CourseSchedulingDTO, CourseSchedulingRequest> courseSchedulingService;
     @Qualifier("examSchedulingService")
-    private final SchedulingService<ExamSchedulingDTO> examSchedulingService;
+    private final SchedulingService<ExamSchedulingDTO, ExamSchedulingRequest> examSchedulingService;
 
     @PostMapping("/course")
     public ResponseEntity<CourseSchedulingDTO> createCourseSchedule(
-            @Valid @RequestBody CourseSchedulingDTO request) {
+            @Valid @RequestBody CourseSchedulingRequest request) {
         CourseSchedulingDTO response = courseSchedulingService.createScheduling(request);
         return ResponseEntity.status(201).body(response);
     }
 
     @PostMapping("/exam")
     public ResponseEntity<ExamSchedulingDTO> createExamSchedule(
-            @Valid @RequestBody ExamSchedulingDTO request) {
+            @Valid @RequestBody ExamSchedulingRequest request) {
         ExamSchedulingDTO response = examSchedulingService.createScheduling(request);
         return ResponseEntity.status(201).body(response);
     }
@@ -48,7 +50,7 @@ public class SchedulingController {
     @PutMapping("/courses/{id}")
     public ResponseEntity<CourseSchedulingDTO> updateCourseSchedule(
             @NonNull @PathVariable String id,
-            @Valid @RequestBody CourseSchedulingDTO request) {
+            @Valid @RequestBody CourseSchedulingRequest request) {
         CourseSchedulingDTO updatedSchedule = courseSchedulingService.updateScheduling(id, request);
         return ResponseEntity.ok(updatedSchedule);
     }
@@ -56,7 +58,7 @@ public class SchedulingController {
     @PutMapping("/exams/{id}")
     public ResponseEntity<ExamSchedulingDTO> updateExamSchedule(
             @NonNull @PathVariable String id,
-            @Valid @RequestBody ExamSchedulingDTO request) {
+            @Valid @RequestBody ExamSchedulingRequest request) {
         ExamSchedulingDTO updatedSchedule = examSchedulingService.updateScheduling(id, request);
         return ResponseEntity.ok(updatedSchedule);
     }

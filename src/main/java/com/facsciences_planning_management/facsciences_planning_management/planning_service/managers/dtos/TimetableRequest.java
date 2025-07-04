@@ -4,10 +4,10 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.SessionType;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.validators.interfaces.ValidAcademicYear;
 
-import jakarta.annotation.Nonnull;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 
-@Nonnull
+@NotNull
 public record TimetableRequest(
         String levelId,
         @Valid @ValidAcademicYear String academicYear,

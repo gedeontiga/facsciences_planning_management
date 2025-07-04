@@ -35,6 +35,7 @@ public class Reservation {
     private RequestStatus status;
     @DocumentReference(lazy = true, collection = "rooms")
     private Room room;
+    private String timeSlotLabel; // e.g., "COURSE_1", "EXAM_2"
     private LocalTime startTime;
     private LocalTime endTime;
     private LocalDate date;
@@ -47,6 +48,8 @@ public class Reservation {
     @DocumentReference(lazy = true, collection = "users")
     private Users processedBy;
     private String adminComment;
+    @DocumentReference(lazy = true, collection = "schedulings")
+    private Scheduling scheduling;
 
     public enum RequestStatus {
         PENDING, APPROVED, REJECTED

@@ -1,6 +1,7 @@
 package com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.controllers;
 
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.LoginRequest;
+import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.LoginResponse;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.PasswordResetRequest;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.UserRequest;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.services.AuthService;
@@ -15,8 +16,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.Map;
 
 import javax.security.sasl.AuthenticationException;
 
@@ -40,7 +39,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Map<String, String>> login(@RequestBody LoginRequest request) throws AuthenticationException {
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) throws AuthenticationException {
         return ResponseEntity.ok(authService.login(request));
     }
 

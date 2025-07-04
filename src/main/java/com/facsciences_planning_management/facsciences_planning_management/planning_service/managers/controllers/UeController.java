@@ -34,8 +34,14 @@ public class UeController {
     private final UeService ueService;
 
     @GetMapping
-    public ResponseEntity<Page<UeDTO>> getAllUes(@PageableDefault(size = 10) Pageable page) {
-        return ResponseEntity.ok(ueService.getAllUes(page));
+    public ResponseEntity<Page<UeDTO>> getAllUes(
+            @RequestParam(required = false) Boolean assigned,
+            @PageableDefault(size = 10) Pageable page) {
+        if (assigned != null && !assigned) {
+            return ResponseEntity.ok(ueService.getAllUnassignedUes(page));
+        } else {
+            return ResponseEntity.ok(ueService.getAllUes(page));
+        }
     }
 
     @GetMapping("/{id}")

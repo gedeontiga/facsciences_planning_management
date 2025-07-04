@@ -14,13 +14,15 @@ import java.time.LocalTime;
 
 @Repository
 public interface ReservationRepository extends
-        MongoRepository<Reservation, String> {
-    Page<Reservation> findByTeacherId(String teacherId, Pageable page);
+		MongoRepository<Reservation, String> {
+	Page<Reservation> findByTeacherId(String teacherId, Pageable page);
 
-    Page<Reservation> findByStatusOrderByCreatedAt(RequestStatus status, Pageable page);
+	Page<Reservation> findByStatusOrderByCreatedAt(RequestStatus status, Pageable page);
 
-    boolean existsByTeacherIdAndDateAndStartTimeAndEndTime(String teacherId, LocalDate date, LocalTime startTime,
-            LocalTime endTime);
+	boolean existsByTeacherIdAndDateAndStartTimeAndEndTime(String teacherId, LocalDate date, LocalTime startTime,
+			LocalTime endTime);
 
-    List<Reservation> findAllByOrderByCreatedAtDesc();
+	List<Reservation> findAllByOrderByCreatedAtDesc();
+
+	List<Reservation> findByDateBefore(LocalDate date);
 }
