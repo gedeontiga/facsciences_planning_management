@@ -44,9 +44,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import com.itextpdf.io.image.ImageData;
 import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.layout.element.Image;
 
@@ -56,370 +56,24 @@ import java.time.LocalDateTime;
 @Service
 @RequiredArgsConstructor
 public class TimetableExportService {
+	public enum ExportType {
+		PDF, CSV
+	}
 
 	private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 	private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy");
+	private static final int MAX_BUFFER_SIZE = 1024 * 1024;
+	private static final int INITIAL_BUFFER_SIZE = 64 * 1024;
 
-	// Resource management
-	private static final int MAX_BUFFER_SIZE = 1024 * 1024; // 1MB max buffer
-	private static final int INITIAL_BUFFER_SIZE = 64 * 1024; // 64KB initial
-
-	// Cache fonts to avoid repeated loading
-	private final Map<String, PdfFont> fontCache = new ConcurrentHashMap<>();
-
-	// Reusable image for logo
-	private volatile Image cachedLogo;
+	// Remove font cache to avoid PDF object conflicts
+	private volatile byte[] cachedLogoData;
 
 	public ByteArrayInputStream generateTimetablePdf(TimetableDTO timetable, String levelCode) throws IOException {
-
-		boolean isExamTimetable = timetable.schedules().stream()
-				.anyMatch(ExamSchedulingDTO.class::isInstance);
-
+		boolean isExamTimetable = timetable.schedules().stream().anyMatch(ExamSchedulingDTO.class::isInstance);
 		return isExamTimetable ? generateExamTimetablePdf(timetable, levelCode)
 				: generateCourseTimetablePdf(timetable, levelCode);
 	}
 
-	private ByteArrayInputStream generateCourseTimetablePdf(TimetableDTO timetable, String levelCode)
-			throws IOException {
-
-		// Use try-with-resources for automatic cleanup
-		try (ByteArrayOutputStream out = new ByteArrayOutputStream(INITIAL_BUFFER_SIZE)) {
-
-			// Check buffer size limit
-			if (estimateDocumentSize(timetable) > MAX_BUFFER_SIZE) {
-				throw new IllegalStateException("Document size exceeds maximum allowed size");
-			}
-
-			try (PdfDocument pdfDoc = new PdfDocument(new PdfWriter(out))) {
-				Document document = new Document(pdfDoc, PageSize.A4.rotate());
-
-				// Configure document for memory efficiency
-				pdfDoc.getWriter().setCompressionLevel(CompressionConstants.DEFAULT_COMPRESSION);
-
-				addOptimizedHeader(document, "Course Timetable", timetable, levelCode);
-
-				// Process schedules in batches to avoid memory spikes
-				Map<DayOfWeek, Map<LocalTime, List<SchedulingDTO>>> groupedSchedules = processSchedulesInBatches(
-						timetable);
-
-				List<LocalTime> timeSlots = getUniqueTimeSlots(timetable);
-				List<DayOfWeek> days = List.of(DayOfWeek.MONDAY, DayOfWeek.TUESDAY,
-						DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY, DayOfWeek.SATURDAY);
-
-				Table pdfTable = createOptimizedTable(new float[] { 1.5f, 3f, 3f, 3f, 3f, 3f, 3f });
-
-				// Add headers
-				pdfTable.addHeaderCell(createHeaderCell("Time"));
-				days.forEach(day -> pdfTable.addHeaderCell(
-						createHeaderCell(day.getDisplayName(TextStyle.FULL, Locale.ENGLISH))));
-
-				// Add content rows efficiently
-				addTableContent(pdfTable, timeSlots, days, groupedSchedules, timetable);
-
-				document.add(pdfTable);
-				document.close();
-			}
-
-			return new ByteArrayInputStream(out.toByteArray());
-		}
-	}
-
-	private ByteArrayInputStream generateExamTimetablePdf(TimetableDTO timetable, String levelCode)
-			throws IOException {
-
-		try (ByteArrayOutputStream out = new ByteArrayOutputStream(INITIAL_BUFFER_SIZE)) {
-
-			if (estimateDocumentSize(timetable) > MAX_BUFFER_SIZE) {
-				throw new IllegalStateException("Document size exceeds maximum allowed size");
-			}
-
-			try (PdfDocument pdfDoc = new PdfDocument(new PdfWriter(out))) {
-				Document document = new Document(pdfDoc, PageSize.A4);
-				pdfDoc.getWriter().setCompressionLevel(CompressionConstants.DEFAULT_COMPRESSION);
-
-				addOptimizedHeader(document, "Exam Timetable", timetable, levelCode);
-
-				Map<LocalDate, List<SchedulingDTO>> groupedExams = processExamSchedules(timetable);
-
-				for (Map.Entry<LocalDate, List<SchedulingDTO>> entry : groupedExams.entrySet()) {
-					addDateHeader(document, entry.getKey());
-					addExamTable(document, entry.getValue());
-				}
-
-				document.close();
-			}
-
-			return new ByteArrayInputStream(out.toByteArray());
-		}
-	}
-
-	// Optimized helper methods
-	private Map<DayOfWeek, Map<LocalTime, List<SchedulingDTO>>> processSchedulesInBatches(TimetableDTO timetable) {
-		return timetable.schedules().stream()
-				.filter(CourseSchedulingDTO.class::isInstance)
-				.collect(Collectors.groupingBy(
-						s -> DayOfWeek.valueOf(((CourseSchedulingDTO) s).day()),
-						Collectors.groupingBy(
-								s -> LocalTime.parse(s.startTime()),
-								TreeMap::new,
-								Collectors.toList())));
-	}
-
-	private List<LocalTime> getUniqueTimeSlots(TimetableDTO timetable) {
-		return timetable.schedules().stream()
-				.map(s -> LocalTime.parse(s.startTime()))
-				.distinct()
-				.sorted()
-				.collect(Collectors.toList());
-	}
-
-	private Table createOptimizedTable(float[] columnWidths) {
-		Table table = new Table(UnitValue.createPercentArray(columnWidths));
-		table.setWidth(UnitValue.createPercentValue(100))
-				.setMarginTop(20)
-				.setKeepTogether(true); // Prevent table splitting across pages
-		return table;
-	}
-
-	private void addTableContent(Table pdfTable, List<LocalTime> timeSlots,
-			List<DayOfWeek> days,
-			Map<DayOfWeek, Map<LocalTime, List<SchedulingDTO>>> groupedSchedules,
-			TimetableDTO timetable) {
-
-		for (LocalTime startTime : timeSlots) {
-			LocalTime endTime = findEndTime(timetable, startTime);
-			pdfTable.addCell(createTimeCell(
-					startTime.format(TIME_FORMATTER) + " - " + endTime.format(TIME_FORMATTER)));
-
-			for (DayOfWeek day : days) {
-				List<SchedulingDTO> schedulesForSlot = groupedSchedules
-						.getOrDefault(day, Collections.emptyMap())
-						.getOrDefault(startTime, Collections.emptyList());
-
-				Cell contentCell = createContentCell(schedulesForSlot);
-				pdfTable.addCell(contentCell);
-			}
-		}
-	}
-
-	private Cell createContentCell(List<SchedulingDTO> schedules) {
-		Cell cell = new Cell()
-				.setPadding(5)
-				.setBorder(new SolidBorder(new DeviceRgb(230, 230, 230), 1));
-
-		if (!schedules.isEmpty()) {
-			for (SchedulingDTO schedule : schedules) {
-				cell.add(createScheduleParagraph(schedule));
-			}
-		}
-
-		return cell;
-	}
-
-	private LocalTime findEndTime(TimetableDTO timetable, LocalTime startTime) {
-		return timetable.schedules().stream()
-				.filter(s -> LocalTime.parse(s.startTime()).equals(startTime))
-				.findFirst()
-				.map(s -> LocalTime.parse(s.endTime()))
-				.orElse(startTime);
-	}
-
-	private Map<LocalDate, List<SchedulingDTO>> processExamSchedules(TimetableDTO timetable) {
-		return timetable.schedules().stream()
-				.filter(ExamSchedulingDTO.class::isInstance)
-				.collect(Collectors.groupingBy(
-						s -> LocalDate.parse(((ExamSchedulingDTO) s).date()),
-						TreeMap::new,
-						Collectors.toList()));
-	}
-
-	private void addDateHeader(Document document, LocalDate date) {
-		document.add(new Paragraph(date.format(DATE_FORMATTER))
-				.setFont(getCachedFont(StandardFonts.HELVETICA_BOLD))
-				.setFontSize(14)
-				.setMarginTop(20)
-				.setMarginBottom(10)
-				.setBorderBottom(new SolidBorder(ColorConstants.BLACK, 1)));
-	}
-
-	private void addExamTable(Document document, List<SchedulingDTO> exams) {
-		Table examTable = new Table(UnitValue.createPercentArray(new float[] { 2, 4, 3, 4 }));
-		examTable.setWidth(UnitValue.createPercentValue(100));
-
-		// Add headers
-		examTable.addHeaderCell(createHeaderCell("Time Slot"));
-		examTable.addHeaderCell(createHeaderCell("Course (UE)"));
-		examTable.addHeaderCell(createHeaderCell("Room(s)"));
-		examTable.addHeaderCell(createHeaderCell("Proctor(s)"));
-
-		// Sort and add exam rows
-		exams.sort(Comparator.comparing(s -> LocalTime.parse(s.startTime())));
-
-		for (SchedulingDTO exam : exams) {
-			examTable.addCell(createCell(formatTimeSlot(exam)));
-			examTable.addCell(createCell(exam.ueCode()));
-			examTable.addCell(createCell(exam.roomCode()));
-
-			String proctorName = exam instanceof ExamSchedulingDTO es ? es.proctorName() : "";
-			examTable.addCell(createCell(proctorName));
-		}
-
-		document.add(examTable);
-	}
-
-	private String formatTimeSlot(SchedulingDTO exam) {
-		return LocalTime.parse(exam.startTime()).format(TIME_FORMATTER) + " - " +
-				LocalTime.parse(exam.endTime()).format(TIME_FORMATTER);
-	}
-
-	private void addOptimizedHeader(Document document, String title, TimetableDTO timetable, String levelCode) {
-		PdfFont boldFont = getCachedFont(StandardFonts.HELVETICA_BOLD);
-		PdfFont regularFont = getCachedFont(StandardFonts.HELVETICA);
-
-		// Create header table
-		Table headerTable = new Table(UnitValue.createPercentArray(new float[] { 1, 1, 1 }))
-				.setWidth(UnitValue.createPercentValue(100))
-				.setHeight(UnitValue.createPointValue(60));
-
-		// Left cell
-		Cell leftCell = new Cell()
-				.add(new Paragraph("UNIVERSITE DE YAOUNDE I\nFACULTE DES SCIENCES")
-						.setFont(regularFont)
-						.setFontSize(8))
-				.setBorder(null)
-				.setVerticalAlignment(VerticalAlignment.MIDDLE);
-		headerTable.addCell(leftCell);
-
-		// Logo cell with cached image
-		Cell logoCell = new Cell()
-				.add(getCachedLogo())
-				.setTextAlignment(TextAlignment.CENTER)
-				.setVerticalAlignment(VerticalAlignment.MIDDLE)
-				.setBorder(null)
-				.setPadding(0);
-		headerTable.addCell(logoCell);
-
-		// Right cell
-		Cell rightCell = new Cell()
-				.add(new Paragraph("UNIVERSITY OF YAOUNDE I\nFACULTY OF SCIENCE")
-						.setFont(regularFont)
-						.setFontSize(8))
-				.setTextAlignment(TextAlignment.RIGHT)
-				.setVerticalAlignment(VerticalAlignment.MIDDLE)
-				.setBorder(null);
-		headerTable.addCell(rightCell);
-
-		document.add(headerTable);
-
-		// Title and info
-		document.add(new Paragraph(title)
-				.setFont(boldFont)
-				.setFontSize(18)
-				.setTextAlignment(TextAlignment.CENTER)
-				.setMarginTop(10));
-
-		document.add(new Paragraph(levelCode)
-				.setFont(boldFont)
-				.setFontSize(14)
-				.setTextAlignment(TextAlignment.CENTER));
-
-		document.add(new Paragraph(String.format("Academic Year: %s | Semester: %s",
-				timetable.academicYear(), timetable.semester().getLabel()))
-				.setFont(regularFont)
-				.setFontSize(10)
-				.setTextAlignment(TextAlignment.CENTER)
-				.setMarginBottom(10));
-	}
-
-	// Font caching
-	private PdfFont getCachedFont(String fontName) {
-		return fontCache.computeIfAbsent(fontName, name -> {
-			try {
-				return PdfFontFactory.createFont(name);
-			} catch (IOException e) {
-				throw new RuntimeException("Failed to load font: " + name, e);
-			}
-		});
-	}
-
-	private byte[] createPlaceholderImage() {
-		// Create a simple 1x1 transparent PNG as placeholder
-		return new byte[] { (byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
-	}
-
-	// Size estimation for resource management
-	private long estimateDocumentSize(TimetableDTO timetable) {
-		// Rough estimation: base size + schedules count * average size per schedule
-		long baseSize = 50 * 1024; // 50KB base
-		long scheduleSize = timetable.schedules().size() * 200; // ~200 bytes per schedule
-		return baseSize + scheduleSize;
-	}
-
-	private Paragraph createScheduleParagraph(SchedulingDTO schedule) {
-		Paragraph p = new Paragraph()
-				.setMargin(0)
-				.setPadding(0)
-				.setMultipliedLeading(1.2f);
-
-		p.add(new Text(schedule.ueCode() + "\n")
-				.setFont(getCachedFont(StandardFonts.HELVETICA_BOLD))
-				.setFontSize(10));
-
-		switch (schedule) {
-			case CourseSchedulingDTO cs -> {
-				p.add(new Text(cs.roomCode() + " - ")
-						.setFont(getCachedFont(StandardFonts.HELVETICA))
-						.setFontSize(8)
-						.setFontColor(new DeviceRgb(0, 153, 0)));
-				p.add(new Text(cs.teacherName())
-						.setFont(getCachedFont(StandardFonts.HELVETICA))
-						.setFontSize(8)
-						.setFontColor(ColorConstants.DARK_GRAY));
-			}
-			case ExamSchedulingDTO es -> {
-				p.add(new Text(es.roomCode() + " - ")
-						.setFont(getCachedFont(StandardFonts.HELVETICA))
-						.setFontSize(8)
-						.setFontColor(new DeviceRgb(204, 0, 0)));
-				p.add(new Text(es.proctorName())
-						.setFont(getCachedFont(StandardFonts.HELVETICA))
-						.setFontSize(8)
-						.setFontColor(ColorConstants.DARK_GRAY));
-			}
-		}
-
-		return p;
-	}
-
-	private Cell createHeaderCell(String text) {
-		return new Cell()
-				.add(new Paragraph(text))
-				.setFont(getCachedFont(StandardFonts.HELVETICA_BOLD))
-				.setFontSize(9)
-				.setBackgroundColor(new DeviceRgb(240, 240, 240))
-				.setTextAlignment(TextAlignment.CENTER)
-				.setVerticalAlignment(VerticalAlignment.MIDDLE)
-				.setPadding(8);
-	}
-
-	private Cell createTimeCell(String text) {
-		return createCell(text)
-				.setFont(getCachedFont(StandardFonts.HELVETICA_BOLD))
-				.setFontColor(ColorConstants.BLACK);
-	}
-
-	private Cell createCell(String text) {
-		return new Cell()
-				.add(new Paragraph(text))
-				.setFont(getCachedFont(StandardFonts.HELVETICA))
-				.setFontSize(9)
-				.setPadding(5)
-				.setTextAlignment(TextAlignment.CENTER)
-				.setVerticalAlignment(VerticalAlignment.MIDDLE)
-				.setBorder(new SolidBorder(new DeviceRgb(220, 220, 220), 1));
-	}
-
-	// CSV method remains the same but with proper resource management
 	public ByteArrayInputStream generateTimetableCsv(TimetableDTO timetable) {
 		try (ByteArrayOutputStream out = new ByteArrayOutputStream(INITIAL_BUFFER_SIZE);
 				PrintWriter writer = new PrintWriter(out)) {
@@ -453,40 +107,378 @@ public class TimetableExportService {
 		}
 	}
 
-	private Image getCachedLogo() {
-		if (cachedLogo == null) {
+	private ByteArrayInputStream generateCourseTimetablePdf(TimetableDTO timetable, String levelCode)
+			throws IOException {
+		try (ByteArrayOutputStream out = new ByteArrayOutputStream(INITIAL_BUFFER_SIZE)) {
+
+			if (estimateDocumentSize(timetable) > MAX_BUFFER_SIZE) {
+				throw new IllegalStateException("Document size exceeds maximum allowed size");
+			}
+
+			try (PdfDocument pdfDoc = new PdfDocument(new PdfWriter(out))) {
+				Document document = new Document(pdfDoc, PageSize.A4.rotate());
+				pdfDoc.getWriter().setCompressionLevel(CompressionConstants.DEFAULT_COMPRESSION);
+
+				// Create fresh fonts for this document
+				PdfFont boldFont = PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD);
+				PdfFont regularFont = PdfFontFactory.createFont(StandardFonts.HELVETICA);
+
+				addOptimizedHeader(document, "Course Timetable", timetable, levelCode, boldFont, regularFont);
+
+				Map<DayOfWeek, Map<LocalTime, List<SchedulingDTO>>> groupedSchedules = processSchedulesInBatches(
+						timetable);
+				List<LocalTime> timeSlots = getUniqueTimeSlots(timetable);
+				List<DayOfWeek> days = List.of(DayOfWeek.MONDAY, DayOfWeek.TUESDAY,
+						DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY, DayOfWeek.SATURDAY);
+
+				// Create table that fits on one page
+				Table pdfTable = createSinglePageTable(new float[] { 1.5f, 3f, 3f, 3f, 3f, 3f, 3f });
+				pdfTable.addHeaderCell(createHeaderCell("Time", boldFont));
+				days.forEach(day -> pdfTable
+						.addHeaderCell(createHeaderCell(day.getDisplayName(TextStyle.FULL, Locale.ENGLISH), boldFont)));
+
+				addTableContent(pdfTable, timeSlots, days, groupedSchedules, timetable, boldFont, regularFont);
+
+				document.add(pdfTable);
+				document.close();
+			}
+
+			return new ByteArrayInputStream(out.toByteArray());
+		}
+	}
+
+	private ByteArrayInputStream generateExamTimetablePdf(TimetableDTO timetable, String levelCode) throws IOException {
+		try (ByteArrayOutputStream out = new ByteArrayOutputStream(INITIAL_BUFFER_SIZE)) {
+
+			if (estimateDocumentSize(timetable) > MAX_BUFFER_SIZE) {
+				throw new IllegalStateException("Document size exceeds maximum allowed size");
+			}
+
+			try (PdfDocument pdfDoc = new PdfDocument(new PdfWriter(out))) {
+				Document document = new Document(pdfDoc, PageSize.A4);
+				pdfDoc.getWriter().setCompressionLevel(CompressionConstants.DEFAULT_COMPRESSION);
+
+				// Create fresh fonts for this document
+				PdfFont boldFont = PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD);
+				PdfFont regularFont = PdfFontFactory.createFont(StandardFonts.HELVETICA);
+
+				addOptimizedHeader(document, "Exam Timetable", timetable, levelCode, boldFont, regularFont);
+
+				Map<LocalDate, List<SchedulingDTO>> groupedExams = processExamSchedules(timetable);
+
+				for (Map.Entry<LocalDate, List<SchedulingDTO>> entry : groupedExams.entrySet()) {
+					addDateHeader(document, entry.getKey(), boldFont);
+					addExamTable(document, entry.getValue(), boldFont, regularFont);
+				}
+
+				document.close();
+			}
+
+			return new ByteArrayInputStream(out.toByteArray());
+		}
+	}
+
+	private Map<DayOfWeek, Map<LocalTime, List<SchedulingDTO>>> processSchedulesInBatches(TimetableDTO timetable) {
+		return timetable.schedules().stream()
+				.filter(CourseSchedulingDTO.class::isInstance)
+				.collect(Collectors.groupingBy(
+						s -> DayOfWeek.valueOf(((CourseSchedulingDTO) s).day()),
+						Collectors.groupingBy(
+								s -> LocalTime.parse(s.startTime()),
+								TreeMap::new,
+								Collectors.toList())));
+	}
+
+	private List<LocalTime> getUniqueTimeSlots(TimetableDTO timetable) {
+		return timetable.schedules().stream()
+				.map(s -> LocalTime.parse(s.startTime()))
+				.distinct()
+				.sorted()
+				.collect(Collectors.toList());
+	}
+
+	// Modified to fit on single page
+	private Table createSinglePageTable(float[] columnWidths) {
+		Table table = new Table(UnitValue.createPercentArray(columnWidths));
+		table.setWidth(UnitValue.createPercentValue(100))
+				.setMarginTop(15)
+				.setKeepTogether(true)
+				.setFontSize(8); // Smaller font for single page fit
+		return table;
+	}
+
+	private void addTableContent(Table pdfTable, List<LocalTime> timeSlots,
+			List<DayOfWeek> days,
+			Map<DayOfWeek, Map<LocalTime, List<SchedulingDTO>>> groupedSchedules,
+			TimetableDTO timetable, PdfFont boldFont, PdfFont regularFont) {
+
+		for (LocalTime startTime : timeSlots) {
+			LocalTime endTime = findEndTime(timetable, startTime);
+			pdfTable.addCell(createTimeCell(startTime.format(TIME_FORMATTER) + " - " + endTime.format(TIME_FORMATTER),
+					boldFont));
+
+			for (DayOfWeek day : days) {
+				List<SchedulingDTO> schedulesForSlot = groupedSchedules
+						.getOrDefault(day, Collections.emptyMap())
+						.getOrDefault(startTime, Collections.emptyList());
+
+				Cell contentCell = createContentCell(schedulesForSlot, boldFont, regularFont);
+				pdfTable.addCell(contentCell);
+			}
+		}
+	}
+
+	private Cell createContentCell(List<SchedulingDTO> schedules, PdfFont boldFont, PdfFont regularFont) {
+		Cell cell = new Cell()
+				.setPadding(3) // Reduced padding for single page
+				.setBorder(new SolidBorder(new DeviceRgb(230, 230, 230), 1));
+
+		if (!schedules.isEmpty()) {
+			for (SchedulingDTO schedule : schedules) {
+				cell.add(createScheduleParagraph(schedule, boldFont, regularFont));
+			}
+		}
+
+		return cell;
+	}
+
+	private LocalTime findEndTime(TimetableDTO timetable, LocalTime startTime) {
+		return timetable.schedules().stream()
+				.filter(s -> LocalTime.parse(s.startTime()).equals(startTime))
+				.findFirst()
+				.map(s -> LocalTime.parse(s.endTime()))
+				.orElse(startTime);
+	}
+
+	private Map<LocalDate, List<SchedulingDTO>> processExamSchedules(TimetableDTO timetable) {
+		return timetable.schedules().stream()
+				.filter(ExamSchedulingDTO.class::isInstance)
+				.collect(Collectors.groupingBy(
+						s -> LocalDate.parse(((ExamSchedulingDTO) s).date()),
+						TreeMap::new,
+						Collectors.toList()));
+	}
+
+	private void addDateHeader(Document document, LocalDate date, PdfFont boldFont) {
+		document.add(new Paragraph(date.format(DATE_FORMATTER))
+				.setFont(boldFont)
+				.setFontSize(14)
+				.setMarginTop(20)
+				.setMarginBottom(10)
+				.setBorderBottom(new SolidBorder(ColorConstants.BLACK, 1)));
+	}
+
+	private void addExamTable(Document document, List<SchedulingDTO> exams, PdfFont boldFont, PdfFont regularFont) {
+		Table examTable = new Table(UnitValue.createPercentArray(new float[] { 2, 4, 3, 4 }));
+		examTable.setWidth(UnitValue.createPercentValue(100));
+
+		examTable.addHeaderCell(createHeaderCell("Time Slot", boldFont));
+		examTable.addHeaderCell(createHeaderCell("Course (UE)", boldFont));
+		examTable.addHeaderCell(createHeaderCell("Room(s)", boldFont));
+		examTable.addHeaderCell(createHeaderCell("Proctor(s)", boldFont));
+
+		exams.sort(Comparator.comparing(s -> LocalTime.parse(s.startTime())));
+
+		for (SchedulingDTO exam : exams) {
+			examTable.addCell(createCell(formatTimeSlot(exam), regularFont));
+			examTable.addCell(createCell(exam.ueCode(), regularFont));
+			examTable.addCell(createCell(exam.roomCode(), regularFont));
+
+			String proctorName = exam instanceof ExamSchedulingDTO es ? es.proctorName() : "";
+			examTable.addCell(createCell(proctorName, regularFont));
+		}
+
+		document.add(examTable);
+	}
+
+	private String formatTimeSlot(SchedulingDTO exam) {
+		return LocalTime.parse(exam.startTime()).format(TIME_FORMATTER) + " - " +
+				LocalTime.parse(exam.endTime()).format(TIME_FORMATTER);
+	}
+
+	private void addOptimizedHeader(Document document, String title, TimetableDTO timetable, String levelCode,
+			PdfFont boldFont, PdfFont regularFont) {
+		Table headerTable = new Table(UnitValue.createPercentArray(new float[] { 1, 1, 1 }))
+				.setWidth(UnitValue.createPercentValue(100))
+				.setHeight(UnitValue.createPointValue(50)); // Reduced height for single page
+
+		Cell leftCell = new Cell()
+				.add(new Paragraph("UNIVERSITE DE YAOUNDE I\nFACULTE DES SCIENCES")
+						.setFont(regularFont)
+						.setFontSize(7)) // Smaller font
+				.setBorder(null)
+				.setVerticalAlignment(VerticalAlignment.MIDDLE);
+		headerTable.addCell(leftCell);
+
+		Cell logoCell = new Cell()
+				.add(createFreshLogo())
+				.setTextAlignment(TextAlignment.CENTER)
+				.setVerticalAlignment(VerticalAlignment.MIDDLE)
+				.setBorder(null)
+				.setPadding(0);
+		headerTable.addCell(logoCell);
+
+		Cell rightCell = new Cell()
+				.add(new Paragraph("UNIVERSITY OF YAOUNDE I\nFACULTY OF SCIENCE")
+						.setFont(regularFont)
+						.setFontSize(7)) // Smaller font
+				.setTextAlignment(TextAlignment.RIGHT)
+				.setVerticalAlignment(VerticalAlignment.MIDDLE)
+				.setBorder(null);
+		headerTable.addCell(rightCell);
+
+		document.add(headerTable);
+
+		document.add(new Paragraph(title)
+				.setFont(boldFont)
+				.setFontSize(16) // Smaller title
+				.setTextAlignment(TextAlignment.CENTER)
+				.setMarginTop(5));
+
+		document.add(new Paragraph(levelCode)
+				.setFont(boldFont)
+				.setFontSize(12)
+				.setTextAlignment(TextAlignment.CENTER));
+
+		document.add(new Paragraph(String.format("Academic Year: %s | Semester: %s",
+				timetable.academicYear(), timetable.semester().getLabel()))
+				.setFont(regularFont)
+				.setFontSize(9)
+				.setTextAlignment(TextAlignment.CENTER)
+				.setMarginBottom(5));
+	}
+
+	private byte[] createPlaceholderImage() {
+		// Create a minimal PNG header for a 1x1 transparent pixel
+		return new byte[] {
+				(byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A,
+				0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52,
+				0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
+				0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0x15, (byte) 0xC4,
+				(byte) 0x89, 0x00, 0x00, 0x00, 0x0B, 0x49, 0x44, 0x41,
+				0x54, 0x78, (byte) 0xDA, 0x63, 0x00, 0x01, 0x00, 0x00,
+				0x05, 0x00, 0x01, 0x0D, 0x0A, 0x2D, (byte) 0xB4,
+				0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44,
+				(byte) 0xAE, 0x42, 0x60, (byte) 0x82
+		};
+	}
+
+	private long estimateDocumentSize(TimetableDTO timetable) {
+		long baseSize = 50 * 1024;
+		long scheduleSize = timetable.schedules().size() * 200;
+		return baseSize + scheduleSize;
+	}
+
+	private Paragraph createScheduleParagraph(SchedulingDTO schedule, PdfFont boldFont, PdfFont regularFont) {
+		Paragraph p = new Paragraph()
+				.setMargin(0)
+				.setPadding(0)
+				.setMultipliedLeading(1.1f) // Tighter line spacing
+				.setFontSize(7); // Smaller font for single page
+
+		p.add(new Text(schedule.ueCode() + "\n")
+				.setFont(boldFont)
+				.setFontSize(8));
+
+		switch (schedule) {
+			case CourseSchedulingDTO cs -> {
+				p.add(new Text(cs.roomCode() + " - ")
+						.setFont(regularFont)
+						.setFontSize(7)
+						.setFontColor(new DeviceRgb(0, 153, 0)));
+				p.add(new Text(cs.teacherName())
+						.setFont(regularFont)
+						.setFontSize(7)
+						.setFontColor(ColorConstants.DARK_GRAY));
+			}
+			case ExamSchedulingDTO es -> {
+				p.add(new Text(es.roomCode() + " - ")
+						.setFont(regularFont)
+						.setFontSize(7)
+						.setFontColor(new DeviceRgb(204, 0, 0)));
+				p.add(new Text(es.proctorName())
+						.setFont(regularFont)
+						.setFontSize(7)
+						.setFontColor(ColorConstants.DARK_GRAY));
+			}
+		}
+
+		return p;
+	}
+
+	private Cell createHeaderCell(String text, PdfFont boldFont) {
+		return new Cell()
+				.add(new Paragraph(text))
+				.setFont(boldFont)
+				.setFontSize(8) // Smaller header font
+				.setBackgroundColor(new DeviceRgb(240, 240, 240))
+				.setTextAlignment(TextAlignment.CENTER)
+				.setVerticalAlignment(VerticalAlignment.MIDDLE)
+				.setPadding(4); // Reduced padding
+	}
+
+	private Cell createTimeCell(String text, PdfFont boldFont) {
+		return createCell(text, boldFont)
+				.setFont(boldFont)
+				.setFontColor(ColorConstants.BLACK);
+	}
+
+	private Cell createCell(String text, PdfFont font) {
+		return new Cell()
+				.add(new Paragraph(text))
+				.setFont(font)
+				.setFontSize(8) // Smaller font
+				.setPadding(3) // Reduced padding
+				.setTextAlignment(TextAlignment.CENTER)
+				.setVerticalAlignment(VerticalAlignment.MIDDLE)
+				.setBorder(new SolidBorder(new DeviceRgb(220, 220, 220), 1));
+	}
+
+	// Create a completely fresh Image object each time
+	private Image createFreshLogo() {
+		byte[] logoData = getCachedLogoData();
+		try {
+			// Create completely fresh ImageData and Image objects
+			ImageData imageData = ImageDataFactory.create(logoData);
+			return new Image(imageData)
+					.setWidth(40) // Smaller logo for single page
+					.setHeight(40)
+					.setHorizontalAlignment(HorizontalAlignment.CENTER);
+		} catch (Exception e) {
+			// Create fresh placeholder
+			ImageData placeholderData = ImageDataFactory.create(createPlaceholderImage());
+			return new Image(placeholderData)
+					.setWidth(40)
+					.setHeight(40)
+					.setHorizontalAlignment(HorizontalAlignment.CENTER);
+		}
+	}
+
+	/**
+	 * Cache only the raw image data, not any PDF objects
+	 */
+	private byte[] getCachedLogoData() {
+		if (cachedLogoData == null) {
 			synchronized (this) {
-				if (cachedLogo == null) {
+				if (cachedLogoData == null) {
 					try {
-						// Load from classpath resources instead of file system
 						ClassPathResource logoResource = new ClassPathResource("images/uy1_logo.png");
 
 						if (logoResource.exists()) {
 							try (InputStream logoStream = logoResource.getInputStream()) {
-								byte[] logoBytes = logoStream.readAllBytes();
-								cachedLogo = new Image(ImageDataFactory.create(logoBytes))
-										.setWidth(50)
-										.setHeight(50)
-										.setHorizontalAlignment(HorizontalAlignment.CENTER);
+								cachedLogoData = logoStream.readAllBytes();
 							}
 						} else {
-							// Fallback to placeholder if logo not found
-							cachedLogo = new Image(ImageDataFactory.create(createPlaceholderImage()))
-									.setWidth(50)
-									.setHeight(50);
+							cachedLogoData = createPlaceholderImage();
 						}
 					} catch (Exception e) {
-						// Log the error for debugging
-						System.err.println("Failed to load logo: " + e.getMessage());
-						// Use placeholder image as fallback
-						cachedLogo = new Image(ImageDataFactory.create(createPlaceholderImage()))
-								.setWidth(50)
-								.setHeight(50);
+						System.err.println("Failed to load logo data: " + e.getMessage());
+						cachedLogoData = createPlaceholderImage();
 					}
 				}
 			}
 		}
-		return cachedLogo;
+		return cachedLogoData;
 	}
 
 	private LocalDate getScheduleSortKey(SchedulingDTO schedule) {
@@ -494,9 +486,5 @@ public class TimetableExportService {
 			case CourseSchedulingDTO cs -> LocalDate.MIN;
 			case ExamSchedulingDTO es -> LocalDateTime.parse(es.date()).toLocalDate();
 		};
-	}
-
-	public enum ExportType {
-		PDF, CSV
 	}
 }
