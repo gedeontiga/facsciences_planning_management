@@ -50,12 +50,6 @@ public class UeController {
         return ResponseEntity.ok(ue);
     }
 
-    @GetMapping("/code/{code}")
-    public ResponseEntity<UeDTO> getUeByCode(@PathVariable String code) {
-        UeDTO ue = ueService.getUeByCode(code);
-        return ResponseEntity.ok(ue);
-    }
-
     @GetMapping("/level/{levelId}")
     public ResponseEntity<Page<UeDTO>> getUesByLevel(
             @PathVariable String levelId,

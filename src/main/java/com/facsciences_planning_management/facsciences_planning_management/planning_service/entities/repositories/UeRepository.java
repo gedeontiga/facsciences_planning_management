@@ -14,6 +14,8 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 public interface UeRepository extends MongoRepository<Ue, String> {
     Page<Ue> findByLevelId(String levelId, Pageable page);
 
+    Optional<Ue> findByIdAndAssignedTrue(String id);
+
     Optional<Ue> findByCode(String code);
 
     boolean existsByCode(String code);

@@ -48,13 +48,6 @@ public class UeServiceImpl implements UeService {
     }
 
     @Override
-    public UeDTO getUeByCode(String code) {
-        return ueRepository.findByCode(code)
-                .map(Ue::toDTO)
-                .orElseThrow(() -> new CustomBusinessException("UE not found with code: " + code));
-    }
-
-    @Override
     public List<UeDTO> getUesByCategoryAndLevel(String category, String levelId) {
         return ueRepository.findByCategoryAndLevelId(category, levelId).stream()
                 .map(Ue::toDTO)
