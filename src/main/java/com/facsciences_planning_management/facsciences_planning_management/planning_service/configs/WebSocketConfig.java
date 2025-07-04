@@ -29,7 +29,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         // Use setAllowedOriginPatterns for flexible origin matching
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns(
-                        "https://facsciences-planning-management.netlify.app",
                         "https://facsciences-uy1-planning-management-gedeontiga-eabfb5d3.koyeb.app",
                         "http://facsciences-uy1-planning-management-gedeontiga-eabfb5d3.koyeb.app",
                         "https://app-planning-uy1-web.vercel.app",

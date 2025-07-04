@@ -44,29 +44,29 @@ public class TimetableExportController {
 			case CSV -> MediaType.parseMediaType("text/csv");
 		};
 
-		try (ByteArrayInputStream bis = switch (type) {
+		ByteArrayInputStream bis = switch (type) {
 			case PDF -> exportService.generateTimetablePdf(timetable, timetable.levelCode());
 			case CSV -> exportService.generateTimetableCsv(timetable);
-		}) {
-			byte[] data = bis.readAllBytes();
-			HttpHeaders headers = new HttpHeaders();
-			String filename = String.format("%s_%s_%s_Timetable.%s",
-					timetable.levelCode().replace(" ", "_"),
-					timetable.academicYear(),
-					timetable.semester(),
-					type.name().toLowerCase());
+		};
 
-			// Key fixes:
-			headers.add("Content-Disposition", "attachment; filename=\"" + filename + "\"");
-			headers.add("Content-Length", String.valueOf(bis.available()));
-			headers.setCacheControl("no-cache, no-store, must-revalidate");
-			headers.setPragma("no-cache");
-			headers.setExpires(0);
-			return ResponseEntity.ok()
-					.headers(headers)
-					.contentType(mediaType)
-					.body(new ByteArrayResource(data));
-		}
+		HttpHeaders headers = new HttpHeaders();
+		String filename = String.format("%s_%s_%s_Timetable.%s",
+				timetable.levelCode().replace(" ", "_"),
+				timetable.academicYear(),
+				timetable.semester(),
+				type.name().toLowerCase());
 
+		// Key fixes:
+		headers.add("Content-Disposition", "attachment; filename=\"" + filename + "\"");
+		headers.add("Content-Length", String.valueOf(bis.available()));
+		headers.setCacheControl("no-cache, no-store, must-revalidate");
+		headers.setPragma("no-cache");
+		headers.setExpires(0);
+
+		byte[] data = bis.readAllBytes();
+		return ResponseEntity.ok()
+				.headers(headers)
+				.contentType(mediaType)
+				.body(new ByteArrayResource(data));
 	}
 }

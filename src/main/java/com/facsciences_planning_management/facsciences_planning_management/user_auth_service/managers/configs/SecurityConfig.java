@@ -45,11 +45,11 @@ public class SecurityConfig {
 						.requestMatchers("/api/auth/**").permitAll()
 						.requestMatchers("/api/admin/**").hasAuthority("ADMIN")
 						.requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
+						.requestMatchers("/swagger-resources/**", "/webjars/**").permitAll() // Add these
 						.requestMatchers("/actuator/**").permitAll()
 						.anyRequest().authenticated())
 				.sessionManagement(session -> session
 						.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
 				.exceptionHandling(exception -> exception
 						.authenticationEntryPoint(customAuthEntryPoint())
 						.accessDeniedHandler(customAccessDeniedHandler()))
@@ -117,13 +117,18 @@ public class SecurityConfig {
 				"https://facsciences-uy1-planning-management-gedeontiga-eabfb5d3.koyeb.app",
 				"http://facsciences-uy1-planning-management-gedeontiga-eabfb5d3.koyeb.app",
 				"https://app-planning-uy1-web.vercel.app",
-				"http://localhost:*"));
-		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+				"http://localhost:*",
+				// Add these for Swagger UI to work in production
+				"https://petstore.swagger.io", // Common Swagger UI origin
+				"null" // For file:// protocol and some edge cases
+		));
+		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"));
 		configuration.setAllowedHeaders(Arrays.asList("*"));
 		configuration.setAllowCredentials(true);
+		configuration.setMaxAge(3600L);
 
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-		source.registerCorsConfiguration("/api/**", configuration);
+		source.registerCorsConfiguration("/**", configuration); // Changed from "/api/**" to "/**"
 		return source;
 	}
 

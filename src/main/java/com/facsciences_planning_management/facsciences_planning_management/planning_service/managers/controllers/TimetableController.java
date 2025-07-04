@@ -17,8 +17,9 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.TimetableDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.TimetableRequest;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces.TimetableService;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.validators.interfaces.ValidAcademicYear;
+
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Pattern;
 
 import java.util.List;
 
@@ -79,7 +80,7 @@ public class TimetableController {
     @GetMapping("/branch/{branchId}")
     public ResponseEntity<Page<TimetableDTO>> getTimetableByBranchAndSemester(
             @NonNull @PathVariable String branchId,
-            @Pattern(regexp = "^\\d{4}-\\d{4}$", message = "Academic year must be in the format YYYY-YYYY") @RequestParam String academicYear,
+            @ValidAcademicYear @RequestParam String academicYear,
             @Valid @RequestParam SessionType sessionType,
             @PageableDefault(size = 10, sort = "academicYear") Pageable page) {
         return ResponseEntity
@@ -89,7 +90,7 @@ public class TimetableController {
     @GetMapping("/level/{levelId}")
     public ResponseEntity<TimetableDTO> getTimetableByLevelAndSemester(
             @NonNull @PathVariable String levelId,
-            @Pattern(regexp = "^\\d{4}-\\d{4}$", message = "Academic year must be in the format YYYY-YYYY") @RequestParam String academicYear,
+            @ValidAcademicYear @RequestParam String academicYear,
             @RequestParam Semester semester,
             @RequestParam SessionType sessionType) {
         return ResponseEntity
