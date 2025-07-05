@@ -86,6 +86,8 @@ public class ExamSchedulingServiceImpl implements SchedulingService<ExamScheduli
 		ExamScheduling savedScheduling = schedulingRepository.save(scheduling);
 		room.setAvailability(false);
 		roomRepository.save(room);
+		timetable.getSchedules().add(savedScheduling);
+		timetableRepository.save(timetable);
 		ExamSchedulingDTO responseDTO = savedScheduling.toDTO();
 
 		// 2. Send real-time update
@@ -156,6 +158,12 @@ public class ExamSchedulingServiceImpl implements SchedulingService<ExamScheduli
 				.orElseThrow(() -> new CustomBusinessException("Scheduling not found: " + id));
 
 		ExamSchedulingDTO deletedDTO = scheduling.toDTO();
+
+		timetableRepository.findById(deletedDTO.timetableId())
+				.ifPresent(timetable -> {
+					timetable.getSchedules().remove(scheduling);
+					timetableRepository.save(timetable);
+				});
 
 		schedulingRepository.deleteById(id);
 

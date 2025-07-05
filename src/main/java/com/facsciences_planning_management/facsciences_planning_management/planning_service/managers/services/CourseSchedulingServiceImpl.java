@@ -79,8 +79,10 @@ public class CourseSchedulingServiceImpl implements SchedulingService<CourseSche
 		log.info("Saving scheduling: {}", request);
 
 		CourseScheduling savedScheduling = schedulingRepository.save(scheduling);
+		timetable.getSchedules().add(savedScheduling);
 		room.setAvailability(false);
 		roomRepository.save(room);
+		timetableRepository.save(timetable);
 		CourseSchedulingDTO responseDTO = savedScheduling.toDTO();
 
 		// 2. Send real-time update
@@ -146,7 +148,11 @@ public class CourseSchedulingServiceImpl implements SchedulingService<CourseSche
 				.orElseThrow(() -> new CustomBusinessException("Scheduling not found: " + id));
 
 		CourseSchedulingDTO deletedDTO = scheduling.toDTO();
-
+		timetableRepository.findById(deletedDTO.timetableId())
+				.ifPresent(timetable -> {
+					timetable.getSchedules().remove(scheduling);
+					timetableRepository.save(timetable);
+				});
 		schedulingRepository.deleteById(id);
 
 		// 2. Send a notification of the deletion.
