@@ -1,4 +1,4 @@
-package com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos;
+package com.facsciences_planning_management.facsciences_planning_management.dto;
 
 import com.facsciences_planning_management.facsciences_planning_management.entities.Teacher;
 
@@ -12,15 +12,15 @@ public record TeacherDTO(
         String departmentCode,
         String address,
         String phoneNumber) {
-    public static TeacherDTO from(Teacher user) {
+    public static TeacherDTO fromTeacher(Teacher user, String departmentName, String departmentCode) {
         return new TeacherDTO(
                 user.getId(),
                 user.getFirstName(),
                 user.getLastName(),
                 user.getEmail(),
-                user.getDepartment().getId(),
-                user.getDepartment().getName(),
-                user.getDepartment().getCode(),
+                user.getDepartmentId(),
+                departmentName,
+                departmentCode,
                 user.getAddress(),
                 user.getPhoneNumber());
     }

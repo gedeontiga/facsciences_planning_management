@@ -4,6 +4,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
 
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.Semester;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.UeDTO;
 
 import lombok.AllArgsConstructor;
@@ -24,6 +25,7 @@ public class Ue {
     private Integer credits;
     private String category;
     private Integer hourlyCharge;
+    private Semester semester;
     @Builder.Default
     private Boolean assigned = false;
 

@@ -74,7 +74,8 @@ public class TimetableServiceImpl implements TimetableService {
 		}
 
 		// 1. Get all active courses that MUST be scheduled for this level.
-		List<Course> coursesToSchedule = courseRepository.findByObsoleteFalseAndUeLevelId(levelId);
+		List<Course> coursesToSchedule = courseRepository.findByObsoleteFalseAndUeLevelIdAndUeLevelSemester(levelId,
+				semester);
 		if (coursesToSchedule.isEmpty()) {
 			throw new IllegalStateException("No active courses found for level " + level.getName() + " to schedule.");
 		}

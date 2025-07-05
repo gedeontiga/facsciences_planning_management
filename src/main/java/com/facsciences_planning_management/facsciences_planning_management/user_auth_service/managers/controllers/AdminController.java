@@ -3,6 +3,7 @@ package com.facsciences_planning_management.facsciences_planning_management.user
 import org.springframework.web.bind.annotation.RestController;
 
 import com.facsciences_planning_management.facsciences_planning_management.entities.types.RoleType;
+import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.AdminUserRequest;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.RoleDTO;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.UserDTO;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.services.AdminServices;
@@ -32,7 +33,7 @@ public class AdminController {
     private final AdminServices adminServices;
 
     @PostMapping("/users/create")
-    public ResponseEntity<UserDTO> createUser(@RequestBody UserDTO user) {
+    public ResponseEntity<UserDTO> createUser(@RequestBody AdminUserRequest user) {
         return ResponseEntity.ok().body(adminServices.createUserWithRole(user));
     }
 

@@ -15,7 +15,7 @@ public interface RoomService {
 
     RoomDTO createRoom(RoomRequest roomDTO);
 
-    RoomDTO updateRoom(String id, RoomDTO roomDTO);
+    RoomDTO updateRoom(String id, RoomRequest roomDTO);
 
     void updateRoomAvailability(String id);
 

@@ -9,6 +9,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Course;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.Semester;
 
 @Repository
 public interface CourseRepository extends
@@ -26,4 +27,6 @@ public interface CourseRepository extends
 
 interface CourseRepositoryCustom {
     List<Course> findByObsoleteFalseAndUeLevelId(String levelId);
+
+    List<Course> findByObsoleteFalseAndUeLevelIdAndUeLevelSemester(String levelId, Semester semester);
 }

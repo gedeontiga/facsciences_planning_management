@@ -66,7 +66,7 @@ public class RoomController {
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<RoomDTO> updateRoom(
             @NonNull @PathVariable String id,
-            @Valid @RequestBody RoomDTO roomDTO) {
+            @Valid @RequestBody RoomRequest roomDTO) {
         RoomDTO updatedRoom = roomService.updateRoom(id, roomDTO);
         return ResponseEntity.ok(updatedRoom);
     }

@@ -38,6 +38,7 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.RoomRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.UeRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.RoomType;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.Semester;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.entities.Role;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.entities.repositories.RoleRepository;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -341,7 +342,7 @@ public class DataProvider {
                 .email(email)
                 .enabled(true)
                 .password(passwordEncoder.encode(firstName.toLowerCase() + passwordSuffix))
-                .department(department)
+                .departmentId(department.getId())
                 .role(teacherRole)
                 .build();
 
@@ -590,6 +591,8 @@ public class DataProvider {
             return null;
         }
 
+        Semester semesterEnum = determineSemester(semester);
+
         Long credits = getLongValue(subjectNode, "credit");
         String category = getTextValue(subjectNode, "category");
 
@@ -600,9 +603,20 @@ public class DataProvider {
                 .hourlyCharge(Objects.requireNonNullElse(credits, 6L).intValue() * 10)
                 .category(category)
                 .level(level)
+                .semester(semesterEnum)
                 .build();
 
         return ueRepository.save(ue);
+    }
+
+    private Semester determineSemester(String semester) {
+        return switch (semester) {
+            case "s1" -> Semester.SEMESTER_1;
+            case "s2" -> Semester.SEMESTER_2;
+            case "s3" -> Semester.SEMESTER_3;
+            case "s4" -> Semester.SEMESTER_4;
+            default -> Semester.SEMESTER_1;
+        };
     }
 
     private String extractSubjectName(JsonNode subjectNode) {

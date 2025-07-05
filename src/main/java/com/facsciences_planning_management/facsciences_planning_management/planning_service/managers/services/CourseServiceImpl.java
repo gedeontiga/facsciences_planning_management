@@ -18,7 +18,6 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Timetable;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Ue;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.CourseRepository;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.DepartmentRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.TimetableRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.UeRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.CourseDTO;
@@ -34,7 +33,6 @@ public class CourseServiceImpl implements CourseService {
 	private final UeRepository ueRepository;
 	private final TeacherRepository teacherRepository;
 	private final TimetableRepository timetableRepository;
-	private final DepartmentRepository departmentRepository;
 
 	@Override
 	public Page<CourseDTO> getAllCourses(Pageable page) {
@@ -54,10 +52,9 @@ public class CourseServiceImpl implements CourseService {
 			throw new CustomBusinessException("Ue is already assigned");
 		}
 
-		if (request.departmentId() != null && teacher.getDepartment() == null) {
-			teacher.setDepartment(departmentRepository.findById(request.departmentId())
-					.orElseThrow(() -> new CustomBusinessException("Department not found for this Id")));
-			teacherRepository.save(teacher);
+		if (teacher.getDepartmentId().equals(request.departmentId())) {
+			throw new CustomBusinessException(
+					"Teacher does not belong to the specified department: " + request.departmentId());
 		}
 		Course course = courseRepository.save(Course.builder()
 				.teacher(teacher)
@@ -82,10 +79,9 @@ public class CourseServiceImpl implements CourseService {
 				.orElseThrow(() -> new CustomBusinessException(
 						"Course not found with id: " + courseId));
 
-		if (departmentId != null && !newTeacher.getDepartment().getId().equals(departmentId)) {
-			newTeacher.setDepartment(departmentRepository.findById(departmentId)
-					.orElseThrow(() -> new CustomBusinessException("Department not found with id: " + departmentId)));
-			teacherRepository.save(newTeacher);
+		if (!newTeacher.getDepartmentId().equals(departmentId)) {
+			throw new CustomBusinessException(
+					"Teacher does not belong to the specified department: " + departmentId);
 		}
 
 		oldCourse.setObsolete(true);
@@ -98,7 +94,7 @@ public class CourseServiceImpl implements CourseService {
 				.obsolete(false)
 				.build();
 
-		return courseRepository.save(newCourse).toDTO();
+		return courseRepository.save(newCourse).toDTO().withDepartment(departmentId);
 	}
 
 	// Soft update: Mark old as obsolete, create a new one
@@ -160,13 +156,13 @@ public class CourseServiceImpl implements CourseService {
 
 	@Override
 	public List<CourseDTO> getUnscheduledCourses(String levelId, String timetableId) {
-		// 1. Get all non-obsolete courses for the level
-		List<Course> allCoursesForLevel = courseRepository.findByObsoleteFalseAndUeLevelId(levelId);
-
-		// 2. Get the timetable and its scheduled UEs
+		// 1. Get the timetable and its scheduled UEs
 		Timetable timetable = timetableRepository.findById(timetableId)
 				.orElseThrow(() -> new CustomBusinessException(
 						"Timetable not found with id: " + timetableId));
+		// 2. Get all non-obsolete courses for the level
+		List<Course> allCoursesForLevel = courseRepository.findByObsoleteFalseAndUeLevelIdAndUeLevelSemester(levelId,
+				timetable.getSemester());
 
 		// 3. Extract the UE IDs of the courses already scheduled in this timetable
 		Set<String> scheduledUeIds = timetable.getSchedules().stream()

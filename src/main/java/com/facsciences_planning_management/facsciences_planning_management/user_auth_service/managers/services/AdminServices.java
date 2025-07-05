@@ -17,6 +17,7 @@ import com.facsciences_planning_management.facsciences_planning_management.entit
 import com.facsciences_planning_management.facsciences_planning_management.exceptions.CustomBusinessException;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.entities.Role;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.entities.repositories.RoleRepository;
+import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.AdminUserRequest;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.RoleDTO;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.UserDTO;
 
@@ -36,7 +37,7 @@ public class AdminServices {
     private final PasswordEncoder passwordEncoder;
     private final MailNotificationService mailNotificationService;
 
-    public UserDTO createUserWithRole(UserDTO userInfo) {
+    public UserDTO createUserWithRole(AdminUserRequest userInfo) {
         // Find role
         Role role = roleRepository.findByType(RoleType.valueOf(userInfo.role()))
                 .orElseThrow(() -> new RuntimeException("Role not found"));
@@ -44,6 +45,9 @@ public class AdminServices {
         Users savedUser;
 
         if (userInfo.role().equals("TEACHER") || userInfo.role().equals("DEPARTMENT_HEAD")) {
+            if (userInfo.departmentId() == null || userInfo.departmentId().isEmpty()) {
+                throw new CustomBusinessException("Department ID is required for teacher or department head role");
+            }
             Teacher user = Teacher.builder()
                     .firstName(userInfo.firstName())
                     .lastName(userInfo.lastName())
@@ -53,6 +57,7 @@ public class AdminServices {
                     .password(passwordEncoder.encode(DEFAULT_PASSWORD))
                     .role(role)
                     .enabled(true)
+                    .departmentId(userInfo.departmentId())
                     .build();
             savedUser = teacherRepository.save(user);
         } else {

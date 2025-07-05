@@ -7,7 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import com.facsciences_planning_management.facsciences_planning_management.entities.Teacher;
+import com.facsciences_planning_management.facsciences_planning_management.dto.TeacherDTO;
 import com.facsciences_planning_management.facsciences_planning_management.entities.repositories.TeacherRepository;
 import com.facsciences_planning_management.facsciences_planning_management.exceptions.CustomBusinessException;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Branch;
@@ -25,7 +25,6 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.faculty.FacultyRequest;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.faculty.LevelDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces.FacultyService;
-import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.TeacherDTO;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -166,8 +165,9 @@ public class FacultyServiceImpl implements FacultyService {
 
     @Override
     public Page<TeacherDTO> getTeachersByDepartment(String departmentId, Pageable page) {
-
+        Department department = departmentRepository.findById(departmentId)
+                .orElseThrow(() -> new CustomBusinessException("Department not found with id: " + departmentId));
         return teacherRepository.findByDepartmentId(departmentId, page)
-                .map(Teacher::toDTO);
+                .map(t -> TeacherDTO.fromTeacher(t, department.getName(), department.getCode()));
     }
 }

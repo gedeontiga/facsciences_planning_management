@@ -4,15 +4,19 @@ import java.util.Optional;
 
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Course;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 public record CourseDTO(
-        String id,
-        String teacherId,
-        String teacherFirstName,
-        String teacherLastName,
-        String ueId,
-        String ueCode,
-        Long duration,
-        String departmentId) {
+        @Schema(accessMode = Schema.AccessMode.READ_ONLY) String id,
+        @NotNull @NotBlank String teacherId,
+        @Schema(accessMode = Schema.AccessMode.READ_ONLY) String teacherFirstName,
+        @Schema(accessMode = Schema.AccessMode.READ_ONLY) String teacherLastName,
+        @NotNull @NotBlank String ueId,
+        @Schema(accessMode = Schema.AccessMode.READ_ONLY) String ueCode,
+        @NotNull @NotBlank Long duration,
+        @NotNull @NotBlank String departmentId) {
     public static CourseDTO fromCourse(Course entity) {
         return new CourseDTO(
                 entity.getId(),

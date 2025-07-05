@@ -7,6 +7,7 @@ import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Course;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.Semester;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,6 +44,29 @@ public class CourseRepositoryImpl implements CourseRepositoryCustom {
                 // --- THE FIX IS HERE ---
                 // Match against a new ObjectId created from the input string
                 Aggregation.match(Criteria.where("joinedLevel._id").is(new ObjectId(levelId))));
+
+        AggregationResults<Course> results = mongoTemplate.aggregate(aggregation, "courses", Course.class);
+        return results.getMappedResults();
+    }
+
+    @Override
+    public List<Course> findByObsoleteFalseAndUeLevelIdAndUeLevelSemester(String levelId, Semester semester) {
+        // Check if the provided ID is a valid ObjectId string
+        if (!ObjectId.isValid(levelId)) {
+            return Collections.emptyList(); // Or throw an exception
+        }
+
+        TypedAggregation<Course> aggregation = Aggregation.newAggregation(Course.class,
+                Aggregation.match(Criteria.where("obsolete").is(false)),
+                Aggregation.lookup("ues", "ue", "_id", "joinedUe"),
+                Aggregation.unwind("joinedUe"),
+                Aggregation.lookup("levels", "joinedUe.level", "_id", "joinedLevel"),
+                Aggregation.unwind("joinedLevel"),
+
+                // --- THE FIX IS HERE ---
+                // Match against a new ObjectId created from the input string
+                Aggregation.match(Criteria.where("joinedLevel._id").is(new ObjectId(levelId)).and("joinedUe.semester")
+                        .is(semester)));
 
         AggregationResults<Course> results = mongoTemplate.aggregate(aggregation, "courses", Course.class);
         return results.getMappedResults();

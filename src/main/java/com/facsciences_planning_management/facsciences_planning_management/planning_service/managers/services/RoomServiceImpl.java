@@ -63,7 +63,7 @@ public class RoomServiceImpl implements RoomService {
     }
 
     @Override
-    public RoomDTO updateRoom(String id, RoomDTO roomDTO) {
+    public RoomDTO updateRoom(String id, RoomRequest roomDTO) {
         Room room = roomRepository.findById(id)
                 .orElseThrow(() -> new CustomBusinessException("Room not found with id: " + id));
 
@@ -71,7 +71,6 @@ public class RoomServiceImpl implements RoomService {
         room.setType(roomDTO.type());
         room.setCapacity(roomDTO.capacity());
         room.setBuilding(roomDTO.building());
-        room.setAvailability(roomDTO.availability());
 
         return roomRepository.save(room).toDTO();
     }
