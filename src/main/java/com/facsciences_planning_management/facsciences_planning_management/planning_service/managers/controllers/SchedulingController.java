@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -34,6 +35,7 @@ public class SchedulingController {
     private final SchedulingService<ExamSchedulingDTO, ExamSchedulingRequest> examSchedulingService;
 
     @PostMapping("/course")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SECRETARY')")
     public ResponseEntity<CourseSchedulingDTO> createCourseSchedule(
             @Valid @RequestBody CourseSchedulingRequest request) {
         CourseSchedulingDTO response = courseSchedulingService.createScheduling(request);
@@ -41,6 +43,7 @@ public class SchedulingController {
     }
 
     @PostMapping("/exam")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SECRETARY')")
     public ResponseEntity<ExamSchedulingDTO> createExamSchedule(
             @Valid @RequestBody ExamSchedulingRequest request) {
         ExamSchedulingDTO response = examSchedulingService.createScheduling(request);
@@ -48,6 +51,7 @@ public class SchedulingController {
     }
 
     @PutMapping("/courses/{id}")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SECRETARY')")
     public ResponseEntity<CourseSchedulingDTO> updateCourseSchedule(
             @NonNull @PathVariable String id,
             @Valid @RequestBody CourseSchedulingRequest request) {
@@ -56,6 +60,7 @@ public class SchedulingController {
     }
 
     @PutMapping("/exams/{id}")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SECRETARY')")
     public ResponseEntity<ExamSchedulingDTO> updateExamSchedule(
             @NonNull @PathVariable String id,
             @Valid @RequestBody ExamSchedulingRequest request) {
@@ -64,12 +69,14 @@ public class SchedulingController {
     }
 
     @GetMapping("/courses/{id}")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SECRETARY')")
     public ResponseEntity<CourseSchedulingDTO> getCourseSchedule(@PathVariable String id) {
         CourseSchedulingDTO scheduling = courseSchedulingService.getScheduling(id);
         return ResponseEntity.ok(scheduling);
     }
 
     @GetMapping("/exams/{id}")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SECRETARY')")
     public ResponseEntity<ExamSchedulingDTO> getExamSchedule(@NonNull @PathVariable String id) {
         ExamSchedulingDTO scheduling = examSchedulingService.getScheduling(id);
         return ResponseEntity.ok(scheduling);

@@ -2,8 +2,13 @@ package com.facsciences_planning_management.facsciences_planning_management.plan
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import com.facsciences_planning_management.facsciences_planning_management.entities.Teacher;
+import com.facsciences_planning_management.facsciences_planning_management.entities.repositories.TeacherRepository;
 import com.facsciences_planning_management.facsciences_planning_management.exceptions.CustomBusinessException;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Branch;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Department;
@@ -20,6 +25,7 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.faculty.FacultyRequest;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.faculty.LevelDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces.FacultyService;
+import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.TeacherDTO;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -33,6 +39,7 @@ public class FacultyServiceImpl implements FacultyService {
     private final BranchRepository branchRepository;
     private final LevelRepository levelRepository;
     private final DepartmentRepository departmentRepository;
+    private final TeacherRepository teacherRepository;
 
     @Override
     public FacultyDTO createFaculty(FacultyRequest request) {
@@ -155,5 +162,12 @@ public class FacultyServiceImpl implements FacultyService {
                 .stream()
                 .map(FacultyDTO::fromFaculty)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<TeacherDTO> getTeachersByDepartment(String departmentId, Pageable page) {
+
+        return teacherRepository.findByDepartmentId(departmentId, page)
+                .map(Teacher::toDTO);
     }
 }

@@ -89,8 +89,12 @@ public class ReservationServiceImpl implements ReservationService {
 		Room room = roomRepository.findById(request.roomId())
 				.orElseThrow(() -> new CustomBusinessException("Room not found with id: " + request.roomId()));
 
-		Ue ue = ueRepository.findByIdAndAssignedTrue(request.ueId())
-				.orElseThrow(() -> new CustomBusinessException("UE not found or not assigned: " + request.ueId()));
+		Ue ue = ueRepository.findById(request.ueId())
+				.orElseThrow(() -> new CustomBusinessException("UE not found with id: " + request.ueId()));
+
+		if (!ue.getAssigned()) {
+			throw new CustomBusinessException("UE is not assigned to any course.");
+		}
 
 		schedulingConflictService.validateScheduling(teacher, room, request.date(),
 				startTime, endTime);

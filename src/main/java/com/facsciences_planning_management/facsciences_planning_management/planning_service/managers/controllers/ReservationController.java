@@ -35,6 +35,7 @@ public class ReservationController {
     private final ReservationService reservationService;
 
     @PostMapping
+    @PreAuthorize("hasAnyAuthority('TEACHER', 'DEPARTMENT_HEAD', 'ADMIN')")
     public ResponseEntity<ReservationResponseDTO> createReservationRequest(
             @Valid @RequestBody ReservationRequestDTO request) {
         ReservationResponseDTO createdReservation = reservationService.createRequest(request);
@@ -76,6 +77,7 @@ public class ReservationController {
     }
 
     @GetMapping("/statuses")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<Iterable<String>> getAllReservationStatuses() {
         Iterable<String> statuses = reservationService.getAllReservationStatuses();
         return ResponseEntity.ok(statuses);

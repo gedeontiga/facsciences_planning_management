@@ -2,7 +2,12 @@ package com.facsciences_planning_management.facsciences_planning_management.plan
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -17,6 +22,7 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.faculty.FacultyRequest;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.faculty.LevelDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces.FacultyService;
+import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.TeacherDTO;
 
 import jakarta.validation.Valid;
 
@@ -33,26 +39,31 @@ public class FacultyController {
     private final FacultyService facultyService;
 
     @PostMapping("/create")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<FacultyDTO> createFaculty(@Valid @RequestBody FacultyRequest request) {
         return ResponseEntity.ok(facultyService.createFaculty(request));
     }
 
     @PostMapping("/create/branch")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<BranchDTO> createBranch(@Valid @RequestBody BranchRequest request) {
         return ResponseEntity.ok(facultyService.createBranch(request));
     }
 
     @PostMapping("/create/department")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<DepartmentDTO> createDepartment(@Valid @RequestBody DepartmentDTO departmentDTO) {
         return ResponseEntity.ok(facultyService.createDepartment(departmentDTO));
     }
 
     @PostMapping("/create/level")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<LevelDTO> createLevel(@Valid @RequestBody LevelDTO levelDTO) {
         return ResponseEntity.ok(facultyService.createLevel(levelDTO));
     }
 
     @PatchMapping("/update/level/{levelId}")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'DEPARTMENT_HEAD', 'SECRETARY')")
     public ResponseEntity<LevelDTO> updateLevel(@NonNull @PathVariable String levelId,
             @Valid @RequestBody @NonNull Long headCount) {
         return ResponseEntity.ok(facultyService.updateLevel(levelId, headCount));
@@ -76,5 +87,13 @@ public class FacultyController {
     @GetMapping("/branches/{branchId}/levels")
     public ResponseEntity<List<LevelDTO>> getLevelsByBranch(@NonNull @PathVariable String branchId) {
         return ResponseEntity.ok(facultyService.getLevelsByBranch(branchId));
+    }
+
+    @GetMapping("/teachers/department/{departmentId}")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'DEPARTMENT_HEAD', 'SECRETARY')")
+    public ResponseEntity<Page<TeacherDTO>> getTeachersByDepartment(
+            @PathVariable String departmentId,
+            @PageableDefault(size = 10) Pageable page) {
+        return ResponseEntity.ok(facultyService.getTeachersByDepartment(departmentId, page));
     }
 }

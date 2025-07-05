@@ -4,7 +4,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.facsciences_planning_management.facsciences_planning_management.entities.types.RoleType;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.RoleDTO;
-import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.TeacherDTO;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.UserDTO;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.services.AdminServices;
 import lombok.RequiredArgsConstructor;
@@ -57,7 +56,7 @@ public class AdminController {
     }
 
     @PutMapping("/users/disable/{id}")
-    public ResponseEntity<String> putMethodName(@PathVariable String id, @RequestBody String entity) {
+    public ResponseEntity<String> disableUser(@PathVariable String id, @RequestBody String entity) {
         adminServices.disableUser(id);
         return ResponseEntity.ok().build();
     }
@@ -66,13 +65,6 @@ public class AdminController {
     public ResponseEntity<Void> deleteUser(@PathVariable String id) {
         adminServices.deleteUser(id);
         return ResponseEntity.noContent().build();
-    }
-
-    @GetMapping("/teachers/department/{departmentId}")
-    public ResponseEntity<Page<TeacherDTO>> getTeachersByDepartment(
-            @PathVariable String departmentId,
-            @PageableDefault(size = 10) Pageable page) {
-        return ResponseEntity.ok(adminServices.getTeachersByDepartment(departmentId, page));
     }
 
 }

@@ -50,7 +50,7 @@ public class CourseController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('ADMIN', 'DEPARTMENT_HEAD')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'DEPARTMENT_HEAD')")
     public ResponseEntity<CourseDTO> createCourse(
             @Valid @RequestBody CourseDTO request,
             @RequestBody(required = false) String departmentId) {
@@ -59,7 +59,7 @@ public class CourseController {
     }
 
     @PatchMapping("/teacher/{courseId}")
-    @PreAuthorize("hasAuthority('ADMIN', 'DEPARTMENT_HEAD')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'DEPARTMENT_HEAD')")
     public ResponseEntity<CourseDTO> updateCourseTeacher(
             @NonNull @PathVariable String courseId,
             @Valid @RequestBody @NonNull String teacherId,
@@ -78,7 +78,7 @@ public class CourseController {
     }
 
     @PatchMapping("/duration/{courseId}")
-    @PreAuthorize("hasAuthority('ADMIN', 'DEPARTMENT_HEAD')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'DEPARTMENT_HEAD')")
     public ResponseEntity<CourseDTO> updateCourseDuration(
             @NonNull @PathVariable String courseId,
             @NonNull @RequestParam Long duration) {

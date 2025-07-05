@@ -18,7 +18,6 @@ import com.facsciences_planning_management.facsciences_planning_management.excep
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.entities.Role;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.entities.repositories.RoleRepository;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.RoleDTO;
-import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.TeacherDTO;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.managers.dtos.UserDTO;
 
 import lombok.RequiredArgsConstructor;
@@ -44,7 +43,7 @@ public class AdminServices {
         final String DEFAULT_PASSWORD = userInfo.firstName().toLowerCase() + passwordEnd;
         Users savedUser;
 
-        if (userInfo.role().equals("TEACHER")) {
+        if (userInfo.role().equals("TEACHER") || userInfo.role().equals("DEPARTMENT_HEAD")) {
             Teacher user = Teacher.builder()
                     .firstName(userInfo.firstName())
                     .lastName(userInfo.lastName())
@@ -108,11 +107,5 @@ public class AdminServices {
         Users user = userRepository.findById(id)
                 .orElseThrow(() -> new CustomBusinessException("User not found with id: " + id));
         userRepository.delete(user);
-    }
-
-    public Page<TeacherDTO> getTeachersByDepartment(String departmentId, Pageable page) {
-
-        return teacherRepository.findByDepartmentId(departmentId, page)
-                .map(Teacher::toDTO);
     }
 }
