@@ -53,7 +53,7 @@ public class SchedulingConflictService {
         boolean isOccupied = false;
         if (courseTimeSlot != null) {
             isOccupied = courseSchedulingRepository.existsByRoomIdAndDayAndTimeSlot(room.getId(),
-                    LocalDate.parse(date).getDayOfWeek(), courseTimeSlot);
+                    DayOfWeek.valueOf(date), courseTimeSlot);
         } else if (examTimeSlot != null) {
             isOccupied = examSchedulingRepository.existsByRoomIdAndSessionDateAndTimeSlot(room.getId(),
                     LocalDate.parse(date),
@@ -68,7 +68,7 @@ public class SchedulingConflictService {
         boolean isOccupied = false;
         if (courseTimeSlot != null) {
             isOccupied = courseSchedulingRepository.existsByAssignedCourseTeacherIdAndDayAndTimeSlot(user.getId(),
-                    LocalDate.parse(date).getDayOfWeek(),
+                    DayOfWeek.valueOf(date),
                     courseTimeSlot);
         } else if (examTimeSlot != null) {
             isOccupied = examSchedulingRepository.existsByProctorIdAndSessionDateAndTimeSlot(user.getId(),

@@ -63,7 +63,7 @@ public class CourseSchedulingServiceImpl implements SchedulingService<CourseSche
 			throw new CustomBusinessException("Level headcount exceeds room capacity: "
 					+ request.headCount() + " > " + room.getCapacity());
 		}
-		conflictService.validateCourseScheduling(assignedCourse.getTeacher(), assignedCourse, room,
+		conflictService.validateScheduling(assignedCourse.getTeacher(), room,
 				request.day(),
 				CourseTimeSlot.valueOf(request.timeSlotLabel()).getStartTime(),
 				CourseTimeSlot.valueOf(request.timeSlotLabel()).getEndTime());
@@ -76,6 +76,7 @@ public class CourseSchedulingServiceImpl implements SchedulingService<CourseSche
 				.assignedCourse(assignedCourse)
 				.headCount(request.headCount())
 				.build();
+		log.info("Saving scheduling: {}", request);
 
 		CourseScheduling savedScheduling = schedulingRepository.save(scheduling);
 		room.setAvailability(false);
@@ -118,8 +119,7 @@ public class CourseSchedulingServiceImpl implements SchedulingService<CourseSche
 		if (request.headCount() != null) {
 			scheduling.setHeadCount(request.headCount());
 		}
-		conflictService.validateCourseScheduling(course.getTeacher(),
-				course, room,
+		conflictService.validateScheduling(course.getTeacher(), room,
 				request.day(),
 				CourseTimeSlot.valueOf(request.timeSlotLabel()).getStartTime(),
 				CourseTimeSlot.valueOf(request.timeSlotLabel()).getEndTime());

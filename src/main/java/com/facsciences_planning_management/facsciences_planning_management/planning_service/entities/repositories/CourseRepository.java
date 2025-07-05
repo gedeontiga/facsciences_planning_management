@@ -23,6 +23,8 @@ public interface CourseRepository extends
     Optional<Course> findByUeIdAndObsoleteFalse(String ueId);
 
     boolean existsByUeId(String ueId);
+
+    boolean existsByUeIdAndTeacherId(String ueId, String teacherId);
 }
 
 interface CourseRepositoryCustom {

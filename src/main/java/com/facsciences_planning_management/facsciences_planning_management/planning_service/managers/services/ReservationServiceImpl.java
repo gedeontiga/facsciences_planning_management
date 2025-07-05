@@ -19,6 +19,7 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Reservation.RequestStatus;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Room;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Ue;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.CourseRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.ReservationRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.RoomRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.TimetableRepository;
@@ -51,6 +52,7 @@ public class ReservationServiceImpl implements ReservationService {
 	private final UserRepository userRepository;
 	private final RoomRepository roomRepository;
 	private final UeRepository ueRepository;
+	private final CourseRepository courseRepository;
 	private final TimetableRepository timetableRepository;
 	private final CourseSchedulingServiceImpl courseSchedulingService;
 	private final ExamSchedulingServiceImpl examSchedulingService;
@@ -66,6 +68,10 @@ public class ReservationServiceImpl implements ReservationService {
 		LocalTime startTime;
 		LocalTime endTime;
 		if (result.isCourseTimeSlot()) {
+			if (!courseRepository.existsByUeIdAndTeacherId(request.ueId(), request.teacherId())) {
+				throw new CustomBusinessException(
+						"Teacher is not a teacher of the course with id: " + request.ueId());
+			}
 			CourseTimeSlot courseSlot = result.asCourseTimeSlot();
 			startTime = courseSlot.getStartTime();
 			endTime = courseSlot.getEndTime();
@@ -132,8 +138,6 @@ public class ReservationServiceImpl implements ReservationService {
 		Users admin = userRepository.findByEmail(email)
 				.orElseThrow(() -> new CustomBusinessException("Admin not found with email: " + email));
 
-		log.info("Processing reservation request: {}", reservation.getId());
-
 		reservation.setStatus(request.status());
 		reservation.setAdminComment(request.message());
 		reservation.setProcessedBy(admin);
@@ -150,6 +154,7 @@ public class ReservationServiceImpl implements ReservationService {
 			}
 		}
 
+		log.info("Processing reservation request: {}", reservation.getId());
 		Reservation updatedReservation = reservationRepository.save(reservation);
 		ReservationResponseDTO responseDTO = ReservationResponseDTO.fromReservation(updatedReservation);
 
