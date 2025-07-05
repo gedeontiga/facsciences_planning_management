@@ -9,16 +9,14 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.validators.interfaces.ValidDate;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 
-@NotNull
 public record ReservationRequestDTO(
 		String teacherId,
 		@Valid SessionType sessionType,
 		String ueId,
 		String roomId,
-		@NotNull @ValidTimeSlot(TimeSlotType.ANY) String timeSlotLabel,
-		@NotNull @ValidDate String date,
+		@ValidTimeSlot(TimeSlotType.ANY) String timeSlotLabel,
+		@ValidDate String date,
 		Long headCount,
 		String timetableId) {
 

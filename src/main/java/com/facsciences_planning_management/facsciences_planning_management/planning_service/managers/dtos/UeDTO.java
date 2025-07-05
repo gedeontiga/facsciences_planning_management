@@ -5,20 +5,18 @@ import java.util.Optional;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Ue;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.Semester;
 
-import jakarta.validation.constraints.NotNull;
-
 public record UeDTO(
         String id,
-        @NotNull String name,
-        @NotNull String code,
-        @NotNull Integer credits,
-        @NotNull String category,
-        @NotNull Integer hourlyCharge,
-        @NotNull String levelId,
+        String name,
+        String code,
+        Integer credits,
+        String category,
+        Integer hourlyCharge,
+        String levelId,
         String levelCode,
-        @NotNull Long totalNumberOfStudents,
+        Long totalNumberOfStudents,
         Boolean assigned,
-        @NotNull Semester semester) {
+        Semester semester) {
     public static UeDTO fromUe(Ue ue) {
         return new UeDTO(
                 ue.getId(), ue.getName(), ue.getCode(),

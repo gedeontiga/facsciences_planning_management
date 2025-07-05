@@ -5,17 +5,15 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.validators.ValidTimeSlot.TimeSlotType;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.validators.interfaces.ValidDate;
 
-import jakarta.validation.constraints.NotNull;
-
 public record ExamSchedulingRequest(
 		String id,
-		@NotNull String roomId,
-		@NotNull String ueId,
-		@NotNull String userId,
-		@NotNull String timetableId,
-		@NotNull @ValidTimeSlot(TimeSlotType.ANY) String timeSlotLabel,
-		@NotNull @ValidDate String date,
-		@NotNull Long headCount,
+		String roomId,
+		String ueId,
+		String userId,
+		String timetableId,
+		@ValidTimeSlot(TimeSlotType.ANY) String timeSlotLabel,
+		@ValidDate String date,
+		Long headCount,
 		HeadCountLabel headCountLabel) implements SchedulingRequest {
 
 	public static ExamSchedulingRequest fromReservation(ReservationRequestDTO reservation) {

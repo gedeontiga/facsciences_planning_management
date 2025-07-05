@@ -21,11 +21,13 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.TimetableRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.UeRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.CourseDTO;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.CourseRequest;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces.CourseService;
 
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CourseServiceImpl implements CourseService {
@@ -42,7 +44,8 @@ public class CourseServiceImpl implements CourseService {
 
 	@Override
 	@Transactional
-	public CourseDTO createCourse(CourseDTO request) {
+	public CourseDTO createCourse(CourseRequest request) {
+		log.info("Creating course: {}", request);
 		Teacher teacher = teacherRepository.findById(request.teacherId())
 				.orElseThrow(() -> new CustomBusinessException("User not found for this Id"));
 		Ue ue = ueRepository.findById(request.ueId())
@@ -76,7 +79,7 @@ public class CourseServiceImpl implements CourseService {
 	// Soft update: Mark old as obsolete, create a new one
 	@Override
 	@Transactional
-	public CourseDTO updateCourseTeacher(String courseId, String teacherId, @NotNull String departmentId) {
+	public CourseDTO updateCourseTeacher(String courseId, String teacherId, String departmentId) {
 		Teacher newTeacher = teacherRepository.findById(teacherId)
 				.orElseThrow(() -> new CustomBusinessException("User not found with id: " + teacherId));
 		Course oldCourse = courseRepository.findById(courseId)
@@ -98,7 +101,7 @@ public class CourseServiceImpl implements CourseService {
 				.obsolete(false)
 				.build();
 
-		return courseRepository.save(newCourse).toDTO().withDepartment(departmentId);
+		return courseRepository.save(newCourse).toDTO();
 	}
 
 	// Soft update: Mark old as obsolete, create a new one

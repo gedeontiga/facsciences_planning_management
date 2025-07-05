@@ -1,6 +1,6 @@
 HELP.md
 target/**
-!target/facsciences-planning-management.jar
+target/facsciences-planning-management.jar
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/

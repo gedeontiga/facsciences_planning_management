@@ -11,16 +11,17 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.CourseDTO;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.CourseRequest;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces.CourseService;
 
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
+
 import lombok.RequiredArgsConstructor;
 
 @Validated
@@ -38,13 +39,13 @@ public class CourseController {
     }
 
     @GetMapping("/ue/{ueId}")
-    public ResponseEntity<CourseDTO> getCourseByUeId(@NotNull @PathVariable String ueId) {
+    public ResponseEntity<CourseDTO> getCourseByUeId(@PathVariable String ueId) {
         CourseDTO course = courseService.getCourseByUe(ueId);
         return ResponseEntity.ok(course);
     }
 
     @GetMapping("/{courseId}")
-    public ResponseEntity<CourseDTO> getCourse(@NotNull @PathVariable String courseId) {
+    public ResponseEntity<CourseDTO> getCourse(@PathVariable String courseId) {
         CourseDTO course = courseService.getCourse(courseId);
         return ResponseEntity.ok(course);
     }
@@ -52,7 +53,7 @@ public class CourseController {
     @PostMapping
     @PreAuthorize("hasAnyAuthority('ADMIN', 'DEPARTMENT_HEAD')")
     public ResponseEntity<CourseDTO> createCourse(
-            @Valid @RequestBody CourseDTO request) {
+            @Valid @RequestBody CourseRequest request) {
         CourseDTO response = courseService.createCourse(request);
         return ResponseEntity.status(201).body(response);
     }
@@ -60,9 +61,9 @@ public class CourseController {
     @PatchMapping("/teacher/{courseId}")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'DEPARTMENT_HEAD')")
     public ResponseEntity<CourseDTO> updateCourseTeacher(
-            @NotNull @PathVariable String courseId,
-            @Valid @RequestBody @NotNull String teacherId,
-            @Valid @RequestBody @NotNull String departmentId) {
+            @PathVariable String courseId,
+            @Valid @RequestBody String teacherId,
+            @Valid @RequestBody String departmentId) {
         CourseDTO course = courseService.updateCourseTeacher(courseId, teacherId, departmentId);
         return ResponseEntity.ok(course);
     }
@@ -70,8 +71,8 @@ public class CourseController {
     @PatchMapping("/ue/{courseId}")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'DEPARTMENT_HEAD')")
     public ResponseEntity<CourseDTO> updateCourseUe(
-            @NotNull @PathVariable String courseId,
-            @Valid @RequestBody @NotNull String ueId) {
+            @PathVariable String courseId,
+            @Valid @RequestBody String ueId) {
         CourseDTO course = courseService.updateCourseUe(courseId, ueId);
         return ResponseEntity.ok(course);
     }
@@ -79,15 +80,15 @@ public class CourseController {
     @PatchMapping("/duration/{courseId}")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'DEPARTMENT_HEAD')")
     public ResponseEntity<CourseDTO> updateCourseDuration(
-            @NotNull @PathVariable String courseId,
-            @NotNull @RequestParam Long duration) {
+            @PathVariable String courseId,
+            @RequestParam Long duration) {
         CourseDTO course = courseService.updateCourseDuration(courseId, duration);
         return ResponseEntity.ok(course);
     }
 
     @DeleteMapping("/{courseId}")
     @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<Void> deleteCourse(@NotNull @PathVariable String courseId) {
+    public ResponseEntity<Void> deleteCourse(@PathVariable String courseId) {
         courseService.deleteCourse(courseId);
         return ResponseEntity.noContent().build();
     }

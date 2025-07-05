@@ -112,13 +112,13 @@ public class DataProvider {
         }
 
         String email = generateEmailFromName(teacherName) + DOMAIN_NAME;
-        Users teacher = userRepository.findByEmail(email)
+        Teacher teacher = teacherRepository.findByEmail(email)
                 .orElseGet(() -> {
 
                     Role teacherRole = roleRepository.findByType(RoleType.TEACHER)
                             .orElseThrow(() -> new RuntimeException("Teacher role not found"));
                     String[] nameParts = parseFullName(teacherName);
-                    Users newTeacher = Users.builder()
+                    Teacher newTeacher = Teacher.builder()
                             .firstName(nameParts[0])
                             .lastName(nameParts[1])
                             .address(DEFAULT_ADDRESS)
@@ -128,7 +128,7 @@ public class DataProvider {
                             .password(passwordEncoder.encode(nameParts[0].toLowerCase() + passwordSuffix))
                             .role(teacherRole)
                             .build();
-                    return userRepository.save(newTeacher);
+                    return teacherRepository.save(newTeacher);
                 });
 
         // Create Course entity

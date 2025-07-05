@@ -10,7 +10,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
 
-import com.facsciences_planning_management.facsciences_planning_management.entities.Users;
+import com.facsciences_planning_management.facsciences_planning_management.entities.Teacher;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.CourseDTO;
 
 import lombok.AllArgsConstructor;
@@ -31,7 +31,7 @@ public class Course {
     private Ue ue;
     @Indexed
     @DocumentReference(collection = "users")
-    private Users teacher;
+    private Teacher teacher;
     @Indexed
     @Builder.Default
     private boolean obsolete = false;
