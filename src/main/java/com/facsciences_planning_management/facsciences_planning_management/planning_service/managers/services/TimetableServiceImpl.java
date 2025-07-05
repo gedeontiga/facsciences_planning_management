@@ -197,11 +197,7 @@ public class TimetableServiceImpl implements TimetableService {
 						levelId,
 						sessionType)
 				.map(Timetable::toDTO)
-				.orElseThrow(() -> new CustomBusinessException(
-						String.format("Timetable not found for Level %s, Year %s, Semester %s",
-								levelId,
-								academicYear,
-								semester)));
+				.orElse(null);
 	}
 
 	@Override
