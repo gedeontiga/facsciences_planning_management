@@ -2,13 +2,12 @@ package com.facsciences_planning_management.facsciences_planning_management.plan
 
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.RoomType;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public record RoomRequest(
-		@NotBlank @NotNull String code,
-		@NotBlank @NotNull RoomType type,
-		@NotBlank @NotNull Long capacity,
-		@NotBlank @NotNull String building,
-		@NotBlank @NotNull String facultyId) {
+		@NotNull String code,
+		@NotNull RoomType type,
+		@NotNull Long capacity,
+		@NotNull String building,
+		@NotNull String facultyId) {
 }

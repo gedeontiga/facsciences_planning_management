@@ -5,11 +5,10 @@ import java.util.Optional;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Branch;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Level;
 
-import jakarta.validation.constraints.NotBlank;
 import lombok.NonNull;
 
 @NonNull
-@NotBlank
+
 public record LevelDTO(
         String id,
         String code,
