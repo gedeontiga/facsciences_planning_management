@@ -8,7 +8,7 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 import jakarta.validation.constraints.NotNull;
 
 public record ExamSchedulingRequest(
-		@NotNull String id,
+		String id,
 		@NotNull String roomId,
 		@NotNull String ueId,
 		@NotNull String userId,

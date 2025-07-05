@@ -23,7 +23,7 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.CourseDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces.CourseService;
 
-import jakarta.annotation.Nullable;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -52,7 +52,11 @@ public class CourseServiceImpl implements CourseService {
 			throw new CustomBusinessException("Ue is already assigned");
 		}
 
-		if (teacher.getDepartmentId().equals(request.departmentId())) {
+		if (request.departmentId() == null) {
+			throw new CustomBusinessException("Department id is required");
+		}
+
+		if (!teacher.getDepartmentId().equals(request.departmentId())) {
 			throw new CustomBusinessException(
 					"Teacher does not belong to the specified department: " + request.departmentId());
 		}
@@ -72,7 +76,7 @@ public class CourseServiceImpl implements CourseService {
 	// Soft update: Mark old as obsolete, create a new one
 	@Override
 	@Transactional
-	public CourseDTO updateCourseTeacher(String courseId, String teacherId, @Nullable String departmentId) {
+	public CourseDTO updateCourseTeacher(String courseId, String teacherId, @NotNull String departmentId) {
 		Teacher newTeacher = teacherRepository.findById(teacherId)
 				.orElseThrow(() -> new CustomBusinessException("User not found with id: " + teacherId));
 		Course oldCourse = courseRepository.findById(courseId)

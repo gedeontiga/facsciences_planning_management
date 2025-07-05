@@ -16,7 +16,7 @@ public record CourseDTO(
         @NotNull String ueId,
         @Schema(accessMode = Schema.AccessMode.READ_ONLY) String ueCode,
         @NotNull Long duration,
-        @NotNull String departmentId) {
+        String departmentId) {
     public static CourseDTO fromCourse(Course entity) {
         return new CourseDTO(
                 entity.getId(),
