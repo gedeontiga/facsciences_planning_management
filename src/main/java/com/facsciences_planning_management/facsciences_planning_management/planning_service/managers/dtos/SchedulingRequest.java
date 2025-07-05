@@ -3,7 +3,6 @@ package com.facsciences_planning_management.facsciences_planning_management.plan
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.types.HeadCountLabel;
 
 public interface SchedulingRequest {
-    String id();
 
     String roomId();
 

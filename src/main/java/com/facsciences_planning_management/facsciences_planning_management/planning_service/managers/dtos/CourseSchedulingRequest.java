@@ -9,7 +9,6 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.validators.interfaces.ValidDayOfWeek;
 
 public record CourseSchedulingRequest(
-		String id,
 		String roomId,
 		String ueId,
 		String userId,
@@ -21,7 +20,6 @@ public record CourseSchedulingRequest(
 
 	public static CourseSchedulingRequest fromReservation(ReservationRequestDTO reservation) {
 		return new CourseSchedulingRequest(
-				null,
 				reservation.roomId(),
 				reservation.ueId(),
 				reservation.teacherId(),

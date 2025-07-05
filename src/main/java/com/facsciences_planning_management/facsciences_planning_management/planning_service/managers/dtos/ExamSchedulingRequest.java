@@ -6,7 +6,6 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.validators.interfaces.ValidDate;
 
 public record ExamSchedulingRequest(
-		String id,
 		String roomId,
 		String ueId,
 		String userId,
@@ -18,7 +17,6 @@ public record ExamSchedulingRequest(
 
 	public static ExamSchedulingRequest fromReservation(ReservationRequestDTO reservation) {
 		return new ExamSchedulingRequest(
-				null,
 				reservation.roomId(),
 				reservation.ueId(),
 				reservation.teacherId(),

@@ -4,8 +4,6 @@ import java.util.Optional;
 
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.ExamScheduling;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.types.HeadCountLabel;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.validators.interfaces.ValidDate;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.validators.interfaces.ValidTime;
 
 public record ExamSchedulingDTO(
 		String id,
@@ -15,10 +13,10 @@ public record ExamSchedulingDTO(
 		String ueCode,
 		String timetableId,
 		String timeSlotLabel,
-		@ValidTime String startTime,
-		@ValidTime String endTime, String userId,
+		String startTime,
+		String endTime, String userId,
 		String proctorName,
-		@ValidDate String date,
+		String date,
 		Long headCount,
 		HeadCountLabel headCountLabel) implements SchedulingDTO {
 

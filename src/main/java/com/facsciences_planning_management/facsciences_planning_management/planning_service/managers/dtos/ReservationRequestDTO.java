@@ -24,8 +24,8 @@ public record ReservationRequestDTO(
 		return new ReservationRequestDTO(
 				Optional.ofNullable(reservation.getTeacher()).map(t -> t.getId()).orElse(null),
 				reservation.getSessionType(),
-				Optional.ofNullable(reservation.getRoom()).map(r -> r.getId()).orElse(null),
 				Optional.ofNullable(reservation.getUe()).map(ue -> ue.getId()).orElse(null),
+				Optional.ofNullable(reservation.getRoom()).map(r -> r.getId()).orElse(null),
 				reservation.getTimeSlotLabel(),
 				reservation.getDate() != null ? reservation.getDate().toString() : null,
 				reservation.getHeadCount(),

@@ -4,12 +4,7 @@ import java.util.Optional;
 
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.CourseScheduling;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.types.HeadCountLabel;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.validators.interfaces.ValidDayOfWeek;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.validators.interfaces.ValidTime;
 
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
 public record CourseSchedulingDTO(
 		String id,
 		String roomId,
@@ -18,10 +13,10 @@ public record CourseSchedulingDTO(
 		String ueCode,
 		String timetableId,
 		String timeSlotLabel,
-		@ValidTime String startTime,
-		@ValidTime String endTime, String userId,
+		String startTime,
+		String endTime, String userId,
 		String teacherName,
-		@ValidDayOfWeek String day,
+		String day,
 		Long headCount,
 		HeadCountLabel headCountLabel) implements SchedulingDTO {
 
@@ -44,7 +39,7 @@ public record CourseSchedulingDTO(
 						.orElse(null),
 				Optional.ofNullable(entity.getAssignedCourse()).map(t -> t.getTeacher().getId()).orElse(null),
 				teacherName,
-				Optional.ofNullable(entity.getDay()).map(e -> e.toString()).orElse(null),
+				Optional.ofNullable(entity.getDay()).map(e -> e.name()).orElse(null),
 				entity.getHeadCount(),
 				headCountLabel);
 	}
