@@ -1,6 +1,5 @@
 package com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.controllers;
 
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -45,7 +44,7 @@ public class ReservationController {
     @PatchMapping("/process/{requestId}")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<ReservationResponseDTO> processReservationRequest(
-            @NonNull @PathVariable String requestId,
+            @PathVariable String requestId,
             @Valid @RequestBody ReservationProcessingDTO request) {
         ReservationResponseDTO processedReservation = reservationService.processRequest(requestId, request);
         return ResponseEntity.ok(processedReservation);
@@ -54,7 +53,7 @@ public class ReservationController {
     @GetMapping("/teacher/{teacherId}")
     @PreAuthorize("hasAnyAuthority('TEACHER', 'DEPARTMENT_HEAD', 'ADMIN')")
     public ResponseEntity<Page<ReservationResponseDTO>> getReservationsByTeacher(
-            @NonNull @PathVariable String teacherId,
+            @PathVariable String teacherId,
             @PageableDefault(size = 10) Pageable pageable) {
         Page<ReservationResponseDTO> reservations = reservationService.getReservationByTeacher(teacherId, pageable);
         return ResponseEntity.ok(reservations);
@@ -71,7 +70,7 @@ public class ReservationController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<Void> deleteReservationRequest(@NonNull @PathVariable String id) {
+    public ResponseEntity<Void> deleteReservationRequest(@PathVariable String id) {
         reservationService.deleteRequest(id);
         return ResponseEntity.noContent().build();
     }

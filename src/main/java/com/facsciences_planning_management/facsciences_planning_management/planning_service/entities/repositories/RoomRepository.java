@@ -17,17 +17,17 @@ public interface RoomRepository extends MongoRepository<Room, String> {
 
     List<Room> findAllByAvailabilityTrue();
 
-    List<Room> findByCapacityIsGreaterThanEqualAndAvailabilityTrueOrderByCapacityAsc(Long capacity);
+    List<Room> findByCapacityIsGreaterThanEqualOrderByCapacityAsc(Long capacity);
 
     Page<Room> findAllByAvailabilityTrue(Pageable page);
 
-    List<Room> findByCapacityIsGreaterThanEqualAndAvailabilityTrue(Long capacity);
+    List<Room> findByCapacityIsGreaterThanEqual(Long capacity);
 
     Optional<Room> findByCode(String code);
 
-    Optional<Room> findTopByAvailabilityTrueOrderByCapacityDesc();
+    Optional<Room> findTopByOrderByCapacityDesc();
 
-    List<Room> findByTypeAndAvailabilityTrue(RoomType type);
+    List<Room> findByType(RoomType type);
 
-    List<Room> findByCapacityIsGreaterThanEqualAndTypeAndAvailabilityTrue(Long capacity, RoomType type);
+    List<Room> findByCapacityIsGreaterThanEqualAndType(Long capacity, RoomType type);
 }

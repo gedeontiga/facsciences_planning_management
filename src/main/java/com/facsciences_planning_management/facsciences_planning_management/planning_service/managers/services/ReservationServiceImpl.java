@@ -67,27 +67,16 @@ public class ReservationServiceImpl implements ReservationService {
 		TimeSlot.TimeSlotResult result = TimeSlot.getTimeSlotWithType(request.timeSlotLabel());
 		LocalTime startTime;
 		LocalTime endTime;
-		if (result.isCourseTimeSlot()) {
-			if (!courseRepository.existsByUeIdAndTeacherId(request.ueId(), request.teacherId())) {
-				throw new CustomBusinessException(
-						"Teacher is not a teacher of the course with id: " + request.ueId());
-			}
-			CourseTimeSlot courseSlot = result.asCourseTimeSlot();
-			startTime = courseSlot.getStartTime();
-			endTime = courseSlot.getEndTime();
-		} else if (result.isExamTimeSlot()) {
-			ExamTimeSlot examSlot = result.asExamTimeSlot();
-			startTime = examSlot.getStartTime();
-			endTime = examSlot.getEndTime();
-		} else {
-			throw new CustomBusinessException("Invalid time slot type: " + request.timeSlotLabel());
-		}
-		if (reservationRepository.existsByTeacherIdAndDateAndStartTimeAndEndTime(
-				request.teacherId(), LocalDate.parse(request.date()), startTime, endTime)) {
-			throw new CustomBusinessException("A reservation already exists for this time slot.");
-		}
-		if (!timetableRepository.existsById(request.timetableId())) {
-			throw new CustomBusinessException("Timetable not found with id: " + request.timetableId());
+
+		String[] academicYear = timetableRepository.findById(request.timetableId())
+				.orElseThrow(() -> new CustomBusinessException("Timetable not found with id: " + request.timetableId()))
+				.getAcademicYear().split("-");
+
+		Integer year1 = Integer.parseInt(academicYear[0]);
+		Integer year2 = Integer.parseInt(academicYear[1]);
+		LocalDate date = LocalDate.parse(request.date());
+		if (date.getYear() != year1 && date.getYear() != year2) {
+			throw new CustomBusinessException("Academic year does not match date: " + request.date());
 		}
 		Users teacher = userRepository.findById(request.teacherId())
 				.orElseThrow(() -> new CustomBusinessException("Teacher not found with id: " + request.teacherId()));
@@ -102,10 +91,31 @@ public class ReservationServiceImpl implements ReservationService {
 			throw new CustomBusinessException("UE is not assigned to any course.");
 		}
 
-		schedulingConflictService.validateScheduling(teacher, room, request.date(),
-				startTime, endTime);
+		if (result.isCourseTimeSlot()) {
+			if (!courseRepository.existsByUeIdAndTeacherId(request.ueId(), request.teacherId())) {
+				throw new CustomBusinessException(
+						"Teacher is not a teacher of the course with id: " + request.ueId());
+			}
+			CourseTimeSlot courseSlot = result.asCourseTimeSlot();
+			startTime = courseSlot.getStartTime();
+			endTime = courseSlot.getEndTime();
+			schedulingConflictService.validateScheduling(teacher, room,
+					LocalDate.parse(request.date()).getDayOfWeek().name(),
+					startTime, endTime);
+		} else if (result.isExamTimeSlot()) {
+			ExamTimeSlot examSlot = result.asExamTimeSlot();
+			startTime = examSlot.getStartTime();
+			endTime = examSlot.getEndTime();
+			schedulingConflictService.validateScheduling(teacher, room, request.date(),
+					startTime, endTime);
+		} else {
+			throw new CustomBusinessException("Invalid time slot type: " + request.timeSlotLabel());
+		}
+		if (reservationRepository.existsByTeacherIdAndDateAndStartTimeAndEndTime(
+				request.teacherId(), LocalDate.parse(request.date()), startTime, endTime)) {
+			throw new CustomBusinessException("A reservation already exists for this time slot.");
+		}
 
-		// log.info("Creating reservation request: {}", teacher.getUsername());
 		Reservation reservation = Reservation.builder()
 				.teacher(teacher)
 				.sessionType(request.sessionType())
@@ -116,7 +126,7 @@ public class ReservationServiceImpl implements ReservationService {
 				.timeSlotLabel(request.timeSlotLabel())
 				.startTime(startTime)
 				.endTime(endTime)
-				.date(LocalDate.parse(request.date()))
+				.date(date)
 				.createdAt(LocalDateTime.now())
 				.build();
 
@@ -153,8 +163,6 @@ public class ReservationServiceImpl implements ReservationService {
 				reservation.setScheduling(scheduling);
 			}
 		}
-
-		log.info("Processing reservation request: {}", reservation.getId());
 		Reservation updatedReservation = reservationRepository.save(reservation);
 		ReservationResponseDTO responseDTO = ReservationResponseDTO.fromReservation(updatedReservation);
 
@@ -196,7 +204,7 @@ public class ReservationServiceImpl implements ReservationService {
 	public void removeOldReservations() {
 		reservationRepository.findByDateBefore(LocalDate.now()).stream()
 				.forEach(reservation -> {
-					log.info("Removing old reservation: {}", reservation.getId());
+
 					reservationRepository.deleteById(reservation.getId());
 					if (reservation.getSessionType().equals(SessionType.COURSE)) {
 						courseSchedulingService.deleteScheduling(reservation.getScheduling().getId());

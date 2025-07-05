@@ -28,7 +28,7 @@ public class RoomServiceImpl implements RoomService {
 
     @Override
     public Page<RoomDTO> getAllRooms(Pageable page) {
-        return roomRepository.findAllByAvailabilityTrue(page)
+        return roomRepository.findAll(page)
                 .map(Room::toDTO);
     }
 
@@ -89,14 +89,14 @@ public class RoomServiceImpl implements RoomService {
 
     @Override
     public List<RoomDTO> getRoomsByCapacity(Long minimumCapacity) {
-        return roomRepository.findByCapacityIsGreaterThanEqualAndAvailabilityTrue(minimumCapacity).stream()
+        return roomRepository.findByCapacityIsGreaterThanEqual(minimumCapacity).stream()
                 .map(Room::toDTO)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<RoomDTO> getRoomsByType(String type) {
-        return roomRepository.findByTypeAndAvailabilityTrue(RoomType.valueOf(type)).stream()
+        return roomRepository.findByType(RoomType.valueOf(type)).stream()
                 .map(Room::toDTO)
                 .collect(Collectors.toList());
     }

@@ -84,8 +84,6 @@ public class ExamSchedulingServiceImpl implements SchedulingService<ExamScheduli
 				.build();
 
 		ExamScheduling savedScheduling = schedulingRepository.save(scheduling);
-		room.setAvailability(false);
-		roomRepository.save(room);
 		timetable.getSchedules().add(savedScheduling);
 		timetableRepository.save(timetable);
 		ExamSchedulingDTO responseDTO = savedScheduling.toDTO();
@@ -134,8 +132,6 @@ public class ExamSchedulingServiceImpl implements SchedulingService<ExamScheduli
 				ExamTimeSlot.valueOf(request.timeSlotLabel()).getEndTime());
 
 		ExamScheduling updatedScheduling = schedulingRepository.save(scheduling);
-		room.setAvailability(false);
-		roomRepository.save(room);
 		ExamSchedulingDTO responseDTO = updatedScheduling.toDTO();
 
 		// 2. Send real-time update

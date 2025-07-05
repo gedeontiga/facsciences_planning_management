@@ -82,7 +82,7 @@ public class TimetableServiceImpl implements TimetableService {
 
 		// 2. Get all available rooms.
 		List<Room> availableRooms = roomRepository
-				.findByCapacityIsGreaterThanEqualAndAvailabilityTrueOrderByCapacityAsc(headCount);
+				.findByCapacityIsGreaterThanEqualOrderByCapacityAsc(headCount);
 		if (availableRooms.isEmpty()) {
 			throw new IllegalStateException("No available rooms in the system for scheduling.");
 		}
@@ -238,7 +238,7 @@ public class TimetableServiceImpl implements TimetableService {
 		if (headCount == null) {
 			return false;
 		}
-		Long roomCapacity = roomRepository.findTopByAvailabilityTrueOrderByCapacityDesc()
+		Long roomCapacity = roomRepository.findTopByOrderByCapacityDesc()
 				.map(Room::getCapacity)
 				.orElse(0L);
 		return headCount > roomCapacity;

@@ -130,8 +130,6 @@ public class CourseSchedulingServiceImpl implements SchedulingService<CourseSche
 		// if needed.
 
 		CourseScheduling updatedScheduling = schedulingRepository.save(scheduling);
-		room.setAvailability(false);
-		roomRepository.save(room);
 		CourseSchedulingDTO responseDTO = updatedScheduling.toDTO();
 
 		// 2. Send real-time update
