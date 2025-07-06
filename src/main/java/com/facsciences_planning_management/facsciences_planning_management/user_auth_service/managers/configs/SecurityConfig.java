@@ -112,7 +112,7 @@ public class SecurityConfig {
 				"http://localhost:*",
 				"https://localhost:*"));
 
-		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"));
+		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS", "HEAD"));
 		configuration.setAllowedHeaders(Arrays.asList("*"));
 		configuration.setAllowCredentials(true);
 		configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Type"));
