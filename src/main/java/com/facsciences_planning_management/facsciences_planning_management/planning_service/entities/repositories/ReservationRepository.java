@@ -24,5 +24,5 @@ public interface ReservationRepository extends
 
 	List<Reservation> findAllByOrderByCreatedAtDesc();
 
-	List<Reservation> findByDateBefore(LocalDate date);
+	List<Reservation> findByDateBeforeAndStatus(LocalDate date, RequestStatus status);
 }

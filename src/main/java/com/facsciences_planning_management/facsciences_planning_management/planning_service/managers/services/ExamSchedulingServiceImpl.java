@@ -89,7 +89,8 @@ public class ExamSchedulingServiceImpl implements SchedulingService<ExamScheduli
 		ExamSchedulingDTO responseDTO = savedScheduling.toDTO();
 
 		// 2. Send real-time update
-		webSocketUpdateService.sendUpdate(TIMETABLE_TOPIC_DESTINATION + responseDTO.timetableId(), responseDTO);
+		webSocketUpdateService.sendUpdate(TIMETABLE_TOPIC_DESTINATION + "create/" + responseDTO.timetableId(),
+				responseDTO);
 		return savedScheduling;
 	}
 
@@ -135,7 +136,8 @@ public class ExamSchedulingServiceImpl implements SchedulingService<ExamScheduli
 		ExamSchedulingDTO responseDTO = updatedScheduling.toDTO();
 
 		// 2. Send real-time update
-		webSocketUpdateService.sendUpdate(TIMETABLE_TOPIC_DESTINATION + responseDTO.timetableId(), responseDTO);
+		webSocketUpdateService.sendUpdate(TIMETABLE_TOPIC_DESTINATION + "update/" + responseDTO.timetableId(),
+				responseDTO);
 
 		return responseDTO;
 	}
@@ -163,7 +165,7 @@ public class ExamSchedulingServiceImpl implements SchedulingService<ExamScheduli
 
 		schedulingRepository.deleteById(id);
 
-		webSocketUpdateService.sendUpdate(TIMETABLE_TOPIC_DESTINATION + deletedDTO.timetableId(),
+		webSocketUpdateService.sendUpdate(TIMETABLE_TOPIC_DESTINATION + "delete/" + deletedDTO.timetableId(),
 				Map.of("schedulingId", deletedDTO.id()));
 	}
 

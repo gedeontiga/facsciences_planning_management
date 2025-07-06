@@ -64,9 +64,13 @@ public class FacultyController {
 
     @PatchMapping("/update/level/{levelId}")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'DEPARTMENT_HEAD', 'SECRETARY')")
-    public ResponseEntity<LevelDTO> updateLevel(@NonNull @PathVariable String levelId,
-            @Valid @RequestBody @NonNull Long headCount) {
-        return ResponseEntity.ok(facultyService.updateLevel(levelId, headCount));
+    public ResponseEntity<LevelDTO> updateLevel(@PathVariable String levelId,
+            @Valid @RequestBody LevelHeadCountUpdate request) {
+        return ResponseEntity.ok(facultyService.updateLevel(levelId, request.headCount()));
+    }
+
+    private record LevelHeadCountUpdate(
+            @NonNull Long headCount) {
     }
 
     @GetMapping
@@ -75,17 +79,17 @@ public class FacultyController {
     }
 
     @GetMapping("/{facultyId}/branches")
-    public ResponseEntity<List<BranchDTO>> getBranchesByFaculty(@NonNull @PathVariable String facultyId) {
+    public ResponseEntity<List<BranchDTO>> getBranchesByFaculty(@PathVariable String facultyId) {
         return ResponseEntity.ok(facultyService.getAllBranchesByFaculty(facultyId));
     }
 
     @GetMapping("/{facultyId}/departments")
-    public ResponseEntity<List<DepartmentDTO>> getDepartmentsByFaculty(@NonNull @PathVariable String facultyId) {
+    public ResponseEntity<List<DepartmentDTO>> getDepartmentsByFaculty(@PathVariable String facultyId) {
         return ResponseEntity.ok(facultyService.getAllDepartmentsByFaculty(facultyId));
     }
 
     @GetMapping("/branches/{branchId}/levels")
-    public ResponseEntity<List<LevelDTO>> getLevelsByBranch(@NonNull @PathVariable String branchId) {
+    public ResponseEntity<List<LevelDTO>> getLevelsByBranch(@PathVariable String branchId) {
         return ResponseEntity.ok(facultyService.getLevelsByBranch(branchId));
     }
 

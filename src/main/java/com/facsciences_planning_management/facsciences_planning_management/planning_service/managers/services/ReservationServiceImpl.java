@@ -133,7 +133,7 @@ public class ReservationServiceImpl implements ReservationService {
 		Reservation savedReservation = reservationRepository.save(reservation);
 		ReservationResponseDTO responseDTO = ReservationResponseDTO.fromReservation(savedReservation);
 
-		webSocketUpdateService.sendUpdate(WS_RESERVATION_TOPIC + savedReservation.getId(), responseDTO);
+		webSocketUpdateService.sendUpdate(WS_RESERVATION_TOPIC + "create/" + savedReservation.getId(), responseDTO);
 
 		return responseDTO;
 	}
@@ -166,7 +166,7 @@ public class ReservationServiceImpl implements ReservationService {
 		Reservation updatedReservation = reservationRepository.save(reservation);
 		ReservationResponseDTO responseDTO = ReservationResponseDTO.fromReservation(updatedReservation);
 
-		webSocketUpdateService.sendUpdate(WS_RESERVATION_TOPIC + updatedReservation.getId(), responseDTO);
+		webSocketUpdateService.sendUpdate(WS_RESERVATION_TOPIC + "update/" + updatedReservation.getId(), responseDTO);
 
 		return responseDTO;
 	}
@@ -192,7 +192,18 @@ public class ReservationServiceImpl implements ReservationService {
 		if (!reservationRepository.existsById(id)) {
 			throw new CustomBusinessException("Reservation not found with id: " + id);
 		}
-		reservationRepository.deleteById(id);
+		reservationRepository.findById(id).ifPresent(
+				reservation -> {
+					if (reservation.getStatus().equals(RequestStatus.APPROVED)) {
+						if (reservation.getSessionType().equals(SessionType.COURSE)) {
+							courseSchedulingService.deleteScheduling(reservation.getScheduling().getId());
+						} else {
+							examSchedulingService.deleteScheduling(reservation.getScheduling().getId());
+						}
+					}
+					reservationRepository.deleteById(id);
+				});
+		webSocketUpdateService.sendUpdate(WS_RESERVATION_TOPIC + "delete/" + id, Map.of("reservationId", id));
 	}
 
 	@Override
@@ -202,17 +213,13 @@ public class ReservationServiceImpl implements ReservationService {
 
 	@Scheduled(cron = "@hourly")
 	public void removeOldReservations() {
-		reservationRepository.findByDateBefore(LocalDate.now()).stream()
+		reservationRepository.findByDateBeforeAndStatus(LocalDate.now(), RequestStatus.APPROVED).stream()
 				.forEach(reservation -> {
-
-					reservationRepository.deleteById(reservation.getId());
 					if (reservation.getSessionType().equals(SessionType.COURSE)) {
 						courseSchedulingService.deleteScheduling(reservation.getScheduling().getId());
 					} else {
 						examSchedulingService.deleteScheduling(reservation.getScheduling().getId());
 					}
-					webSocketUpdateService.sendUpdate(WS_RESERVATION_TOPIC + reservation.getId(),
-							Map.of("reservationId", reservation.getId()));
 				});
 	}
 }

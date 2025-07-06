@@ -86,7 +86,8 @@ public class CourseSchedulingServiceImpl implements SchedulingService<CourseSche
 		CourseSchedulingDTO responseDTO = savedScheduling.toDTO();
 
 		// 2. Send real-time update
-		webSocketUpdateService.sendUpdate(TIMETABLE_TOPIC_DESTINATION + responseDTO.timetableId(), responseDTO);
+		webSocketUpdateService.sendUpdate(TIMETABLE_TOPIC_DESTINATION + "create/" + responseDTO.timetableId(),
+				responseDTO);
 		return savedScheduling;
 	}
 
@@ -133,7 +134,8 @@ public class CourseSchedulingServiceImpl implements SchedulingService<CourseSche
 		CourseSchedulingDTO responseDTO = updatedScheduling.toDTO();
 
 		// 2. Send real-time update
-		webSocketUpdateService.sendUpdate(TIMETABLE_TOPIC_DESTINATION + responseDTO.timetableId(), responseDTO);
+		webSocketUpdateService.sendUpdate(TIMETABLE_TOPIC_DESTINATION + "update/" + responseDTO.timetableId(),
+				responseDTO);
 
 		return responseDTO;
 	}
@@ -155,7 +157,7 @@ public class CourseSchedulingServiceImpl implements SchedulingService<CourseSche
 
 		// 2. Send a notification of the deletion.
 		// The client can use this DTO to identify which schedule to remove from the UI.
-		webSocketUpdateService.sendUpdate(TIMETABLE_TOPIC_DESTINATION + deletedDTO.timetableId(),
+		webSocketUpdateService.sendUpdate(TIMETABLE_TOPIC_DESTINATION + "delete/" + deletedDTO.timetableId(),
 				Map.of("schedulingId", deletedDTO.id()));
 	}
 
