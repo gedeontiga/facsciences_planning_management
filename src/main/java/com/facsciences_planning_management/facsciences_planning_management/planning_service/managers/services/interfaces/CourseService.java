@@ -24,7 +24,7 @@ public interface CourseService {
 
     CourseDTO getCourseByUe(String ueId);
 
-    List<CourseDTO> getCourseByLevel(String levelId);
+    Page<CourseDTO> getCourseByLevel(String levelId, Pageable page);
 
     List<CourseDTO> getUnscheduledCourses(String levelId, String timetableId);
 

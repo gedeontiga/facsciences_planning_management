@@ -50,6 +50,12 @@ public class CourseController {
         return ResponseEntity.ok(course);
     }
 
+    @GetMapping("/level/{levelId}")
+    public ResponseEntity<Page<CourseDTO>> getCourseByLevel(@PathVariable String levelId,
+            @PageableDefault(size = 10) Pageable page) {
+        return ResponseEntity.ok(courseService.getCourseByLevel(levelId, page));
+    }
+
     @PostMapping
     @PreAuthorize("hasAnyAuthority('ADMIN', 'DEPARTMENT_HEAD')")
     public ResponseEntity<CourseDTO> createCourse(

@@ -154,11 +154,9 @@ public class CourseServiceImpl implements CourseService {
 	}
 
 	@Override
-	public List<CourseDTO> getCourseByLevel(String levelId) {
-		return courseRepository.findByObsoleteFalseAndUeLevelId(levelId)
-				.stream()
-				.map(Course::toDTO)
-				.collect(Collectors.toList());
+	public Page<CourseDTO> getCourseByLevel(String levelId, Pageable page) {
+		return courseRepository.findByObsoleteFalseAndUeLevelId(levelId, page)
+				.map(Course::toDTO);
 	}
 
 	@Override

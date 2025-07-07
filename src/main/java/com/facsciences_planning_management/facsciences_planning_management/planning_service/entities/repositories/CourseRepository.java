@@ -14,6 +14,7 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 @Repository
 public interface CourseRepository extends
         MongoRepository<Course, String>, CourseRepositoryCustom {
+
     Page<Course> findAllByObsoleteFalse(Pageable page);
 
     List<Course> findByObsoleteFalseAndTeacherId(String teacherId);
@@ -28,7 +29,7 @@ public interface CourseRepository extends
 }
 
 interface CourseRepositoryCustom {
-    List<Course> findByObsoleteFalseAndUeLevelId(String levelId);
+    Page<Course> findByObsoleteFalseAndUeLevelId(String levelId, Pageable page);
 
     List<Course> findByObsoleteFalseAndUeLevelIdAndUeLevelSemester(String levelId, Semester semester);
 }
