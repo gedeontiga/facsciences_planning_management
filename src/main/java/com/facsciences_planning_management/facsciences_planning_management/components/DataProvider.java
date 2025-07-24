@@ -20,6 +20,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.facsciences_planning_management.facsciences_planning_management.entities.Teacher;
 import com.facsciences_planning_management.facsciences_planning_management.entities.Users;
+import com.facsciences_planning_management.facsciences_planning_management.entities.repositories.DepartmentRepository;
+import com.facsciences_planning_management.facsciences_planning_management.entities.repositories.LevelRepository;
 import com.facsciences_planning_management.facsciences_planning_management.entities.repositories.TeacherRepository;
 import com.facsciences_planning_management.facsciences_planning_management.entities.repositories.UserRepository;
 import com.facsciences_planning_management.facsciences_planning_management.entities.types.RoleType;
@@ -32,9 +34,7 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Ue;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.BranchRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.CourseRepository;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.DepartmentRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.FacultyRepository;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.LevelRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.RoomRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.UeRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.RoomType;
@@ -135,6 +135,9 @@ public class DataProvider {
         Course course = Course.builder()
                 .ue(ue)
                 .teacher(teacher)
+                .branchId(ue.getLevel().getBranch().getId())
+                .levelId(ue.getLevel().getId())
+                .semester(ue.getSemester())
                 .duration(Duration.ofHours(3))
                 .build();
 

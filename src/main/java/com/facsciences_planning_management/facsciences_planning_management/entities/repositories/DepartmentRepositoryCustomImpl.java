@@ -1,4 +1,4 @@
-package com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories;
+package com.facsciences_planning_management.facsciences_planning_management.entities.repositories;
 
 import java.util.Collections;
 import java.util.List;

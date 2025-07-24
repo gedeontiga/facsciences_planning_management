@@ -23,6 +23,7 @@ import jakarta.validation.Valid;
 
 import java.util.List;
 
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -33,8 +34,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Validated
 @RestController
-@RequestMapping("/api/timetables")
 @RequiredArgsConstructor
+@RequestMapping("/api/timetables")
 public class TimetableController {
 
     private final TimetableService timetableService;
@@ -72,19 +73,35 @@ public class TimetableController {
                 request.levelId()));
     }
 
+    @GetMapping
+    public ResponseEntity<Page<TimetableDTO>> getTimetableForCurrentUser(
+            @RequestParam SessionType sessionType,
+            @RequestParam(required = false) Semester semester,
+            @PageableDefault(size = 10) Pageable page) {
+        if (semester == null) {
+            return ResponseEntity.ok(
+                    timetableService.getTimetableForCurrentUser(page, sessionType));
+        } else {
+
+            return ResponseEntity.ok(timetableService.getTimetableForCurrentUser(page, sessionType, semester));
+        }
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<TimetableDTO> getTimetableById(@NonNull @PathVariable String id) {
         return ResponseEntity.ok(timetableService.getTimetableById(id));
     }
 
     @GetMapping("/branch/{branchId}")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SECRETARY', 'DEPARTMENT_HEAD', 'TEACHER')")
     public ResponseEntity<Page<TimetableDTO>> getTimetableByBranchAndSemester(
             @NonNull @PathVariable String branchId,
             @ValidAcademicYear @RequestParam String academicYear,
-            @Valid @RequestParam SessionType sessionType,
+            @RequestParam SessionType sessionType,
+            @RequestParam Semester semester,
             @PageableDefault(size = 10, sort = "academicYear") Pageable page) {
         return ResponseEntity
-                .ok(timetableService.getTimetablesByBranch(academicYear, branchId, sessionType, page));
+                .ok(timetableService.getTimetablesByBranch(academicYear, semester, branchId, sessionType, page));
     }
 
     @GetMapping("/level/{levelId}")
@@ -94,8 +111,14 @@ public class TimetableController {
             @RequestParam Semester semester,
             @RequestParam SessionType sessionType) {
         return ResponseEntity
-                .ok(timetableService.getTimetableByLevelAndSemester(academicYear, levelId, semester.name(),
+                .ok(timetableService.getTimetableByLevelAndSemester(academicYear, levelId, semester,
                         sessionType));
+    }
+
+    @DeleteMapping("/{timetableId}")
+    public ResponseEntity<Void> deleteTimetable(String timetableId) {
+        timetableService.deleteTimetable(timetableId);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/year")
@@ -115,8 +138,12 @@ public class TimetableController {
     }
 
     @GetMapping("/timeslots")
-    public ResponseEntity<List<TimeSlotDTO>> getCoursesTimeSlots() {
-        return ResponseEntity.ok(timetableService.getCoursesTimeSlots());
+    public ResponseEntity<List<TimeSlotDTO>> getTimeSlots(@RequestParam SessionType sessionType) {
+        if (sessionType.equals(SessionType.COURSE)) {
+            return ResponseEntity.ok(timetableService.getCoursesTimeSlots());
+        } else {
+            return ResponseEntity.ok(timetableService.getExamTimeSlots());
+        }
     }
 
     @GetMapping("/semesters/course")

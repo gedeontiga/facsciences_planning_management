@@ -28,6 +28,6 @@ public interface CourseService {
 
     List<CourseDTO> getUnscheduledCourses(String levelId, String timetableId);
 
-    void deleteCourse(String courseId);
+    // void deleteCourse(String courseId);
 
 }

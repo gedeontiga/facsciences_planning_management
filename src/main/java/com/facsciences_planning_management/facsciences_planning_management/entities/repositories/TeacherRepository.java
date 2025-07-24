@@ -12,5 +12,7 @@ import java.util.Optional;
 public interface TeacherRepository extends MongoRepository<Teacher, String> {
     Page<Teacher> findByDepartmentId(String departmentId, Pageable page);
 
+    Optional<Teacher> findByEmailAndEnabledIsTrue(String email);
+
     Optional<Teacher> findByEmail(String email);
 }

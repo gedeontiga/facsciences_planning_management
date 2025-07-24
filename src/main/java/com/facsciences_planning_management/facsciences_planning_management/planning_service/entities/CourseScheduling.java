@@ -25,6 +25,8 @@ public class CourseScheduling extends Scheduling {
     @DocumentReference(collection = "courses")
     private Course assignedCourse;
     private TimeSlot.CourseTimeSlot timeSlot;
+    @Indexed
+    private String teacherId;
 
     @Override
     public CourseSchedulingDTO toDTO() {

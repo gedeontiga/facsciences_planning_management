@@ -46,6 +46,7 @@ public class Timetable {
     @Indexed
     @Builder.Default
     private boolean used = true;
+    private String branchId;
 
     public TimetableDTO toDTO() {
         return TimetableDTO.fromTimetable(this);

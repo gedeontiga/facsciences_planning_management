@@ -189,6 +189,7 @@ public class TimetableSolverService {
                             .room(key.room())
                             .day(key.day())
                             .timeSlot(key.timeSlot())
+                            .headCount(level.getHeadCount())
                             .build());
                 }
             }

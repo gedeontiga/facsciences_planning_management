@@ -25,6 +25,8 @@ public class Room {
     private String building;
     private Boolean availability;
 
+    // private String facultyId;
+
     public RoomDTO toDTO() {
         return RoomDTO.fromRoom(this);
     }

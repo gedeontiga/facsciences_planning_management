@@ -66,6 +66,9 @@ public class CourseServiceImpl implements CourseService {
 		Course course = courseRepository.save(Course.builder()
 				.teacher(teacher)
 				.ue(ue)
+				.branchId(ue.getLevel().getBranch().getId())
+				.levelId(ue.getLevel().getId())
+				.semester(ue.getSemester())
 				.duration(Duration.ofHours(request.duration()))
 				.obsolete(false)
 				.build());
@@ -97,7 +100,10 @@ public class CourseServiceImpl implements CourseService {
 		Course newCourse = Course.builder()
 				.teacher(newTeacher)
 				.ue(oldCourse.getUe())
+				.branchId(oldCourse.getBranchId())
+				.levelId(oldCourse.getLevelId())
 				.duration(oldCourse.getDuration())
+				.semester(oldCourse.getSemester())
 				.obsolete(false)
 				.build();
 
@@ -120,6 +126,9 @@ public class CourseServiceImpl implements CourseService {
 		Course newCourse = Course.builder()
 				.teacher(oldCourse.getTeacher())
 				.ue(newUe)
+				.branchId(oldCourse.getBranchId())
+				.levelId(newUe.getLevel().getId())
+				.semester(newUe.getSemester())
 				.duration(oldCourse.getDuration())
 				.obsolete(false)
 				.build();
@@ -155,7 +164,7 @@ public class CourseServiceImpl implements CourseService {
 
 	@Override
 	public Page<CourseDTO> getCourseByLevel(String levelId, Pageable page) {
-		return courseRepository.findByObsoleteFalseAndUeLevelId(levelId, page)
+		return courseRepository.findByObsoleteFalseAndLevelId(levelId, page)
 				.map(Course::toDTO);
 	}
 
@@ -166,7 +175,7 @@ public class CourseServiceImpl implements CourseService {
 				.orElseThrow(() -> new CustomBusinessException(
 						"Timetable not found with id: " + timetableId));
 		// 2. Get all non-obsolete courses for the level
-		List<Course> allCoursesForLevel = courseRepository.findByObsoleteFalseAndUeLevelIdAndUeLevelSemester(levelId,
+		List<Course> allCoursesForLevel = courseRepository.findByObsoleteFalseAndLevelIdAndSemester(levelId,
 				timetable.getSemester());
 
 		// 3. Extract the UE IDs of the courses already scheduled in this timetable
@@ -182,13 +191,13 @@ public class CourseServiceImpl implements CourseService {
 				.collect(Collectors.toList());
 	}
 
-	@Override
-	public void deleteCourse(String courseId) {
-		// This is a hard delete. Alternatively, could also be implemented as setting
-		// obsolete=true.
-		if (!courseRepository.existsById(courseId)) {
-			throw new CustomBusinessException("Course not found with id: " + courseId);
-		}
-		courseRepository.deleteById(courseId);
-	}
+	// @Override
+	// public void deleteCourse(String courseId) {
+	// // This is a hard delete. Alternatively, could also be implemented as setting
+	// // obsolete=true.
+	// if (!courseRepository.existsById(courseId)) {
+	// throw new CustomBusinessException("Course not found with id: " + courseId);
+	// }
+	// courseRepository.deleteById(courseId);
+	// }
 }

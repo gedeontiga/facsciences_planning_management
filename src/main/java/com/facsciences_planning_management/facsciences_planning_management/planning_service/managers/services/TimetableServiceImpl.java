@@ -4,23 +4,28 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.facsciences_planning_management.facsciences_planning_management.components.JwtsHelper;
+import com.facsciences_planning_management.facsciences_planning_management.entities.Teacher;
 import com.facsciences_planning_management.facsciences_planning_management.entities.repositories.AcademicYearRepository;
+import com.facsciences_planning_management.facsciences_planning_management.entities.repositories.DepartmentRepository;
+import com.facsciences_planning_management.facsciences_planning_management.entities.repositories.LevelRepository;
+import com.facsciences_planning_management.facsciences_planning_management.entities.repositories.TeacherRepository;
+import com.facsciences_planning_management.facsciences_planning_management.entities.types.RoleType;
 import com.facsciences_planning_management.facsciences_planning_management.exceptions.CustomBusinessException;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.AcademicYear;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Course;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.CourseScheduling;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.ExamScheduling;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Level;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Room;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Scheduling;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Timetable;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.CourseRepository;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.CourseSchedulingRepository;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.LevelRepository;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.RoomRepository;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.TimetableRepository;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.*;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.Semester;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.SessionType;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.TimeSlot;
@@ -30,6 +35,7 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces.TimetableService;
 
 import java.time.DayOfWeek;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -41,14 +47,18 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class TimetableServiceImpl implements TimetableService {
-	// ... (repository declarations)
+
+	private final ExamSchedulingRepository examSchedulingRepository;
 	private final AcademicYearRepository academicYearRepository;
 	private final TimetableRepository timetableRepository;
 	private final TimetableSolverService timetableSolverService;
 	private final CourseRepository courseRepository;
+	private final DepartmentRepository departmentRepository;
+	private final TeacherRepository teacherRepository;
 	private final RoomRepository roomRepository;
 	private final LevelRepository levelRepository;
 	private final CourseSchedulingRepository courseSchedulingRepository;
+	private final JwtsHelper jwtsHelper;
 
 	@Override
 	@Transactional
@@ -57,10 +67,18 @@ public class TimetableServiceImpl implements TimetableService {
 				.orElseThrow(() -> new CustomBusinessException("Level not found with id: " + levelId));
 
 		Long headCount = level.getHeadCount();
-		if (isExceededRoomCapacity(headCount)) {
-			throw new CustomBusinessException(
-					"Cannot generate timetable for Level '" + level.getCode() + "' due to room capacity limit.");
+		// if (isExceededRoomCapacity(headCount)) {
+		// throw new CustomBusinessException(
+		// "Cannot generate timetable for Level '" + level.getCode() + "' due to room
+		// capacity limit.");
 
+		// }
+
+		// 2. Get all available rooms.
+		List<Room> availableRooms = roomRepository
+				.findByCapacityIsGreaterThanEqualOrderByCapacityAsc(headCount);
+		if (availableRooms.isEmpty()) {
+			throw new IllegalStateException("No available rooms in the system for this head count:" + headCount);
 		}
 
 		// Prevent regeneration if a timetable already exists and is in use for this
@@ -74,23 +92,17 @@ public class TimetableServiceImpl implements TimetableService {
 		}
 
 		// 1. Get all active courses that MUST be scheduled for this level.
-		List<Course> coursesToSchedule = courseRepository.findByObsoleteFalseAndUeLevelIdAndUeLevelSemester(levelId,
+		List<Course> coursesToSchedule = courseRepository.findByObsoleteFalseAndLevelIdAndSemester(levelId,
 				semester);
 		if (coursesToSchedule.isEmpty()) {
 			throw new IllegalStateException("No active courses found for level " + level.getName() + " to schedule.");
 		}
 
-		// 2. Get all available rooms.
-		List<Room> availableRooms = roomRepository
-				.findByCapacityIsGreaterThanEqualOrderByCapacityAsc(headCount);
-		if (availableRooms.isEmpty()) {
-			throw new IllegalStateException("No available rooms in the system for scheduling.");
-		}
-
 		// 3. Get ALL existing, active course schedules from the ENTIRE system.
 		// This is the crucial step to handle resource conflicts across different
 		// levels.
-		List<CourseScheduling> existingSchedules = courseSchedulingRepository.findByTimetableUsedTrue();
+		List<CourseScheduling> existingSchedules = courseSchedulingRepository
+				.findByHeadCountIsGreaterThanEqualAndActiveIsTrue(headCount);
 
 		List<DayOfWeek> days = List.of(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY,
 				DayOfWeek.FRIDAY, DayOfWeek.SATURDAY);
@@ -107,6 +119,7 @@ public class TimetableServiceImpl implements TimetableService {
 				.academicYear(academicYear)
 				.semester(semester)
 				.level(level)
+				.branchId(level.getBranch().getId())
 				.name("Course Planning for " + level.getCode())
 				.description("Timetable for " + level.getName() + " | " + academicYear + " | " + semester.getLabel())
 				.sessionType(SessionType.COURSE)
@@ -146,6 +159,7 @@ public class TimetableServiceImpl implements TimetableService {
 				.academicYear(academicYear)
 				.semester(semester)
 				.level(level)
+				.branchId(level.getBranch().getId())
 				.name("Course Planning for " + level.getCode())
 				.description("Timetable for " + level.getName() + " __" + academicYear + "__" + semester.getLabel())
 				.sessionType(sessionType)
@@ -164,8 +178,9 @@ public class TimetableServiceImpl implements TimetableService {
 				.academicYear(academicYear)
 				.semester(semester)
 				.level(level)
+				.branchId(level.getBranch().getId())
 				.name("Exam Planning for " + level.getCode())
-				.description("Timetable for " + level.getName() + " __" + academicYear + "__" + semester.getLabel())
+				.description("Timetable for " + level.getName() + " __" + academicYear + "__ " + semester.getLabel())
 				.sessionType(sessionType)
 				.schedules(new HashSet<>())
 				.build())
@@ -180,20 +195,112 @@ public class TimetableServiceImpl implements TimetableService {
 	}
 
 	@Override
-	public Page<TimetableDTO> getTimetablesByBranch(String academicYear,
+	public Page<TimetableDTO> getTimetableForCurrentUser(Pageable page, SessionType sessionType) {
+		RoleType role = RoleType.valueOf(jwtsHelper.getRoleFromToken());
+		;
+
+		if (role == RoleType.STUDENT) {
+			return timetableRepository.findByLevelIdAndSessionTypeAndUsedTrue(jwtsHelper.getMetadataFromToken(),
+					sessionType, page)
+					.map(Timetable::toDTO);
+		} else if (role == RoleType.DEPARTMENT_HEAD) {
+			String branchId = departmentRepository.findById(jwtsHelper.getMetadataFromToken())
+					.orElseThrow(() -> new CustomBusinessException("Department not found for this id")).getBranch()
+					.getId();
+			return timetableRepository.findByBranchIdAndSessionTypeAndUsedTrue(branchId,
+					sessionType, page)
+					.map(Timetable::toDTO);
+		} else if (role == RoleType.TEACHER) {
+			Teacher teacher = teacherRepository.findByEmail(jwtsHelper.getEmailFromToken())
+					.orElseThrow(() -> new CustomBusinessException("Teacher not found for this id"));
+			String branchId = departmentRepository.findById(teacher.getDepartmentId())
+					.orElseThrow(() -> new CustomBusinessException("Department not found for this id")).getBranch()
+					.getId();
+			Page<Timetable> timetables = timetableRepository.findByBranchIdAndSessionTypeAndUsedTrue(branchId,
+					sessionType, page);
+
+			List<TimetableDTO> timetableDTOs = new ArrayList<>();
+
+			timetables.getContent().stream()
+					.filter(timetable1 -> timetable1.getSchedules().stream()
+							.anyMatch(scheduling -> isTeacherPresent(scheduling, teacher.getId())))
+					.forEach(timetable1 -> timetableDTOs.add(timetable1.toDTO()));
+
+			return new PageImpl<>(timetableDTOs, timetables.getPageable(), timetables.getTotalElements());
+		}
+		return timetableRepository.findBySessionTypeAndUsedTrue(sessionType, page)
+				.map(Timetable::toDTO);
+	}
+
+	@Override
+	public Page<TimetableDTO> getTimetableForCurrentUser(Pageable page, SessionType sessionType, Semester semester) {
+		RoleType role = RoleType.valueOf(jwtsHelper.getRoleFromToken());
+
+		if (role == RoleType.STUDENT) {
+			return timetableRepository
+					.findByLevelIdAndSemesterAndSessionTypeAndUsedTrue(jwtsHelper.getMetadataFromToken(),
+							semester,
+							sessionType, page)
+					.map(Timetable::toDTO);
+		} else if (role == RoleType.DEPARTMENT_HEAD) {
+			String branchId = departmentRepository.findById(jwtsHelper.getMetadataFromToken())
+					.orElseThrow(() -> new CustomBusinessException("Department not found for this id")).getBranch()
+					.getId();
+			return timetableRepository.findByBranchIdAndSemesterAndSessionTypeAndUsedTrue(branchId,
+					semester,
+					sessionType, page)
+					.map(Timetable::toDTO);
+		} else if (role == RoleType.TEACHER) {
+			Teacher teacher = teacherRepository.findByEmail(jwtsHelper.getEmailFromToken())
+					.orElseThrow(() -> new CustomBusinessException("Teacher not found for this id"));
+			String branchId = departmentRepository.findById(teacher.getDepartmentId())
+					.orElseThrow(() -> new CustomBusinessException("Department not found for this id")).getBranch()
+					.getId();
+			Page<Timetable> timetables = timetableRepository.findByBranchIdAndSemesterAndSessionTypeAndUsedTrue(
+					branchId,
+					semester,
+					sessionType, page);
+
+			List<TimetableDTO> timetableDTOs = new ArrayList<>();
+
+			timetables.getContent().stream()
+					.filter(timetable1 -> timetable1.getSchedules().stream()
+							.anyMatch(scheduling -> isTeacherPresent(scheduling, teacher.getId())))
+					.forEach(timetable1 -> timetableDTOs.add(timetable1.toDTO()));
+
+			return new PageImpl<>(timetableDTOs, timetables.getPageable(), timetables.getTotalElements());
+		}
+		return timetableRepository.findBySemesterAndSessionTypeAndUsedTrue(semester, sessionType, page)
+				.map(Timetable::toDTO);
+	}
+
+	private boolean isTeacherPresent(Scheduling scheduling, String teacherId) {
+		if (scheduling instanceof CourseScheduling) {
+			CourseScheduling courseScheduling = ((CourseScheduling) scheduling);
+			return courseScheduling.getAssignedCourse().getTeacher().getId().equals(teacherId);
+		} else if (scheduling instanceof ExamScheduling) {
+			ExamScheduling examScheduling = ((ExamScheduling) scheduling);
+			return examScheduling.getProctor().getId().equals(teacherId);
+		}
+		return false;
+	}
+
+	@Override
+	public Page<TimetableDTO> getTimetablesByBranch(String academicYear, Semester semester,
 			String branchId, SessionType sessionType, Pageable page) {
 		return timetableRepository
-				.findByAcademicYearAndSessionTypeAndUsedTrueAndLevelBranchId(academicYear,
+				.findByAcademicYearAndSemesterAndSessionTypeAndUsedTrueAndBranchId(academicYear,
+						semester,
 						sessionType, branchId, page)
 				.map(Timetable::toDTO);
 	}
 
 	@Override
-	public TimetableDTO getTimetableByLevelAndSemester(String academicYear, String levelId, String semester,
+	public TimetableDTO getTimetableByLevelAndSemester(String academicYear, String levelId, Semester semester,
 			SessionType sessionType) {
 		return timetableRepository
 				.findByAcademicYearAndSemesterAndLevelIdAndSessionTypeAndUsedTrue(
-						academicYear, Semester.valueOf(semester),
+						academicYear, semester,
 						levelId,
 						sessionType)
 				.map(Timetable::toDTO)
@@ -201,46 +308,61 @@ public class TimetableServiceImpl implements TimetableService {
 	}
 
 	@Override
+	public void deleteTimetable(String id) {
+		timetableRepository.findById(id)
+				.ifPresentOrElse(timetable -> {
+					timetable.setUsed(false);
+					timetable.getSchedules().forEach(scheduling -> {
+						scheduling.setActive(false);
+						if (scheduling instanceof CourseScheduling) {
+							CourseScheduling courseScheduling = ((CourseScheduling) scheduling);
+							Course course = courseScheduling.getAssignedCourse();
+							course.setObsolete(true);
+							courseRepository.save(course);
+							courseSchedulingRepository.save(courseScheduling);
+						} else if (scheduling instanceof ExamScheduling) {
+							examSchedulingRepository.save((ExamScheduling) scheduling);
+						}
+					});
+					timetableRepository.save(timetable);
+				}, () -> new CustomBusinessException("Timetable not found with id: " + id));
+	}
+
 	public List<String> getAllAcademicYears() {
 		return academicYearRepository.findAll().stream()
 				.map(AcademicYear::getLabel)
 				.collect(Collectors.toList());
 	}
 
-	@Override
 	public List<String> getSessionTypes() {
 		return Arrays.stream(SessionType.values()).map(Enum::name).collect(Collectors.toList());
 	}
 
-	@Override
 	public List<TimeSlotDTO> getExamTimeSlots() {
 		return Arrays.stream(TimeSlot.ExamTimeSlot.values()).map(TimeSlotDTO::fromTimeSlot)
 				.collect(Collectors.toList());
 	}
 
-	@Override
 	public List<TimeSlotDTO> getCoursesTimeSlots() {
 		return Arrays.stream(TimeSlot.CourseTimeSlot.values()).map(TimeSlotDTO::fromTimeSlot)
 				.collect(Collectors.toList());
 	}
 
-	@Override
 	public List<String> getSemestersForCourseTimetable() {
 		return List.of(Semester.SEMESTER_1.name(), Semester.SEMESTER_2.name());
 	}
 
-	@Override
 	public List<String> getSemestersForExamTimetable() {
 		return Arrays.stream(Semester.values()).map(Enum::name).collect(Collectors.toList());
 	}
 
-	private boolean isExceededRoomCapacity(Long headCount) {
-		if (headCount == null) {
-			return false;
-		}
-		Long roomCapacity = roomRepository.findTopByOrderByCapacityDesc()
-				.map(Room::getCapacity)
-				.orElse(0L);
-		return headCount > roomCapacity;
-	}
+	// private boolean isExceededRoomCapacity(Long headCount) {
+	// if (headCount == null) {
+	// return true;
+	// }
+	// Long roomCapacity = roomRepository.findTopByOrderByCapacityDesc()
+	// .map(Room::getCapacity)
+	// .orElse(0L);
+	// return headCount > roomCapacity;
+	// }
 }

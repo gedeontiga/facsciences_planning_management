@@ -19,19 +19,19 @@ public interface TimetableService {
 
 	TimetableDTO getTimetableById(String id);
 
-	Page<TimetableDTO> getTimetablesByBranch(String academicYear,
+	Page<TimetableDTO> getTimetablesByBranch(String academicYear, Semester semester,
 			String branchId, SessionType sessionType, Pageable page);
 
 	String createAcademicYear(String label);
 
-	// List<TimetableDTO> getTimetablesByBranchAndSemester(Year
-	// academicYear, String branchId,
-	// String semester);
-
 	TimetableDTO generateTimetableForLevel(String academicYear, Semester semester, String levelId);
 
-	TimetableDTO getTimetableByLevelAndSemester(String academicYear, String levelId, String semester,
+	TimetableDTO getTimetableByLevelAndSemester(String academicYear, String levelId, Semester semester,
 			SessionType sessionType);
+
+	Page<TimetableDTO> getTimetableForCurrentUser(Pageable page, SessionType sessionType);
+
+	Page<TimetableDTO> getTimetableForCurrentUser(Pageable page, SessionType sessionType, Semester semester);
 
 	List<String> getAllAcademicYears();
 
@@ -44,4 +44,6 @@ public interface TimetableService {
 	List<String> getSemestersForCourseTimetable();
 
 	List<String> getSemestersForExamTimetable();
+
+	void deleteTimetable(String id);
 }

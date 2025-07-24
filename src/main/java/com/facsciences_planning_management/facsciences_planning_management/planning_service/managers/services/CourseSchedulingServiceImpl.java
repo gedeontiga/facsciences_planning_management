@@ -23,6 +23,7 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces.SchedulingService;
 
 import java.time.DayOfWeek;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -71,6 +72,9 @@ public class CourseSchedulingServiceImpl implements SchedulingService<CourseSche
 		CourseScheduling scheduling = CourseScheduling.builder()
 				.timetable(timetable)
 				.room(room)
+				.levelId(assignedCourse.getLevelId())
+				.branchId(assignedCourse.getBranchId())
+				.teacherId(assignedCourse.getTeacher().getId())
 				.timeSlot(TimeSlot.CourseTimeSlot.valueOf(request.timeSlotLabel()))
 				.day(DayOfWeek.valueOf(request.day()))
 				.assignedCourse(assignedCourse)
@@ -147,6 +151,10 @@ public class CourseSchedulingServiceImpl implements SchedulingService<CourseSche
 		CourseScheduling scheduling = schedulingRepository.findById(id)
 				.orElseThrow(() -> new CustomBusinessException("Scheduling not found: " + id));
 
+		if (scheduling.getCreatedAt().plusDays(7).isBefore(LocalDateTime.now())) {
+			throw new CustomBusinessException("Scheduling cannot be deleted after 7 days.");
+		}
+
 		CourseSchedulingDTO deletedDTO = scheduling.toDTO();
 		timetableRepository.findById(deletedDTO.timetableId())
 				.ifPresent(timetable -> {
@@ -175,16 +183,18 @@ public class CourseSchedulingServiceImpl implements SchedulingService<CourseSche
 				.collect(Collectors.toList());
 	}
 
-	public CourseScheduling toEntity(CourseSchedulingDTO dto) {
-		return CourseScheduling.builder()
-				.id(dto.id())
-				.room(roomRepository.findById(dto.roomId())
-						.orElseThrow(() -> new CustomBusinessException("Room not found: " + dto.roomId())))
-				.timeSlot(TimeSlot.CourseTimeSlot.valueOf(dto.timeSlotLabel()))
-				.day(DayOfWeek.valueOf(dto.day()))
-				.assignedCourse(courseRepository.findById(dto.ueId())
-						.orElseThrow(() -> new CustomBusinessException("Course not found: " + dto.ueId())))
-				.headCount(dto.headCount())
-				.build();
-	}
+	// public CourseScheduling toEntity(CourseSchedulingDTO dto) {
+	// return CourseScheduling.builder()
+	// .id(dto.id())
+	// .room(roomRepository.findById(dto.roomId())
+	// .orElseThrow(() -> new CustomBusinessException("Room not found: " +
+	// dto.roomId())))
+	// .timeSlot(TimeSlot.CourseTimeSlot.valueOf(dto.timeSlotLabel()))
+	// .day(DayOfWeek.valueOf(dto.day()))
+	// .assignedCourse(courseRepository.findById(dto.ueId())
+	// .orElseThrow(() -> new CustomBusinessException("Course not found: " +
+	// dto.ueId())))
+	// .headCount(dto.headCount())
+	// .build();
+	// }
 }

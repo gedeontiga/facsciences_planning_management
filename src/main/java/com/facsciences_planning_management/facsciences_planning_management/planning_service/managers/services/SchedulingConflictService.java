@@ -67,7 +67,7 @@ public class SchedulingConflictService {
         ExamTimeSlot examTimeSlot = ExamTimeSlot.fromTimeSlot(startTime, endTime);
         boolean isOccupied = false;
         if (courseTimeSlot != null) {
-            isOccupied = courseSchedulingRepository.existsByAssignedCourseTeacherIdAndDayAndTimeSlot(user.getId(),
+            isOccupied = courseSchedulingRepository.existsByTeacherIdAndDayAndTimeSlot(user.getId(),
                     DayOfWeek.valueOf(date),
                     courseTimeSlot);
         } else if (examTimeSlot != null) {

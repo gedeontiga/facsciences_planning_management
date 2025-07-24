@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -76,6 +77,8 @@ public class ExamSchedulingServiceImpl implements SchedulingService<ExamScheduli
 		ExamScheduling scheduling = ExamScheduling.builder()
 				.timetable(timetable)
 				.room(room)
+				.levelId(ue.getLevel().getId())
+				.branchId(ue.getLevel().getBranch().getId())
 				.timeSlot(TimeSlot.ExamTimeSlot.valueOf(request.timeSlotLabel()))
 				.sessionDate(LocalDate.parse(request.date()))
 				.ue(ue)
@@ -155,6 +158,10 @@ public class ExamSchedulingServiceImpl implements SchedulingService<ExamScheduli
 		ExamScheduling scheduling = schedulingRepository.findById(id)
 				.orElseThrow(() -> new CustomBusinessException("Scheduling not found: " + id));
 
+		if (scheduling.getCreatedAt().plusDays(7).isBefore(LocalDateTime.now())) {
+			throw new CustomBusinessException("Scheduling cannot be deleted after 7 days.");
+		}
+
 		ExamSchedulingDTO deletedDTO = scheduling.toDTO();
 
 		timetableRepository.findById(deletedDTO.timetableId())
@@ -176,18 +183,21 @@ public class ExamSchedulingServiceImpl implements SchedulingService<ExamScheduli
 				.collect(Collectors.toList());
 	}
 
-	public ExamScheduling toEntity(ExamSchedulingDTO dto) {
-		return ExamScheduling.builder()
-				.id(dto.id())
-				.room(roomRepository.findById(dto.roomId())
-						.orElseThrow(() -> new CustomBusinessException("Room not found: " + dto.roomId())))
-				.timeSlot(TimeSlot.ExamTimeSlot.valueOf(dto.timeSlotLabel()))
-				.sessionDate(LocalDate.parse(dto.date()))
-				.ue(ueRepository.findById(dto.ueId())
-						.orElseThrow(() -> new CustomBusinessException("Course not found: " + dto.ueId())))
-				.headCount(dto.headCount())
-				.proctor(userRepository.findById(dto.userId())
-						.orElseThrow(() -> new CustomBusinessException("Proctor not found: " + dto.userId())))
-				.build();
-	}
+	// public ExamScheduling toEntity(ExamSchedulingDTO dto) {
+	// return ExamScheduling.builder()
+	// .id(dto.id())
+	// .room(roomRepository.findById(dto.roomId())
+	// .orElseThrow(() -> new CustomBusinessException("Room not found: " +
+	// dto.roomId())))
+	// .timeSlot(TimeSlot.ExamTimeSlot.valueOf(dto.timeSlotLabel()))
+	// .sessionDate(LocalDate.parse(dto.date()))
+	// .ue(ueRepository.findById(dto.ueId())
+	// .orElseThrow(() -> new CustomBusinessException("Course not found: " +
+	// dto.ueId())))
+	// .headCount(dto.headCount())
+	// .proctor(userRepository.findById(dto.userId())
+	// .orElseThrow(() -> new CustomBusinessException("Proctor not found: " +
+	// dto.userId())))
+	// .build();
+	// }
 }

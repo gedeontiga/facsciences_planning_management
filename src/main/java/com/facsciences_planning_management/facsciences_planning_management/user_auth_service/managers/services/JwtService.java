@@ -12,8 +12,13 @@ import org.springframework.cglib.core.internal.Function;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import com.facsciences_planning_management.facsciences_planning_management.entities.Student;
+import com.facsciences_planning_management.facsciences_planning_management.entities.Teacher;
 import com.facsciences_planning_management.facsciences_planning_management.entities.Users;
+import com.facsciences_planning_management.facsciences_planning_management.entities.repositories.StudentRepository;
+import com.facsciences_planning_management.facsciences_planning_management.entities.repositories.TeacherRepository;
 import com.facsciences_planning_management.facsciences_planning_management.entities.repositories.UserRepository;
+import com.facsciences_planning_management.facsciences_planning_management.entities.types.RoleType;
 import com.facsciences_planning_management.facsciences_planning_management.exceptions.CustomBusinessException;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.entities.Jwt;
 import com.facsciences_planning_management.facsciences_planning_management.user_auth_service.entities.repositories.JwtRepository;
@@ -37,6 +42,8 @@ public class JwtService {
     private long tokenValidityHours;
 
     private final UserRepository userRepository;
+    private final TeacherRepository teacherRepository;
+    private final StudentRepository studentRepository;
     private final JwtRepository jwtRepository;
 
     private SecretKey getSigningKey() {
@@ -44,34 +51,44 @@ public class JwtService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public LoginResponse generate(final String email) {
+    public LoginResponse generate(final String email, final RoleType role) {
+        if (role.equals(RoleType.STUDENT)) {
+            final Student student = studentRepository.findByEmailAndEnabledIsTrue(email)
+                    .orElseThrow(() -> new CustomBusinessException("User not found"));
+            invalidateUserTokens(student.getId());
+            return this.generateJwt(student, student.getLevelId());
+        } else if (role.equals(RoleType.TEACHER) || role.equals(RoleType.DEPARTMENT_HEAD)) {
+            final Teacher teacher = teacherRepository.findByEmailAndEnabledIsTrue(email)
+                    .orElseThrow(() -> new CustomBusinessException("User not found"));
+            invalidateUserTokens(teacher.getId());
+            return this.generateJwt(teacher, teacher.getDepartmentId());
+        }
         final Users user = userRepository.findByEmailAndEnabledIsTrue(email)
                 .orElseThrow(() -> new CustomBusinessException("User not found"));
-
         invalidateUserTokens(user.getId());
 
-        return this.generateJwt(user);
+        return this.generateJwt(user, user.getId());
     }
 
-    public LoginResponse refreshToken(final String token) {
+    // public LoginResponse refreshToken(final String token) {
 
-        if (!isValidTokenFormat(token)) {
-            throw new JwtException("Invalid token format");
-        }
+    // if (!isValidTokenFormat(token)) {
+    // throw new JwtException("Invalid token format");
+    // }
 
-        final String email = getEmailFromToken(token);
-        final Users user = userRepository.findByEmailAndEnabledIsTrue(email)
-                .orElseThrow(() -> new CustomBusinessException("User not found"));
+    // final String email = getEmailFromToken(token);
+    // final Users user = userRepository.findByEmailAndEnabledIsTrue(email)
+    // .orElseThrow(() -> new CustomBusinessException("User not found"));
 
-        Jwt currentJwt = getJwtByToken(token);
-        if (currentJwt.getExpiredAt().isBefore(Instant.now())) {
-            throw new JwtException("Cannot refresh expired token");
-        }
+    // Jwt currentJwt = getJwtByToken(token);
+    // if (currentJwt.getExpiredAt().isBefore(Instant.now())) {
+    // throw new JwtException("Cannot refresh expired token");
+    // }
 
-        jwtRepository.delete(currentJwt);
+    // jwtRepository.delete(currentJwt);
 
-        return this.generateJwt(user);
-    }
+    // return this.generateJwt(user, );
+    // }
 
     public String getEmailFromToken(final String token) {
         return getClaim(token, Claims::getId);
@@ -193,7 +210,7 @@ public class JwtService {
         }
     }
 
-    private LoginResponse generateJwt(final Users user) {
+    private LoginResponse generateJwt(Users user, String metadata) {
         final Instant now = Instant.now();
         final Instant expirationInstant = now.plusSeconds(tokenValidityHours * 3600);
 
@@ -209,7 +226,7 @@ public class JwtService {
                 .expiration(expirationDate)
                 .id(user.getEmail())
                 .subject(user.getRole().getType().toString())
-                .add("userId", user.getId())
+                .add("metadata", metadata)
                 .and()
                 .signWith(getSigningKey())
                 .compact();

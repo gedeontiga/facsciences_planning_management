@@ -6,7 +6,6 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -92,10 +91,10 @@ public class CourseController {
         return ResponseEntity.ok(course);
     }
 
-    @DeleteMapping("/{courseId}")
-    @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<Void> deleteCourse(@PathVariable String courseId) {
-        courseService.deleteCourse(courseId);
-        return ResponseEntity.noContent().build();
-    }
+    // @DeleteMapping("/{courseId}")
+    // @PreAuthorize("hasAuthority('ADMIN')")
+    // public ResponseEntity<Void> deleteCourse(@PathVariable String courseId) {
+    // courseService.deleteCourse(courseId);
+    // return ResponseEntity.noContent().build();
+    // }
 }

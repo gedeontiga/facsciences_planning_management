@@ -14,7 +14,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.facsciences_planning_management.facsciences_planning_management.entities.Student;
 import com.facsciences_planning_management.facsciences_planning_management.entities.Users;
+import com.facsciences_planning_management.facsciences_planning_management.entities.repositories.LevelRepository;
 import com.facsciences_planning_management.facsciences_planning_management.entities.repositories.UserRepository;
 import com.facsciences_planning_management.facsciences_planning_management.entities.types.RoleType;
 import com.facsciences_planning_management.facsciences_planning_management.exceptions.CustomBusinessException;
@@ -40,6 +42,7 @@ public class AuthService {
     private final ValidationRepository validationRepository;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final LevelRepository levelRepository;
     private final PasswordEncoder passwordEncoder;
     private final MailNotificationService notificationService;
 
@@ -48,8 +51,8 @@ public class AuthService {
     }
 
     public void register(UserRequest request) {
-        validateEmailUniqueness(request.email());
-        Users user = Users.builder()
+        validateRequest(request.email(), request.levelId());
+        Student user = Student.builder()
                 .email(request.email())
                 .firstName(request.firstName())
                 .lastName(request.lastName())
@@ -57,6 +60,7 @@ public class AuthService {
                 .phoneNumber(request.phoneNumber())
                 .password(passwordEncoder.encode(request.password()))
                 .role(getRoleByType(RoleType.STUDENT))
+                .levelId(request.levelId())
                 .enabled(false)
                 .build();
 
@@ -75,8 +79,10 @@ public class AuthService {
         }
 
         Users user = activation.getUser();
-        user.setEnabled(true);
-        userRepository.save(user);
+        userRepository.findByEmail(user.getEmail()).ifPresent(updatedUser -> {
+            updatedUser.setEnabled(true);
+            userRepository.save(updatedUser);
+        });
         validationRepository.delete(activation);
     }
 
@@ -86,10 +92,9 @@ public class AuthService {
                     new UsernamePasswordAuthenticationToken(request.email(), request.password()));
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            log.debug("Authentication successful for user: {}", authentication.getCredentials());
-
             if (authentication.isAuthenticated()) {
-                return jwtService.generate(request.email());
+                Users user = (Users) authentication.getPrincipal();
+                return jwtService.generate(request.email(), user.getRole().getType());
             }
             throw new BadCredentialsException("Invalid login credentials");
         } catch (BadCredentialsException e) {
@@ -120,8 +125,10 @@ public class AuthService {
                 .orElseThrow(() -> new CustomBusinessException("Invalid or expired reset token"));
 
         Users user = resetValidation.getUser();
-        user.setPassword(passwordEncoder.encode(request.newPassword()));
-        userRepository.save(user);
+        userRepository.findByEmail(user.getEmail()).ifPresent(updatedUser -> {
+            updatedUser.setPassword(passwordEncoder.encode(request.newPassword()));
+            userRepository.save(updatedUser);
+        });
         validationRepository.delete(resetValidation);
     }
 
@@ -147,9 +154,13 @@ public class AuthService {
                 .orElseThrow(() -> new CustomBusinessException("Role not found: " + roleType));
     }
 
-    private void validateEmailUniqueness(String email) {
+    private void validateRequest(String email, String levelId) {
         if (isEmailAlreadyExists(email)) {
             throw new CustomBusinessException("Email already registered");
+        }
+
+        if (!levelRepository.existsById(levelId)) {
+            throw new CustomBusinessException("Level not found");
         }
     }
 }

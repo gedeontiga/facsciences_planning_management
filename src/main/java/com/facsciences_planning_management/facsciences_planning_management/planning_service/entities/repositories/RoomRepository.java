@@ -25,7 +25,10 @@ public interface RoomRepository extends MongoRepository<Room, String> {
 
     Optional<Room> findByCode(String code);
 
-    Optional<Room> findTopByOrderByCapacityDesc();
+    // List<Room> findByCapacityIsGreaterThanEqualAndAvailabilityIsTrue(Long
+    // headCount);
+
+    // Optional<Room> findTopByOrderByCapacityDesc();
 
     List<Room> findByType(RoomType type);
 

@@ -7,10 +7,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import com.facsciences_planning_management.facsciences_planning_management.entities.repositories.LevelRepository;
 import com.facsciences_planning_management.facsciences_planning_management.exceptions.CustomBusinessException;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Level;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.Ue;
-import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.LevelRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.repositories.UeRepository;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.UeDTO;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.services.interfaces.UeService;

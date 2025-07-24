@@ -13,7 +13,7 @@ import com.facsciences_planning_management.facsciences_planning_management.plann
 
 @Repository
 public interface CourseRepository extends
-        MongoRepository<Course, String>, CourseRepositoryCustom {
+        MongoRepository<Course, String> {
 
     Page<Course> findAllByObsoleteFalse(Pageable page);
 
@@ -26,10 +26,12 @@ public interface CourseRepository extends
     boolean existsByUeId(String ueId);
 
     boolean existsByUeIdAndTeacherId(String ueId, String teacherId);
+
+    Page<Course> findByObsoleteFalseAndLevelId(String levelId, Pageable page);
+
+    List<Course> findByObsoleteFalseAndLevelIdAndSemester(String levelId, Semester semester);
 }
 
-interface CourseRepositoryCustom {
-    Page<Course> findByObsoleteFalseAndUeLevelId(String levelId, Pageable page);
+// interface CourseRepositoryCustom {
 
-    List<Course> findByObsoleteFalseAndUeLevelIdAndUeLevelSemester(String levelId, Semester semester);
-}
+// }

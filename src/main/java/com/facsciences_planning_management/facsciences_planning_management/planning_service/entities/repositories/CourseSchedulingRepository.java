@@ -10,10 +10,10 @@ import java.util.List;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.TimeSlot.CourseTimeSlot;
 
 @Repository
-public interface CourseSchedulingRepository extends SchedulingRepository<CourseScheduling, String>,
-		CourseSchedulingRepositoryCustom {
+public interface CourseSchedulingRepository extends SchedulingRepository<CourseScheduling, String> {
 
-	List<CourseScheduling> findByTimetableUsedTrueAndTimeSlot(CourseTimeSlot timeSlot);
+	// List<CourseScheduling> findByTimetableUsedTrueAndTimeSlot(CourseTimeSlot
+	// timeSlot);
 
 	boolean existsByRoomIdAndDayAndTimeSlot(String roomId, DayOfWeek day, CourseTimeSlot timeSlot);
 
@@ -28,23 +28,25 @@ public interface CourseSchedulingRepository extends SchedulingRepository<CourseS
 
 	boolean existsByAssignedCourseIdAndDay(String courseId, DayOfWeek day);
 
-}
-
-interface CourseSchedulingRepositoryCustom {
-	boolean existsByAssignedCourseTeacherIdAndDayAndTimeSlot(String userId, DayOfWeek day,
+	boolean existsByTeacherIdAndDayAndTimeSlot(String userId, DayOfWeek day,
 			CourseTimeSlot courseTimeSlot);
 
-	List<CourseScheduling> findByTimetableUsedTrue();
+	List<CourseScheduling> findByHeadCountIsGreaterThanEqualAndActiveIsTrue(Long headCount);
 
-	Page<CourseScheduling> findByAssignedCourseObsoleteFalseAndAssignedCourseUeLevelBranchId(
+	// List<CourseScheduling> findByActiveIsTrue();
+
+	Page<CourseScheduling> findByActiveIsTrueAndBranchId(
 			String branchId, Pageable page);
 
-	List<CourseScheduling> findByAssignedCourseObsoleteFalseAndAssignedCourseUeLevelIdAndDayAndTimeSlot(
+	List<CourseScheduling> findByActiveIsTrueAndLevelIdAndDayAndTimeSlot(
 			String levelId, DayOfWeek day, CourseTimeSlot timeSlot);
 
-	List<CourseScheduling> findByAssignedCourseObsoleteFalseAndAssignedCourseUeLevelIdAndDay(
+	List<CourseScheduling> findByActiveIsTrueAndLevelIdAndDay(
 			String levelId, DayOfWeek day);
 
-	List<CourseScheduling> findByAssignedCourseObsoleteFalseAndAssignedCourseUeLevelIdAndTimeSlot(
+	List<CourseScheduling> findByActiveIsTrueAndLevelIdAndTimeSlot(
 			String levelId, CourseTimeSlot timeSlot);
 }
+
+// interface CourseSchedulingRepositoryCustom {
+// }

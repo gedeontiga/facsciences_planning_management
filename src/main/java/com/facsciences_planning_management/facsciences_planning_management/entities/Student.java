@@ -11,6 +11,6 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Teacher extends Users {
-    private String departmentId;
+public class Student extends Users {
+    private String levelId;
 }

@@ -11,6 +11,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
 
 import com.facsciences_planning_management.facsciences_planning_management.entities.Teacher;
+import com.facsciences_planning_management.facsciences_planning_management.planning_service.entities.types.Semester;
 import com.facsciences_planning_management.facsciences_planning_management.planning_service.managers.dtos.CourseDTO;
 
 import lombok.AllArgsConstructor;
@@ -26,10 +27,8 @@ import lombok.NoArgsConstructor;
 public class Course {
     @Id
     private String id;
-    @Indexed
     @DocumentReference(collection = "ues")
     private Ue ue;
-    @Indexed
     @DocumentReference(collection = "users")
     private Teacher teacher;
     @Indexed
@@ -40,6 +39,11 @@ public class Course {
     private LocalDateTime createdAt;
     @LastModifiedDate
     private LocalDateTime updatedAt;
+    @Indexed
+    private String levelId;
+    private String branchId;
+    @Indexed
+    private Semester semester;
 
     public CourseDTO toDTO() {
         return CourseDTO.fromCourse(this);
