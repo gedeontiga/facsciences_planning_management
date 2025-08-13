@@ -183,7 +183,7 @@ public class MailNotificationService {
                 "<div style='max-width: 600px; margin: 0 auto; padding: 30px; background-color: white; border: 1px solid #eee; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);'>"
                 +
                 "<div style='text-align: center; margin-bottom: 30px;'>" +
-                "<h1 style='color: #4CAF50; margin: 0; font-size: 24px;'>Faculté des Sciences UY1</h1>" +
+                "<h1 style='color: #9444ff; margin: 0; font-size: 24px;'>Faculté des Sciences UY1</h1>" +
                 "<h2 style='color: #333; margin: 10px 0 0 0; font-size: 20px;'>Activation de votre compte</h2>" +
                 "</div>" +
                 "<p style='margin-bottom: 20px;'>Merci de vous être inscrit sur la plateforme de gestion de planning de la Faculté des Sciences.</p>"
@@ -192,7 +192,7 @@ public class MailNotificationService {
                 +
                 "<div style='text-align: center; margin: 30px 0;'>" +
                 "<a href='" + activationLink
-                + "' style='display: inline-block; background-color: #4CAF50; color: white; " +
+                + "' style='display: inline-block; background-color: #9444ff; color: white; " +
                 "padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px;'>Activer mon compte</a>"
                 +
                 "</div>" +
@@ -204,7 +204,7 @@ public class MailNotificationService {
                 "<hr style='border: none; border-top: 1px solid #eee; margin: 30px 0;'>" +
                 "<p style='font-size: 12px; color: #666; margin-top: 20px; text-align: center;'>" +
                 "Si vous n'arrivez pas à cliquer sur le bouton, copiez et collez ce lien dans votre navigateur :<br>" +
-                "<a href='" + activationLink + "' style='color: #4CAF50; word-break: break-all;'>" + activationLink
+                "<a href='" + activationLink + "' style='color: #9444ff; word-break: break-all;'>" + activationLink
                 + "</a>" +
                 "</p>" +
                 "<p style='font-size: 11px; color: #888; margin-top: 20px; text-align: center;'>" +
@@ -229,7 +229,7 @@ public class MailNotificationService {
                 "<div style='max-width: 600px; margin: 0 auto; padding: 30px; background-color: white; border: 1px solid #eee; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);'>"
                 +
                 "<div style='text-align: center; margin-bottom: 30px;'>" +
-                "<h1 style='color: #ff6b6b; margin: 0; font-size: 24px;'>Faculté des Sciences UY1</h1>" +
+                "<h1 style='color: #9444ff; margin: 0; font-size: 24px;'>Faculté des Sciences UY1</h1>" +
                 "<h2 style='color: #333; margin: 10px 0 0 0; font-size: 20px;'>Réinitialisation de mot de passe</h2>" +
                 "</div>" +
                 "<p style='margin-bottom: 20px;'>Vous avez demandé la réinitialisation de votre mot de passe pour votre compte sur la plateforme de gestion de planning.</p>"
@@ -237,7 +237,7 @@ public class MailNotificationService {
                 "<p style='margin-bottom: 25px;'>Cliquez sur le bouton ci-dessous pour procéder à la réinitialisation :</p>"
                 +
                 "<div style='text-align: center; margin: 30px 0;'>" +
-                "<a href='" + resetLink + "' style='display: inline-block; background-color: #ff6b6b; color: white; " +
+                "<a href='" + resetLink + "' style='display: inline-block; background-color: #9444ff; color: white; " +
                 "padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px;'>Réinitialiser mon mot de passe</a>"
                 +
                 "</div>" +
@@ -254,7 +254,7 @@ public class MailNotificationService {
                 "<hr style='border: none; border-top: 1px solid #eee; margin: 30px 0;'>" +
                 "<p style='font-size: 12px; color: #666; margin-top: 20px; text-align: center;'>" +
                 "Si vous n'arrivez pas à cliquer sur le bouton, copiez et collez ce lien dans votre navigateur :<br>" +
-                "<a href='" + resetLink + "' style='color: #ff6b6b; word-break: break-all;'>" + resetLink + "</a>" +
+                "<a href='" + resetLink + "' style='color: #9444ff; word-break: break-all;'>" + resetLink + "</a>" +
                 "</p>" +
                 "<p style='font-size: 11px; color: #888; margin-top: 20px; text-align: center;'>" +
                 "Cet email a été envoyé automatiquement par le système de gestion de planning de la Faculté des Sciences UY1."

@@ -95,7 +95,7 @@ public class TimetableServiceImpl implements TimetableService {
 		List<Course> coursesToSchedule = courseRepository.findByObsoleteFalseAndLevelIdAndSemester(levelId,
 				semester);
 		if (coursesToSchedule.isEmpty()) {
-			throw new IllegalStateException("No active courses found for level " + level.getName() + " to schedule.");
+			throw new CustomBusinessException("No active courses found for level " + level.getName() + " to schedule.");
 		}
 
 		// 3. Get ALL existing, active course schedules from the ENTIRE system.
@@ -197,81 +197,93 @@ public class TimetableServiceImpl implements TimetableService {
 	@Override
 	public Page<TimetableDTO> getTimetableForCurrentUser(Pageable page, SessionType sessionType) {
 		RoleType role = RoleType.valueOf(jwtsHelper.getRoleFromToken());
-		;
 
-		if (role == RoleType.STUDENT) {
-			return timetableRepository.findByLevelIdAndSessionTypeAndUsedTrue(jwtsHelper.getMetadataFromToken(),
-					sessionType, page)
-					.map(Timetable::toDTO);
-		} else if (role == RoleType.DEPARTMENT_HEAD) {
-			String branchId = departmentRepository.findById(jwtsHelper.getMetadataFromToken())
-					.orElseThrow(() -> new CustomBusinessException("Department not found for this id")).getBranch()
-					.getId();
-			return timetableRepository.findByBranchIdAndSessionTypeAndUsedTrue(branchId,
-					sessionType, page)
-					.map(Timetable::toDTO);
-		} else if (role == RoleType.TEACHER) {
-			Teacher teacher = teacherRepository.findByEmail(jwtsHelper.getEmailFromToken())
-					.orElseThrow(() -> new CustomBusinessException("Teacher not found for this id"));
-			String branchId = departmentRepository.findById(teacher.getDepartmentId())
-					.orElseThrow(() -> new CustomBusinessException("Department not found for this id")).getBranch()
-					.getId();
-			Page<Timetable> timetables = timetableRepository.findByBranchIdAndSessionTypeAndUsedTrue(branchId,
-					sessionType, page);
+		switch (role) {
+			case STUDENT -> {
+				return timetableRepository.findByLevelIdAndSessionTypeAndUsedTrue(jwtsHelper.getMetadataFromToken(),
+						sessionType, page)
+						.map(Timetable::toDTO);
+			}
+			case DEPARTMENT_HEAD -> {
+				String branchId = departmentRepository.findById(jwtsHelper.getMetadataFromToken())
+						.orElseThrow(() -> new CustomBusinessException("Department not found for this id")).getBranch()
+						.getId();
+				return timetableRepository.findByBranchIdAndSessionTypeAndUsedTrue(branchId,
+						sessionType, page)
+						.map(Timetable::toDTO);
+			}
+			case TEACHER -> {
+				Teacher teacher = teacherRepository.findByEmail(jwtsHelper.getEmailFromToken())
+						.orElseThrow(() -> new CustomBusinessException("Teacher not found for this id"));
+				String branchId = departmentRepository.findById(teacher.getDepartmentId())
+						.orElseThrow(() -> new CustomBusinessException("Department not found for this id")).getBranch()
+						.getId();
+				Page<Timetable> timetables = timetableRepository.findByBranchIdAndSessionTypeAndUsedTrue(branchId,
+						sessionType, page);
 
-			List<TimetableDTO> timetableDTOs = new ArrayList<>();
+				List<TimetableDTO> timetableDTOs = new ArrayList<>();
 
-			timetables.getContent().stream()
-					.filter(timetable1 -> timetable1.getSchedules().stream()
-							.anyMatch(scheduling -> isTeacherPresent(scheduling, teacher.getId())))
-					.forEach(timetable1 -> timetableDTOs.add(timetable1.toDTO()));
+				timetables.getContent().stream()
+						.filter(timetable1 -> timetable1.getSchedules().stream()
+								.anyMatch(scheduling -> isTeacherPresent(scheduling, teacher.getId())))
+						.forEach(timetable1 -> timetableDTOs.add(timetable1.toDTO()));
 
-			return new PageImpl<>(timetableDTOs, timetables.getPageable(), timetables.getTotalElements());
+				return new PageImpl<>(timetableDTOs, timetables.getPageable(), timetables.getTotalElements());
+			}
+
+			default -> {
+				return timetableRepository.findBySessionTypeAndUsedTrue(sessionType, page)
+						.map(Timetable::toDTO);
+			}
 		}
-		return timetableRepository.findBySessionTypeAndUsedTrue(sessionType, page)
-				.map(Timetable::toDTO);
 	}
 
 	@Override
 	public Page<TimetableDTO> getTimetableForCurrentUser(Pageable page, SessionType sessionType, Semester semester) {
 		RoleType role = RoleType.valueOf(jwtsHelper.getRoleFromToken());
 
-		if (role == RoleType.STUDENT) {
-			return timetableRepository
-					.findByLevelIdAndSemesterAndSessionTypeAndUsedTrue(jwtsHelper.getMetadataFromToken(),
-							semester,
-							sessionType, page)
-					.map(Timetable::toDTO);
-		} else if (role == RoleType.DEPARTMENT_HEAD) {
-			String branchId = departmentRepository.findById(jwtsHelper.getMetadataFromToken())
-					.orElseThrow(() -> new CustomBusinessException("Department not found for this id")).getBranch()
-					.getId();
-			return timetableRepository.findByBranchIdAndSemesterAndSessionTypeAndUsedTrue(branchId,
-					semester,
-					sessionType, page)
-					.map(Timetable::toDTO);
-		} else if (role == RoleType.TEACHER) {
-			Teacher teacher = teacherRepository.findByEmail(jwtsHelper.getEmailFromToken())
-					.orElseThrow(() -> new CustomBusinessException("Teacher not found for this id"));
-			String branchId = departmentRepository.findById(teacher.getDepartmentId())
-					.orElseThrow(() -> new CustomBusinessException("Department not found for this id")).getBranch()
-					.getId();
-			Page<Timetable> timetables = timetableRepository.findByBranchIdAndSemesterAndSessionTypeAndUsedTrue(
-					branchId,
-					semester,
-					sessionType, page);
+		switch (role) {
+			case STUDENT -> {
+				return timetableRepository
+						.findByLevelIdAndSemesterAndSessionTypeAndUsedTrue(jwtsHelper.getMetadataFromToken(),
+								semester,
+								sessionType, page)
+						.map(Timetable::toDTO);
+			}
+			case DEPARTMENT_HEAD -> {
+				String branchId = departmentRepository.findById(jwtsHelper.getMetadataFromToken())
+						.orElseThrow(() -> new CustomBusinessException("Department not found for this id")).getBranch()
+						.getId();
+				return timetableRepository.findByBranchIdAndSemesterAndSessionTypeAndUsedTrue(branchId,
+						semester,
+						sessionType, page)
+						.map(Timetable::toDTO);
+			}
+			case TEACHER -> {
+				Teacher teacher = teacherRepository.findByEmail(jwtsHelper.getEmailFromToken())
+						.orElseThrow(() -> new CustomBusinessException("Teacher not found for this id"));
+				String branchId = departmentRepository.findById(teacher.getDepartmentId())
+						.orElseThrow(() -> new CustomBusinessException("Department not found for this id")).getBranch()
+						.getId();
+				Page<Timetable> timetables = timetableRepository.findByBranchIdAndSemesterAndSessionTypeAndUsedTrue(
+						branchId,
+						semester,
+						sessionType, page);
 
-			List<TimetableDTO> timetableDTOs = new ArrayList<>();
+				List<TimetableDTO> timetableDTOs = new ArrayList<>();
 
-			timetables.getContent().stream()
-					.filter(timetable1 -> timetable1.getSchedules().stream()
-							.anyMatch(scheduling -> isTeacherPresent(scheduling, teacher.getId())))
-					.forEach(timetable1 -> timetableDTOs.add(timetable1.toDTO()));
+				timetables.getContent().stream()
+						.filter(timetable1 -> timetable1.getSchedules().stream()
+								.anyMatch(scheduling -> isTeacherPresent(scheduling, teacher.getId())))
+						.forEach(timetable1 -> timetableDTOs.add(timetable1.toDTO()));
 
-			return new PageImpl<>(timetableDTOs, timetables.getPageable(), timetables.getTotalElements());
+				return new PageImpl<>(timetableDTOs, timetables.getPageable(), timetables.getTotalElements());
+			}
+			default -> {
+				return timetableRepository.findBySemesterAndSessionTypeAndUsedTrue(semester, sessionType, page)
+						.map(Timetable::toDTO);
+			}
 		}
-		return timetableRepository.findBySemesterAndSessionTypeAndUsedTrue(semester, sessionType, page)
-				.map(Timetable::toDTO);
 	}
 
 	private boolean isTeacherPresent(Scheduling scheduling, String teacherId) {
