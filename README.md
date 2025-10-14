@@ -1,6 +1,8 @@
+![alt text](assets/uy1-planning-management-soa.svg)
+
 # Timetable & Reservation Management System API
 
-This is the official backend API for the University of Yaoundé I's Faculty of Science Timetable and Classroom Reservation Management System. The application is built with Spring Boot and leverages Google OR-Tools for complex scheduling problems. It provides a secure, robust, and scalable solution for managing academic resources.
+This is the backend API for the University of Yaoundé I's Faculty of Science Timetable and Classroom Reservation Management System. The application is built with Spring Boot and leverages Google OR-Tools for complex scheduling problems. It provides a secure, robust, and scalable solution for managing academic resources.
 
 ## ✨ Features
 

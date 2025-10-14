@@ -1,0 +1,25 @@
+package com.facsciencesuy1.planning_management.entities;
+
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.DocumentReference;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+@Document(collection = "departments")
+public class Department {
+    @Id
+    private String id;
+    private String name;
+    private String code;
+
+    @DocumentReference(lazy = true, collection = "branches")
+    private Branch branch;
+}

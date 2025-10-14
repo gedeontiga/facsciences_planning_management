@@ -1,0 +1,61 @@
+package com.facsciencesuy1.planning_management.entities;
+
+import java.util.Collection;
+
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
+
+@Getter
+@Setter
+@SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
+@RequiredArgsConstructor
+@Document(collection = "users")
+public class Users implements UserDetails {
+    @Id
+    private String id;
+
+    @NonNull
+    @Indexed(unique = true)
+    private String email;
+    @NonNull
+    private String password;
+    private String firstName;
+    private String lastName;
+    private String address;
+    private String phoneNumber;
+    @NonNull
+    private Role role;
+
+    @NonNull
+    private Boolean enabled;
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return role.getType().getAuthorities();
+    }
+
+    @Override
+    public String getUsername() {
+        return email;
+    }
+
+    @Override
+    public String toString() {
+        return "Users{" + "id='" + id + '\'' + ", email='" + email + '\'' + ", password='" + password + '\''
+                + ", firstName='" + firstName + '\'' + ", lastName='" + lastName + '\'' + ", address='" + address + '\''
+                + ", phoneNumber='" + phoneNumber + '\'' + ", role=" + role + ", enabled=" + enabled + '}';
+    }
+}

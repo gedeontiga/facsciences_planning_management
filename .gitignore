@@ -34,3 +34,5 @@ build/
 .vscode/
 
 test.http
+
+.env**
