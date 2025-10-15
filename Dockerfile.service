@@ -1,0 +1,22 @@
+# syntax=docker/dockerfile:1
+FROM eclipse-temurin:21-jre-alpine AS runtime
+
+ARG SERVICE_NAME
+WORKDIR /app
+RUN addgroup -S spring && adduser -S spring -G spring
+
+# Copy pre-built JAR from the service directory
+COPY ${SERVICE_NAME}/target/*.jar app.jar
+
+RUN chown -R spring:spring /app
+USER spring:spring
+EXPOSE 8080
+
+ENV JAVA_OPTS="-XX:+UseContainerSupport \
+    -XX:MaxRAMPercentage=75.0 \
+    -XX:+ExitOnOutOfMemoryError \
+    -XX:+UseG1GC \
+    -XX:+UseStringDeduplication \
+    -Djava.security.egd=file:/dev/./urandom"
+
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

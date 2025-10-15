@@ -12,11 +12,11 @@ import org.springframework.cglib.core.internal.Function;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import com.facsciencesuy1.planning_management.api_gateway.dtos.LoginResponse;
 import com.facsciencesuy1.planning_management.api_gateway.repositories.JwtRepository;
 import com.facsciencesuy1.planning_management.api_gateway.repositories.StudentRepository;
 import com.facsciencesuy1.planning_management.api_gateway.repositories.TeacherRepository;
 import com.facsciencesuy1.planning_management.api_gateway.repositories.UserRepository;
+import com.facsciencesuy1.planning_management.api_gateway.utils.dtos.LoginResponse;
 import com.facsciencesuy1.planning_management.entities.Jwt;
 import com.facsciencesuy1.planning_management.entities.Student;
 import com.facsciencesuy1.planning_management.entities.Teacher;

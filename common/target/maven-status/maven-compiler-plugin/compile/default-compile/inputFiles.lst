@@ -8,7 +8,6 @@
 /home/gedeon/Documents/App/facsciences_planning_management/planning-management-soa/common/src/main/java/com/facsciencesuy1/planning_management/entities/Branch.java
 /home/gedeon/Documents/App/facsciences_planning_management/planning-management-soa/common/src/main/java/com/facsciencesuy1/planning_management/dtos/ErrorResponse.java
 /home/gedeon/Documents/App/facsciences_planning_management/planning-management-soa/common/src/main/java/com/facsciencesuy1/planning_management/dtos/CourseSchedulingDTO.java
-/home/gedeon/Documents/App/facsciences_planning_management/planning-management-soa/common/src/main/java/com/facsciencesuy1/planning_management/configs/DataProviderConfig.java
 /home/gedeon/Documents/App/facsciences_planning_management/planning-management-soa/common/src/main/java/com/facsciencesuy1/planning_management/entities/Room.java
 /home/gedeon/Documents/App/facsciences_planning_management/planning-management-soa/common/src/main/java/com/facsciencesuy1/planning_management/dtos/CourseDTO.java
 /home/gedeon/Documents/App/facsciences_planning_management/planning-management-soa/common/src/main/java/com/facsciencesuy1/planning_management/dtos/TimetableDTO.java

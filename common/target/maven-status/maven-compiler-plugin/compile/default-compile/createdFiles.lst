@@ -21,7 +21,6 @@ com/facsciencesuy1/planning_management/entities/Ue$UeBuilder.class
 com/facsciencesuy1/planning_management/dtos/ExamSchedulingDTO.class
 com/facsciencesuy1/planning_management/dtos/CourseSchedulingDTO.class
 com/facsciencesuy1/planning_management/entities/Course$CourseBuilder.class
-com/facsciencesuy1/planning_management/configs/DataProviderConfig.class
 com/facsciencesuy1/planning_management/entities/Student.class
 com/facsciencesuy1/planning_management/entities/types/RoleType.class
 com/facsciencesuy1/planning_management/components/JwtsHelper.class

@@ -1,4 +1,4 @@
-![alt text](assets/uy1-planning-management-soa.svg)
+![alt text](assets/uy1-planning-management-soa.png)
 
 # Timetable & Reservation Management System API
 

@@ -14,14 +14,14 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.facsciencesuy1.planning_management.api_gateway.dtos.LoginRequest;
-import com.facsciencesuy1.planning_management.api_gateway.dtos.LoginResponse;
-import com.facsciencesuy1.planning_management.api_gateway.dtos.PasswordResetRequest;
-import com.facsciencesuy1.planning_management.api_gateway.dtos.UserRequest;
 import com.facsciencesuy1.planning_management.api_gateway.repositories.LevelRepository;
 import com.facsciencesuy1.planning_management.api_gateway.repositories.RoleRepository;
 import com.facsciencesuy1.planning_management.api_gateway.repositories.UserRepository;
 import com.facsciencesuy1.planning_management.api_gateway.repositories.ValidationRepository;
+import com.facsciencesuy1.planning_management.api_gateway.utils.dtos.LoginRequest;
+import com.facsciencesuy1.planning_management.api_gateway.utils.dtos.LoginResponse;
+import com.facsciencesuy1.planning_management.api_gateway.utils.dtos.PasswordResetRequest;
+import com.facsciencesuy1.planning_management.api_gateway.utils.dtos.UserRequest;
 import com.facsciencesuy1.planning_management.entities.Role;
 import com.facsciencesuy1.planning_management.entities.Student;
 import com.facsciencesuy1.planning_management.entities.Users;

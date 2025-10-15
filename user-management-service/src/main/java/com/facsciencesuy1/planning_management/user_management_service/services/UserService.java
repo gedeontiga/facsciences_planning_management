@@ -6,9 +6,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import com.facsciencesuy1.planning_management.entities.Users;
 import com.facsciencesuy1.planning_management.exceptions.CustomBusinessException;
-import com.facsciencesuy1.planning_management.user_management_service.dtos.UserDTO;
-import com.facsciencesuy1.planning_management.user_management_service.dtos.UserUpdate;
 import com.facsciencesuy1.planning_management.user_management_service.repositories.UserRepository;
+import com.facsciencesuy1.planning_management.user_management_service.utils.dtos.UserDTO;
+import com.facsciencesuy1.planning_management.user_management_service.utils.dtos.UserUpdate;
 
 import lombok.RequiredArgsConstructor;
 

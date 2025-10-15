@@ -1,0 +1,14 @@
+{
+  "properties": [
+    {
+      "name": "gateway.secret",
+      "type": "java.lang.String",
+      "description": "A description for 'gateway.secret'"
+    },
+    {
+      "name": "spring.websocket.enabled",
+      "type": "java.lang.String",
+      "description": "A description for 'spring.websocket.enabled'"
+    }
+  ]
+}

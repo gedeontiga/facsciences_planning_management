@@ -13,11 +13,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.facsciencesuy1.planning_management.api_gateway.dtos.LoginRequest;
-import com.facsciencesuy1.planning_management.api_gateway.dtos.LoginResponse;
-import com.facsciencesuy1.planning_management.api_gateway.dtos.PasswordResetRequest;
-import com.facsciencesuy1.planning_management.api_gateway.dtos.UserRequest;
 import com.facsciencesuy1.planning_management.api_gateway.services.AuthService;
+import com.facsciencesuy1.planning_management.api_gateway.utils.dtos.LoginRequest;
+import com.facsciencesuy1.planning_management.api_gateway.utils.dtos.LoginResponse;
+import com.facsciencesuy1.planning_management.api_gateway.utils.dtos.PasswordResetRequest;
+import com.facsciencesuy1.planning_management.api_gateway.utils.dtos.UserRequest;
 
 import javax.security.sasl.AuthenticationException;
 

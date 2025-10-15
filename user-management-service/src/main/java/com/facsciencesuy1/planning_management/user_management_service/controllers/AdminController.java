@@ -4,11 +4,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.facsciencesuy1.planning_management.dtos.RoleDTO;
 import com.facsciencesuy1.planning_management.entities.types.RoleType;
-import com.facsciencesuy1.planning_management.user_management_service.dtos.UserDTO;
-import com.facsciencesuy1.planning_management.user_management_service.dtos.admin.CreateStudent;
-import com.facsciencesuy1.planning_management.user_management_service.dtos.admin.CreateTeacher;
-import com.facsciencesuy1.planning_management.user_management_service.dtos.admin.CreateUser;
 import com.facsciencesuy1.planning_management.user_management_service.services.AdminServices;
+import com.facsciencesuy1.planning_management.user_management_service.utils.dtos.UserDTO;
+import com.facsciencesuy1.planning_management.user_management_service.utils.dtos.admin.CreateStudent;
+import com.facsciencesuy1.planning_management.user_management_service.utils.dtos.admin.CreateTeacher;
+import com.facsciencesuy1.planning_management.user_management_service.utils.dtos.admin.CreateUser;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

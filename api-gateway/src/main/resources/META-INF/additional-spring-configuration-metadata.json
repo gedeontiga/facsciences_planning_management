@@ -1,0 +1,111 @@
+{
+  "properties": [
+    {
+      "name": "app.frontend-url",
+      "type": "java.lang.String",
+      "description": "A description for 'app.frontend-url'",
+      "defaultValue": "https://app-planning-uy1-web.vercel.app"
+    },
+    {
+      "name": "mail.from",
+      "type": "java.lang.String",
+      "description": "A description for 'mail.from'",
+      "defaultValue": ""
+    },
+    {
+      "name": "jwt.secret",
+      "type": "java.lang.String",
+      "description": "A description for 'jwt.secret'"
+    },
+    {
+      "name": "jwt.expiration.hours",
+      "type": "java.lang.String",
+      "description": "A description for 'jwt.expiration.hours'"
+    },
+    {
+      "name": "app.password-suffix",
+      "type": "java.lang.String",
+      "description": "A description for 'app.default-password-end'"
+    },
+    {
+      "name": "services.user-management.websocket-url",
+      "type": "java.lang.String",
+      "description": "A description for 'services.user-management.websocket-url'"
+    },
+    {
+      "name": "services.user-management.url",
+      "type": "java.lang.String",
+      "description": "A description for 'services.user-management.url'"
+    },
+    {
+      "name": "services.academic.url",
+      "type": "java.lang.String",
+      "description": "A description for 'services.academic.url'"
+    },
+    {
+      "name": "services.planning.url",
+      "type": "java.lang.String",
+      "description": "A description for 'services.planning.url'"
+    },
+    {
+      "name": "services.planning.websocket-url",
+      "type": "java.lang.String",
+      "description": "A description for 'services.planning.websocket-url'"
+    },
+    {
+      "name": "webclient.connect-timeout",
+      "type": "java.lang.String",
+      "description": "A description for 'webclient.connect-timeout'"
+    },
+    {
+      "name": "webclient.read-timeout",
+      "type": "java.lang.String",
+      "description": "A description for 'webclient.read-timeout'"
+    },
+    {
+      "name": "webclient.write-timeout",
+      "type": "java.lang.String",
+      "description": "A description for 'webclient.write-timeout'"
+    },
+    {
+      "name": "cors.allowed-origins",
+      "type": "java.lang.String",
+      "description": "A description for 'cors.allowed-origins'"
+    },
+    {
+      "name": "cors.allowed-headers",
+      "type": "java.lang.String",
+      "description": "A description for 'cors.allowed-headers'"
+    },
+    {
+      "name": "cors.allow-credentials",
+      "type": "java.lang.String",
+      "description": "A description for 'cors.allow-credentials'"
+    },
+    {
+      "name": "cors.max-age",
+      "type": "java.lang.String",
+      "description": "A description for 'cors.max-age'"
+    },
+    {
+      "name": "rate-limit.enabled",
+      "type": "java.lang.String",
+      "description": "A description for 'rate-limit.enabled'"
+    },
+    {
+      "name": "rate-limit.requests-per-minute",
+      "type": "java.lang.String",
+      "description": "A description for 'rate-limit.requests-per-minute'"
+    },
+    {
+      "name": "gateway.secret",
+      "type": "java.lang.String",
+      "description": "A description for 'gateway.secret'"
+    },
+    {
+      "name": "spring.websocket.proxy.enabled",
+      "type": "java.lang.String",
+      "description": "A description for 'spring.websocket.proxy.enabled'"
+    }
+  ]
+}

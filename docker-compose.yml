@@ -1,0 +1,155 @@
+services:
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGODB_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGODB_PASSWORD}
+      - MONGO_INITDB_DATABASE=${MONGODB_DATABASE}
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  user-management-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+      args:
+        SERVICE_NAME: user-management-service
+    container_name: user-management-service
+    restart: unless-stopped
+    ports:
+      - "8383:8383"
+    environment:
+      - SPRING_APPLICATION_NAME=user-management-service
+      - SERVER_PORT=8383
+      - SPRING_DATA_MONGODB_URI=${MONGODB_URI}
+      - GATEWAY_SECRET=${GATEWAY_SECRET}
+      - FRONTEND_URL=${FRONTEND_URL}
+      - MAIL_FROM=${MAIL_FROM}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - PASSWORD_SUFFIX=${PASSWORD_SUFFIX}
+      - LOG_LEVEL=${LOG_LEVEL}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8383/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  academic-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+      args:
+        SERVICE_NAME: academic-service
+    container_name: academic-service
+    restart: unless-stopped
+    ports:
+      - "8282:8282"
+    environment:
+      - SPRING_APPLICATION_NAME=academic-service
+      - SERVER_PORT=8282
+      - SPRING_DATA_MONGODB_URI=${MONGODB_URI}
+      - GATEWAY_SECRET=${GATEWAY_SECRET}
+      - JWT_SECRET=${JWT_SECRET}
+      - LOG_LEVEL=${LOG_LEVEL}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8282/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  planning-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+      args:
+        SERVICE_NAME: planning-service
+    container_name: planning-service
+    restart: unless-stopped
+    ports:
+      - "8181:8181"
+    environment:
+      - SPRING_APPLICATION_NAME=planning-service
+      - SERVER_PORT=8181
+      - SPRING_DATA_MONGODB_URI=${MONGODB_URI}
+      - GATEWAY_SECRET=${GATEWAY_SECRET}
+      - LOG_LEVEL=${LOG_LEVEL}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8181/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+      args:
+        SERVICE_NAME: api-gateway
+    container_name: api-gateway
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_APPLICATION_NAME=api-gateway
+      - SERVER_PORT=8080
+      - GATEWAY_SECRET=${GATEWAY_SECRET}
+      - SPRING_DATA_MONGODB_URI=${MONGODB_URI}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRATION_HOURS=${JWT_EXPIRATION_HOURS}
+      - USER_MANAGEMENT_URL=http://user-management-service:8383
+      - ACADEMIC_SERVICE_URL=http://academic-service:8282
+      - PLANNING_SERVICE_URL=http://planning-service:8181
+      - PLANNING_SERVICE_WS_URL=ws://planning-service:8181
+      - CORS_ALLOWED_ORIGINS=${CORS_ORIGINS}
+      - APP_FRONTEND_URL=${FRONTEND_URL}
+      - MAIL_FROM=${MAIL_FROM}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - PASSWORD_SUFFIX=${PASSWORD_SUFFIX}
+      - LOG_LEVEL=${LOG_LEVEL}
+    depends_on:
+      user-management-service:
+        condition: service_healthy
+      academic-service:
+        condition: service_healthy
+      planning-service:
+        condition: service_healthy
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  backend:
+    driver: bridge

@@ -1,0 +1,24 @@
+{
+  "properties": [
+    {
+      "name": "spring.servletmultipart.max-file-size",
+      "type": "java.lang.String",
+      "description": "A description for 'spring.servletmultipart.max-file-size'"
+    },
+    {
+      "name": "spring.servletmultipart.max-request-size",
+      "type": "java.lang.String",
+      "description": "A description for 'spring.servletmultipart.max-request-size'"
+    },
+    {
+      "name": "gateway.secret",
+      "type": "java.lang.String",
+      "description": "A description for 'gateway.secret'"
+    },
+    {
+      "name": "spring.websocket.enabled",
+      "type": "java.lang.String",
+      "description": "A description for 'spring.websocket.enabled'"
+    }
+  ]
+}

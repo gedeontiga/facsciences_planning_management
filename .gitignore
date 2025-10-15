@@ -36,3 +36,4 @@ build/
 test.http
 
 .env**
+!.env.example
