@@ -3,7 +3,9 @@ package com.facsciencesuy1.planning_management.api_gateway.controllers;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -19,8 +21,9 @@ import com.facsciencesuy1.planning_management.api_gateway.utils.dtos.LoginRespon
 import com.facsciencesuy1.planning_management.api_gateway.utils.dtos.PasswordResetRequest;
 import com.facsciencesuy1.planning_management.api_gateway.utils.dtos.UserRequest;
 
-import javax.security.sasl.AuthenticationException;
+import reactor.core.publisher.Mono;
 
+@Slf4j
 @Validated
 @RestController
 @RequestMapping("/api/auth")
@@ -30,31 +33,58 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(@Valid @RequestBody UserRequest request) {
-        authService.register(request);
-        return ResponseEntity.status(201).body("User registered successfully. Please check your email for activation.");
+    public Mono<ResponseEntity<String>> register(@Valid @RequestBody UserRequest request) {
+        return Mono.fromRunnable(() -> authService.register(request))
+                .then(Mono.just(ResponseEntity.status(HttpStatus.CREATED)
+                        .body("User registered successfully. Please check your email for activation.")))
+                .onErrorResume(e -> {
+                    log.error("Registration failed: {}", e.getMessage());
+                    return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                            .body("Registration failed: " + e.getMessage()));
+                });
     }
 
     @PatchMapping("/activate")
-    public ResponseEntity<String> activate(@RequestParam String token) {
-        authService.activate(token);
-        return ResponseEntity.ok("Account activated successfully");
+    public Mono<ResponseEntity<String>> activate(@RequestParam String token) {
+        return Mono.fromRunnable(() -> authService.activate(token))
+                .then(Mono.just(ResponseEntity.ok("Account activated successfully")))
+                .onErrorResume(e -> {
+                    log.error("Activation failed: {}", e.getMessage());
+                    return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                            .body("Activation failed: " + e.getMessage()));
+                });
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) throws AuthenticationException {
-        return ResponseEntity.ok(authService.login(request));
+    public Mono<ResponseEntity<LoginResponse>> login(@Valid @RequestBody LoginRequest request) {
+        return authService.login(request)
+                .map(ResponseEntity::ok)
+                .onErrorResume(e -> {
+                    log.error("Login failed: {}", e.getMessage());
+                    return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                            .body(null));
+                });
     }
 
     @PostMapping("/reset-password-request")
-    public ResponseEntity<String> requestPasswordReset(@RequestParam String email) {
-        authService.requestPasswordReset(email);
-        return ResponseEntity.ok("Password reset email sent");
+    public Mono<ResponseEntity<String>> requestPasswordReset(@RequestParam String email) {
+        return Mono.fromRunnable(() -> authService.requestPasswordReset(email))
+                .then(Mono.just(ResponseEntity.ok("Password reset email sent")))
+                .onErrorResume(e -> {
+                    log.error("Password reset request failed: {}", e.getMessage());
+                    return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                            .body("Password reset request failed: " + e.getMessage()));
+                });
     }
 
     @PostMapping("/reset-password")
-    public ResponseEntity<String> resetPassword(@Valid @RequestBody PasswordResetRequest request) {
-        authService.resetPassword(request);
-        return ResponseEntity.ok("Password reset successful");
+    public Mono<ResponseEntity<String>> resetPassword(@Valid @RequestBody PasswordResetRequest request) {
+        return Mono.fromRunnable(() -> authService.resetPassword(request))
+                .then(Mono.just(ResponseEntity.ok("Password reset successful")))
+                .onErrorResume(e -> {
+                    log.error("Password reset failed: {}", e.getMessage());
+                    return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                            .body("Password reset failed: " + e.getMessage()));
+                });
     }
 }

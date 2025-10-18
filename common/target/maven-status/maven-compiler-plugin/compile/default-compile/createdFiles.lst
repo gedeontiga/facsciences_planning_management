@@ -23,7 +23,6 @@ com/facsciencesuy1/planning_management/dtos/CourseSchedulingDTO.class
 com/facsciencesuy1/planning_management/entities/Course$CourseBuilder.class
 com/facsciencesuy1/planning_management/entities/Student.class
 com/facsciencesuy1/planning_management/entities/types/RoleType.class
-com/facsciencesuy1/planning_management/components/JwtsHelper.class
 com/facsciencesuy1/planning_management/entities/Users$UsersBuilderImpl.class
 com/facsciencesuy1/planning_management/entities/Reservation$RequestStatus.class
 com/facsciencesuy1/planning_management/dtos/LevelDTO.class

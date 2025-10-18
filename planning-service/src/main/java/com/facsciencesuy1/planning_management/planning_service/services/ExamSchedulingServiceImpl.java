@@ -27,7 +27,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 /*
@@ -43,9 +42,6 @@ public class ExamSchedulingServiceImpl implements SchedulingService<ExamScheduli
 	private final UeRepository ueRepository;
 	private final UserRepository userRepository;
 	private final SchedulingConflictService conflictService;
-	private final WebSocketUpdateService webSocketUpdateService;
-
-	private static final String TIMETABLE_TOPIC_DESTINATION = "/topic/timetable/";
 
 	@Override
 	@Transactional
@@ -89,11 +85,6 @@ public class ExamSchedulingServiceImpl implements SchedulingService<ExamScheduli
 		ExamScheduling savedScheduling = schedulingRepository.save(scheduling);
 		timetable.getSchedules().add(savedScheduling);
 		timetableRepository.save(timetable);
-		ExamSchedulingDTO responseDTO = savedScheduling.toDTO();
-
-		// 2. Send real-time update
-		webSocketUpdateService.sendUpdate(TIMETABLE_TOPIC_DESTINATION + "create/" + responseDTO.timetableId(),
-				responseDTO);
 		return savedScheduling;
 	}
 
@@ -138,10 +129,6 @@ public class ExamSchedulingServiceImpl implements SchedulingService<ExamScheduli
 		ExamScheduling updatedScheduling = schedulingRepository.save(scheduling);
 		ExamSchedulingDTO responseDTO = updatedScheduling.toDTO();
 
-		// 2. Send real-time update
-		webSocketUpdateService.sendUpdate(TIMETABLE_TOPIC_DESTINATION + "update/" + responseDTO.timetableId(),
-				responseDTO);
-
 		return responseDTO;
 	}
 
@@ -171,9 +158,6 @@ public class ExamSchedulingServiceImpl implements SchedulingService<ExamScheduli
 				});
 
 		schedulingRepository.deleteById(id);
-
-		webSocketUpdateService.sendUpdate(TIMETABLE_TOPIC_DESTINATION + "delete/" + deletedDTO.timetableId(),
-				Map.of("schedulingId", deletedDTO.id()));
 	}
 
 	@Override

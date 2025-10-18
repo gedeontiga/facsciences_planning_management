@@ -19,7 +19,6 @@
 /home/gedeon/Documents/App/facsciences_planning_management/planning-management-soa/common/src/main/java/com/facsciencesuy1/planning_management/entities/Ue.java
 /home/gedeon/Documents/App/facsciences_planning_management/planning-management-soa/common/src/main/java/com/facsciencesuy1/planning_management/entities/types/PermissionType.java
 /home/gedeon/Documents/App/facsciences_planning_management/planning-management-soa/common/src/main/java/com/facsciencesuy1/planning_management/entities/types/RoleType.java
-/home/gedeon/Documents/App/facsciences_planning_management/planning-management-soa/common/src/main/java/com/facsciencesuy1/planning_management/components/JwtsHelper.java
 /home/gedeon/Documents/App/facsciences_planning_management/planning-management-soa/common/src/main/java/com/facsciencesuy1/planning_management/dtos/RoomDTO.java
 /home/gedeon/Documents/App/facsciences_planning_management/planning-management-soa/common/src/main/java/com/facsciencesuy1/planning_management/entities/types/Semester.java
 /home/gedeon/Documents/App/facsciences_planning_management/planning-management-soa/common/src/main/java/com/facsciencesuy1/planning_management/entities/Level.java

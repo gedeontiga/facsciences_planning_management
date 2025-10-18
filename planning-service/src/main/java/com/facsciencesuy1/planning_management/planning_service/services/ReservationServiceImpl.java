@@ -40,7 +40,6 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -57,9 +56,6 @@ public class ReservationServiceImpl implements ReservationService {
 	private final CourseSchedulingServiceImpl courseSchedulingService;
 	private final ExamSchedulingServiceImpl examSchedulingService;
 	private final SchedulingConflictService schedulingConflictService;
-	private final WebSocketUpdateService webSocketUpdateService;
-
-	private static final String WS_RESERVATION_TOPIC = "/topic/reservations/";
 
 	@Override
 	@Transactional
@@ -133,8 +129,6 @@ public class ReservationServiceImpl implements ReservationService {
 		Reservation savedReservation = reservationRepository.save(reservation);
 		ReservationResponseDTO responseDTO = ReservationResponseDTO.fromReservation(savedReservation);
 
-		webSocketUpdateService.sendUpdate(WS_RESERVATION_TOPIC + "create/" + savedReservation.getId(), responseDTO);
-
 		return responseDTO;
 	}
 
@@ -165,8 +159,6 @@ public class ReservationServiceImpl implements ReservationService {
 		}
 		Reservation updatedReservation = reservationRepository.save(reservation);
 		ReservationResponseDTO responseDTO = ReservationResponseDTO.fromReservation(updatedReservation);
-
-		webSocketUpdateService.sendUpdate(WS_RESERVATION_TOPIC + "update/" + updatedReservation.getId(), responseDTO);
 
 		return responseDTO;
 	}
@@ -203,7 +195,6 @@ public class ReservationServiceImpl implements ReservationService {
 					}
 					reservationRepository.deleteById(id);
 				});
-		webSocketUpdateService.sendUpdate(WS_RESERVATION_TOPIC + "delete/" + id, Map.of("reservationId", id));
 	}
 
 	@Override

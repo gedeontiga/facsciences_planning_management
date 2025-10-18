@@ -9,7 +9,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.facsciencesuy1.planning_management.components.JwtsHelper;
 import com.facsciencesuy1.planning_management.dtos.TimetableDTO;
 import com.facsciencesuy1.planning_management.entities.AcademicYear;
 import com.facsciencesuy1.planning_management.entities.Course;
@@ -36,6 +35,7 @@ import com.facsciencesuy1.planning_management.planning_service.repositories.Room
 import com.facsciencesuy1.planning_management.planning_service.repositories.TeacherRepository;
 import com.facsciencesuy1.planning_management.planning_service.repositories.TimetableRepository;
 import com.facsciencesuy1.planning_management.planning_service.services.interfaces.TimetableService;
+import com.facsciencesuy1.planning_management.planning_service.utils.components.JwtsHelper;
 import com.facsciencesuy1.planning_management.planning_service.utils.dtos.TimeSlotDTO;
 
 import java.time.DayOfWeek;
@@ -71,22 +71,13 @@ public class TimetableServiceImpl implements TimetableService {
 				.orElseThrow(() -> new CustomBusinessException("Level not found with id: " + levelId));
 
 		Long headCount = level.getHeadCount();
-		// if (isExceededRoomCapacity(headCount)) {
-		// throw new CustomBusinessException(
-		// "Cannot generate timetable for Level '" + level.getCode() + "' due to room
-		// capacity limit.");
 
-		// }
-
-		// 2. Get all available rooms.
 		List<Room> availableRooms = roomRepository
 				.findByCapacityIsGreaterThanEqualOrderByCapacityAsc(headCount);
 		if (availableRooms.isEmpty()) {
 			throw new IllegalStateException("No available rooms in the system for this head count:" + headCount);
 		}
 
-		// Prevent regeneration if a timetable already exists and is in use for this
-		// exact context
 		Optional<Timetable> existingTimetable = timetableRepository
 				.findByAcademicYearAndSemesterAndLevelIdAndSessionTypeAndUsedTrue(academicYear,
 						semester, levelId, SessionType.COURSE);
@@ -95,16 +86,12 @@ public class TimetableServiceImpl implements TimetableService {
 			return existingTimetable.get().toDTO();
 		}
 
-		// 1. Get all active courses that MUST be scheduled for this level.
 		List<Course> coursesToSchedule = courseRepository.findByObsoleteFalseAndLevelIdAndSemester(levelId,
 				semester);
 		if (coursesToSchedule.isEmpty()) {
 			throw new CustomBusinessException("No active courses found for level " + level.getName() + " to schedule.");
 		}
 
-		// 3. Get ALL existing, active course schedules from the ENTIRE system.
-		// This is the crucial step to handle resource conflicts across different
-		// levels.
 		List<CourseScheduling> existingSchedules = courseSchedulingRepository
 				.findByHeadCountIsGreaterThanEqualAndActiveIsTrue(headCount);
 
@@ -112,12 +99,9 @@ public class TimetableServiceImpl implements TimetableService {
 				DayOfWeek.FRIDAY, DayOfWeek.SATURDAY);
 		List<CourseTimeSlot> timeSlots = Arrays.asList(CourseTimeSlot.values());
 
-		// 4. Call the solver with all required information.
-
 		List<CourseScheduling> solvedSchedules = timetableSolverService.solve(
 				coursesToSchedule, availableRooms, days, timeSlots, existingSchedules, level);
 
-		// 5. Create and save the new timetable and its generated schedules.
 		getOrCreateAcademicYear(academicYear);
 		Timetable newTimetable = Timetable.builder()
 				.academicYear(academicYear)
@@ -127,7 +111,7 @@ public class TimetableServiceImpl implements TimetableService {
 				.name("Course Planning for " + level.getCode())
 				.description("Timetable for " + level.getName() + " | " + academicYear + " | " + semester.getLabel())
 				.sessionType(SessionType.COURSE)
-				.used(true) // New timetables are active by default.
+				.used(true)
 				.build();
 
 		Timetable savedTimetable = timetableRepository.save(newTimetable);
@@ -372,13 +356,4 @@ public class TimetableServiceImpl implements TimetableService {
 		return Arrays.stream(Semester.values()).map(Enum::name).collect(Collectors.toList());
 	}
 
-	// private boolean isExceededRoomCapacity(Long headCount) {
-	// if (headCount == null) {
-	// return true;
-	// }
-	// Long roomCapacity = roomRepository.findTopByOrderByCapacityDesc()
-	// .map(Room::getCapacity)
-	// .orElse(0L);
-	// return headCount > roomCapacity;
-	// }
 }

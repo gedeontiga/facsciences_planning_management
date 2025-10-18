@@ -4,13 +4,11 @@ import java.time.Instant;
 import java.util.UUID;
 
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -31,13 +29,14 @@ import com.facsciencesuy1.planning_management.exceptions.CustomBusinessException
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Mono;
 
 @Slf4j
 @Service
 @AllArgsConstructor
 public class AuthService {
     private static final long ACTIVATION_HOURS_VALIDITY = 24 * 3600 * 1000;
-    private final AuthenticationManager authenticationManager;
+    private final ReactiveAuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final ValidationRepository validationRepository;
     private final UserRepository userRepository;
@@ -52,10 +51,17 @@ public class AuthService {
 
     public void register(UserRequest request) {
         validateRequest(request.email(), request.levelId());
-        Student user = Student.builder().email(request.email()).firstName(request.firstName())
-                .lastName(request.lastName()).address(request.address()).phoneNumber(request.phoneNumber())
-                .password(passwordEncoder.encode(request.password())).role(getRoleByType(RoleType.STUDENT))
-                .levelId(request.levelId()).enabled(false).build();
+        Student user = Student.builder()
+                .email(request.email())
+                .firstName(request.firstName())
+                .lastName(request.lastName())
+                .address(request.address())
+                .phoneNumber(request.phoneNumber())
+                .password(passwordEncoder.encode(request.password()))
+                .role(getRoleByType(RoleType.STUDENT))
+                .levelId(request.levelId())
+                .enabled(false)
+                .build();
 
         String token = generateActivationToken();
         saveToken(userRepository.save(user), token);
@@ -63,7 +69,8 @@ public class AuthService {
     }
 
     public void activate(String token) {
-        Validation activation = validationRepository.findByActivationTokenAndExpiredIsAfter(token, Instant.now())
+        Validation activation = validationRepository
+                .findByActivationTokenAndExpiredIsAfter(token, Instant.now())
                 .orElseThrow(() -> new CustomBusinessException("Invalid or expired activation link"));
 
         if (!activation.getActivationToken().equals(token)) {
@@ -78,24 +85,21 @@ public class AuthService {
         validationRepository.delete(activation);
     }
 
-    public LoginResponse login(LoginRequest request) throws AuthenticationException {
-        try {
-            Authentication authentication = authenticationManager
-                    .authenticate(new UsernamePasswordAuthenticationToken(request.email(), request.password()));
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+    public Mono<LoginResponse> login(LoginRequest request) {
+        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(request.email(),
+                request.password());
 
-            if (authentication.isAuthenticated()) {
-                Users user = (Users) authentication.getPrincipal();
-                return jwtService.generate(request.email(), user.getRole().getType());
-            }
-            throw new BadCredentialsException("Invalid login credentials");
-        } catch (BadCredentialsException e) {
-            throw new BadCredentialsException("Invalid login credentials");
-        } catch (DisabledException e) {
-            throw new BadCredentialsException("User not found or account is not activated");
-        } catch (Exception e) {
-            throw new BadCredentialsException("Authentication failed: " + e.getMessage());
-        }
+        return authenticationManager.authenticate(authToken)
+                .map(authentication -> {
+                    Users user = (Users) authentication.getPrincipal();
+                    return jwtService.generate(request.email(), user.getRole().getType());
+                })
+                .onErrorMap(DisabledException.class,
+                        e -> new BadCredentialsException("User not found or account is not activated"))
+                .onErrorMap(BadCredentialsException.class,
+                        e -> new BadCredentialsException("Invalid login credentials"))
+                .onErrorMap(AuthenticationException.class,
+                        e -> new BadCredentialsException("Authentication failed: " + e.getMessage()));
     }
 
     public void requestPasswordReset(String email) {

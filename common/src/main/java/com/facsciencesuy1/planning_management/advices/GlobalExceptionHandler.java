@@ -2,7 +2,6 @@ package com.facsciencesuy1.planning_management.advices;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -14,7 +13,6 @@ import com.facsciencesuy1.planning_management.dtos.ErrorResponse;
 import com.facsciencesuy1.planning_management.exceptions.CustomBusinessException;
 
 import io.jsonwebtoken.JwtException;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 
 import java.time.LocalDateTime;
@@ -58,28 +56,6 @@ public class GlobalExceptionHandler {
 				HttpStatus.BAD_REQUEST.value(),
 				LocalDateTime.now().toString());
 		return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
-	}
-
-	// Keep existing exception handlers...
-	@ExceptionHandler(AccessDeniedException.class)
-	public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException ex,
-			HttpServletRequest request) {
-		ErrorResponse error = new ErrorResponse(
-				"Access Denied",
-				ex.getMessage(),
-				HttpStatus.FORBIDDEN.value(),
-				LocalDateTime.now().toString());
-		return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
-	}
-
-	@ExceptionHandler(Exception.class)
-	public ResponseEntity<ErrorResponse> handleGenericException(Exception ex, HttpServletRequest request) {
-		ErrorResponse error = new ErrorResponse(
-				"Internal Server Error",
-				ex.getMessage(),
-				HttpStatus.INTERNAL_SERVER_ERROR.value(),
-				LocalDateTime.now().toString());
-		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
 	}
 
 	@ExceptionHandler(MethodArgumentNotValidException.class)

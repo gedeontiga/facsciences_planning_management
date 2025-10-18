@@ -1,4 +1,4 @@
-package com.facsciencesuy1.planning_management.components;
+package com.facsciencesuy1.planning_management.planning_service.utils.components;
 
 import java.util.Base64;
 
