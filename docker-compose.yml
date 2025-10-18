@@ -30,10 +30,11 @@ services:
     networks:
       - backend
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8761/actuator/health"]
       interval: 10s
       timeout: 5s
-      retries: 3
+      retries: 5
+      start_period: 30s
 
   user-management-service:
     build:
@@ -60,14 +61,16 @@ services:
     depends_on:
       mongodb:
         condition: service_healthy
+      discovery-service:
+        condition: service_healthy
     networks:
       - backend
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8383/actuator/health"]
-      interval: 20s
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8383/actuator/health"]
+      interval: 15s
       timeout: 5s
-      retries: 1
-      start_period: 20s
+      retries: 5
+      start_period: 40s
 
   academic-service:
     build:
@@ -89,14 +92,16 @@ services:
     depends_on:
       mongodb:
         condition: service_healthy
+      discovery-service:
+        condition: service_healthy
     networks:
       - backend
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8282/actuator/health"]
-      interval: 20s
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8282/actuator/health"]
+      interval: 15s
       timeout: 5s
-      retries: 1
-      start_period: 20s
+      retries: 5
+      start_period: 40s
 
   planning-service:
     build:
@@ -118,14 +123,16 @@ services:
     depends_on:
       mongodb:
         condition: service_healthy
+      discovery-service:
+        condition: service_healthy
     networks:
       - backend
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8181/actuator/health"]
-      interval: 20s
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8181/actuator/health"]
+      interval: 15s
       timeout: 5s
-      retries: 1
-      start_period: 20s
+      retries: 5
+      start_period: 60s
 
   api-gateway:
     build:
@@ -164,6 +171,12 @@ services:
         condition: service_healthy
     networks:
       - backend
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 50s
 
 networks:
   backend:

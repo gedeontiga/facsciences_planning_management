@@ -3,7 +3,23 @@ FROM eclipse-temurin:21-jre-alpine AS runtime
 
 ARG SERVICE_NAME
 WORKDIR /app
-RUN addgroup -S spring && adduser -S spring -G spring
+
+# Create non-root user (Debian/Ubuntu syntax)
+RUN groupadd -r spring && useradd -r -g spring spring
+
+# Install OR-Tools native library dependencies for planning-service
+# Install all required libraries including curl for healthchecks
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends curl && \
+    if [ "$SERVICE_NAME" = "planning-service" ]; then \
+    apt-get install -y --no-install-recommends \
+    libgomp1 \
+    libgfortran5 \
+    libc6 \
+    libstdc++6 \
+    zlib1g; \
+    fi && \
+    rm -rf /var/lib/apt/lists/*
 
 # Copy pre-built JAR from the service directory
 COPY ${SERVICE_NAME}/target/*.jar app.jar
