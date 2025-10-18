@@ -3,7 +3,7 @@ package com.facsciencesuy1.planning_management.planning_service.controllers;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -31,40 +31,46 @@ public class TimetableExportController {
 	private final TimetableService timetableService;
 
 	@GetMapping("/{timetableId}")
-	public ResponseEntity<ByteArrayResource> exportTimetableToPdf(
+	public ResponseEntity<InputStreamResource> exportTimetable(
 			@PathVariable String timetableId,
 			@RequestParam @Valid ExportType type) throws IOException {
 
 		TimetableDTO timetable = timetableService.getTimetableById(timetableId);
 
-		MediaType mediaType = switch (type) {
-			case PDF -> MediaType.APPLICATION_PDF;
-			case CSV -> MediaType.parseMediaType("text/csv");
-		};
-
+		// Generate the appropriate export
 		ByteArrayInputStream bis = switch (type) {
 			case PDF -> exportService.generateTimetablePdf(timetable, timetable.levelCode());
 			case CSV -> exportService.generateTimetableCsv(timetable);
 		};
 
-		HttpHeaders headers = new HttpHeaders();
+		// Determine media type
+		MediaType mediaType = switch (type) {
+			case PDF -> MediaType.APPLICATION_PDF;
+			case CSV -> MediaType.parseMediaType("text/csv");
+		};
+
+		// Generate filename
 		String filename = String.format("%s_%s_%s_Timetable.%s",
 				timetable.levelCode().replace(" ", "_"),
 				timetable.academicYear(),
 				timetable.semester(),
 				type.name().toLowerCase());
 
-		// Key fixes:
-		headers.add("Content-Disposition", "attachment; filename=\"" + filename + "\"");
-		headers.add("Content-Length", String.valueOf(bis.available()));
+		// Get content length before creating InputStreamResource
+		int contentLength = bis.available();
+
+		// Set headers for file download
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(mediaType);
+		headers.setContentDispositionFormData("attachment", filename);
+		headers.setContentLength(contentLength);
 		headers.setCacheControl("no-cache, no-store, must-revalidate");
 		headers.setPragma("no-cache");
 		headers.setExpires(0);
 
-		byte[] data = bis.readAllBytes();
+		// Use InputStreamResource for better streaming support
 		return ResponseEntity.ok()
 				.headers(headers)
-				.contentType(mediaType)
-				.body(new ByteArrayResource(data));
+				.body(new InputStreamResource(bis));
 	}
 }

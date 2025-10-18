@@ -6,10 +6,10 @@ import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.web.codec.CodecCustomizer;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.web.server.ServerWebExchange;
-
 import java.util.stream.Collectors;
 
 @Configuration
@@ -25,8 +25,12 @@ public class GatewayConfig {
 						.filters(f -> f.filter(authenticationHeaderFilter()))
 						.uri("lb://academic-service"))
 				.route("planning-service", r -> r
-						.path("/api/schedules/**", "/api/reservations/**", "/api/timetables/**",
-								"/api/export/timetables/**")
+						.path("/api/schedules/**", "/api/reservations/**", "/api/timetables/**")
+						.filters(f -> f.filter(authenticationHeaderFilter()))
+						.uri("lb://planning-service"))
+				// Separate route for binary file downloads (PDF, CSV exports)
+				.route("planning-export-service", r -> r
+						.path("/api/export/timetables/**")
 						.filters(f -> f.filter(authenticationHeaderFilter()))
 						.uri("lb://planning-service"))
 				.route("user-management-service", r -> r
@@ -62,7 +66,6 @@ public class GatewayConfig {
 								.map(authority -> authority.getAuthority().replace("ROLE_", ""))
 								.collect(Collectors.joining(","));
 
-						// FIX: Create mutated exchange with modified request
 						ServerWebExchange mutatedExchange = exchange.mutate()
 								.request(builder -> builder
 										.header("X-Gateway-Secret", gatewaySecret)
@@ -76,5 +79,15 @@ public class GatewayConfig {
 					return chain.filter(exchange);
 				})
 				.switchIfEmpty(chain.filter(exchange));
+	}
+
+	/**
+	 * Customize codec to handle large binary files
+	 */
+	@Bean
+	CodecCustomizer codecCustomizer() {
+		return configurer -> {
+			configurer.defaultCodecs().maxInMemorySize(10 * 1024 * 1024); // 10MB
+		};
 	}
 }

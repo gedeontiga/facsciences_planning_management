@@ -106,7 +106,7 @@ services:
   planning-service:
     build:
       context: .
-      dockerfile: Dockerfile.service
+      dockerfile: Dockerfile.planning
       args:
         SERVICE_NAME: planning-service
     container_name: planning-service

@@ -5,7 +5,12 @@ ARG SERVICE_NAME
 WORKDIR /app
 
 RUN groupadd -r spring && useradd -r -g spring spring
+RUN mkdir -p /app/native-libs
 
+# Copy native libraries
+COPY --chown=spring:spring ${SERVICE_NAME}/target/ortools-natives/ortools-linux-x86-64/*.so /app/native-libs/
+
+# Copy JAR
 COPY --chown=spring:spring ${SERVICE_NAME}/target/*.jar app.jar
 
 USER spring:spring
@@ -16,6 +21,7 @@ ENV JAVA_OPTS="-XX:+UseContainerSupport \
     -XX:+ExitOnOutOfMemoryError \
     -XX:+UseG1GC \
     -XX:+UseStringDeduplication \
-    -Djava.security.egd=file:/dev/./urandom"
+    -Djava.security.egd=file:/dev/./urandom \
+    -Djava.library.path=/app/native-libs"
 
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

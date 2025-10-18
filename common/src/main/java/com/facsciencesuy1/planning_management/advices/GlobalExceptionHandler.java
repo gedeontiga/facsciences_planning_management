@@ -1,24 +1,20 @@
 package com.facsciencesuy1.planning_management.advices;
 
+import com.facsciencesuy1.planning_management.dtos.ErrorResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
-
-import com.facsciencesuy1.planning_management.dtos.ErrorResponse;
-import com.facsciencesuy1.planning_management.exceptions.CustomBusinessException;
-
-import io.jsonwebtoken.JwtException;
 import jakarta.validation.ConstraintViolationException;
-
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
-@ControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
 	@ExceptionHandler(IllegalArgumentException.class)
@@ -73,6 +69,17 @@ public class GlobalExceptionHandler {
 		return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
 	}
 
+	@ExceptionHandler(AccessDeniedException.class)
+	@ResponseStatus(HttpStatus.FORBIDDEN)
+	public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException ex) {
+		ErrorResponse error = new ErrorResponse(
+				"Access Denied",
+				ex.getMessage(),
+				HttpStatus.FORBIDDEN.value(),
+				LocalDateTime.now().toString());
+		return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+	}
+
 	@ExceptionHandler(InsufficientAuthenticationException.class)
 	@ResponseStatus(HttpStatus.UNAUTHORIZED)
 	public ResponseEntity<ErrorResponse> handleInsufficientAuthenticationException(
@@ -85,7 +92,6 @@ public class GlobalExceptionHandler {
 		return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
 	}
 
-	// Handle Spring Security authentication exceptions
 	@ExceptionHandler(AuthenticationException.class)
 	@ResponseStatus(HttpStatus.UNAUTHORIZED)
 	public ResponseEntity<ErrorResponse> handleAuthenticationException(AuthenticationException ex) {
@@ -97,26 +103,16 @@ public class GlobalExceptionHandler {
 		return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
 	}
 
-	@ExceptionHandler(JwtException.class)
-	@ResponseStatus(HttpStatus.FORBIDDEN)
-	public ResponseEntity<ErrorResponse> handleAccessTokenException(JwtException ex) {
-		ErrorResponse errorResponse = new ErrorResponse(
-				"Access Denied",
-				ex.getMessage(),
-				HttpStatus.FORBIDDEN.value(),
-				LocalDateTime.now().toString());
-		return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
-	}
+	@ExceptionHandler(Exception.class)
+	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+	public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
+		log.error("Unexpected exception: ", ex);
 
-	// Handle custom business exceptions (if any)
-	@ExceptionHandler(CustomBusinessException.class)
-	@ResponseStatus(HttpStatus.BAD_REQUEST)
-	public ResponseEntity<ErrorResponse> handleCustomBusinessException(CustomBusinessException ex) {
-		ErrorResponse errorResponse = new ErrorResponse(
-				"Business Error",
+		ErrorResponse error = new ErrorResponse(
+				"Internal Server Error",
 				ex.getMessage(),
-				HttpStatus.BAD_REQUEST.value(),
+				HttpStatus.INTERNAL_SERVER_ERROR.value(),
 				LocalDateTime.now().toString());
-		return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
 	}
 }
