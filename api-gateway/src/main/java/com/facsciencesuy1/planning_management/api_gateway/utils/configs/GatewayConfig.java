@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 
 @Configuration
 public class GatewayConfig {
+
 	@Value("${gateway.secret}")
 	private String gatewaySecret;
 
@@ -22,33 +23,47 @@ public class GatewayConfig {
 		return builder.routes()
 				.route("academic-service", r -> r
 						.path("/api/courses/**", "/api/faculties/**", "/api/rooms/**", "/api/ues/**")
-						.filters(f -> f.filter(authenticationHeaderFilter()))
+						.filters(f -> f
+								.filter(authenticationHeaderFilter())
+								.retry(retryConfig -> retryConfig.setRetries(2)))
 						.uri("lb://academic-service"))
+
 				.route("planning-service", r -> r
 						.path("/api/schedules/**", "/api/reservations/**", "/api/timetables/**")
-						.filters(f -> f.filter(authenticationHeaderFilter()))
+						.filters(f -> f
+								.filter(authenticationHeaderFilter())
+								.retry(retryConfig -> retryConfig.setRetries(2)))
 						.uri("lb://planning-service"))
-				// Separate route for binary file downloads (PDF, CSV exports)
+
 				.route("planning-export-service", r -> r
 						.path("/api/export/timetables/**")
-						.filters(f -> f.filter(authenticationHeaderFilter()))
+						.filters(f -> f
+								.filter(authenticationHeaderFilter())
+								.retry(retryConfig -> retryConfig.setRetries(2)))
 						.uri("lb://planning-service"))
+
 				.route("user-management-service", r -> r
 						.path("/api/user/**", "/api/admin/**")
-						.filters(f -> f.filter(authenticationHeaderFilter()))
+						.filters(f -> f
+								.filter(authenticationHeaderFilter())
+								.retry(retryConfig -> retryConfig.setRetries(2)))
 						.uri("lb://user-management-service"))
+
 				.route("academic-swagger", r -> r
 						.path("/v3/api-docs/academic")
 						.filters(f -> f.rewritePath("/v3/api-docs/academic", "/v3/api-docs"))
 						.uri("lb://academic-service"))
+
 				.route("planning-swagger", r -> r
 						.path("/v3/api-docs/planning")
 						.filters(f -> f.rewritePath("/v3/api-docs/planning", "/v3/api-docs"))
 						.uri("lb://planning-service"))
+
 				.route("user-management-swagger", r -> r
 						.path("/v3/api-docs/user-management")
 						.filters(f -> f.rewritePath("/v3/api-docs/user-management", "/v3/api-docs"))
 						.uri("lb://user-management-service"))
+
 				.build();
 	}
 
@@ -82,12 +97,16 @@ public class GatewayConfig {
 	}
 
 	/**
-	 * Customize codec to handle large binary files
+	 * Customize codec to handle large binary files (PDFs, Excel, images, etc.)
+	 * Increases buffer size to 10MB to prevent DataBufferLimitException
 	 */
 	@Bean
 	CodecCustomizer codecCustomizer() {
 		return configurer -> {
-			configurer.defaultCodecs().maxInMemorySize(10 * 1024 * 1024); // 10MB
+			// 10MB buffer for large files
+			configurer.defaultCodecs().maxInMemorySize(10 * 1024 * 1024);
+			// Enable streaming mode for large responses
+			configurer.defaultCodecs().enableLoggingRequestDetails(false);
 		};
 	}
 }

@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Component
 public class GatewayAuthenticationFilter extends OncePerRequestFilter {
+
     @Value("${gateway.secret}")
     private String expectedGatewaySecret;
 
@@ -35,36 +36,32 @@ public class GatewayAuthenticationFilter extends OncePerRequestFilter {
 
         String requestPath = request.getRequestURI();
 
-        // Skip filter for actuator and API docs
-        if (requestPath.startsWith("/actuator/") ||
-                requestPath.startsWith("/v3/api-docs") ||
-                requestPath.startsWith("/swagger-ui")) {
+        // Allow public endpoints
+        if (isPublicPath(requestPath)) {
             filterChain.doFilter(request, response);
             return;
         }
 
         String gatewaySecret = request.getHeader("X-Gateway-Secret");
 
-        // Validate gateway secret
+        // Verify request comes from gateway
         if (gatewaySecret == null || !gatewaySecret.equals(expectedGatewaySecret)) {
             log.warn("Unauthorized direct access attempt from IP: {} to path: {}",
                     getClientIp(request), requestPath);
-            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            response.setContentType("application/json");
-            response.getWriter().write(
-                    "{\"error\":\"Forbidden\",\"message\":\"Direct service access not allowed. Use API Gateway.\"}");
+            sendJsonError(response, HttpServletResponse.SC_FORBIDDEN,
+                    "Forbidden", "Direct service access not allowed. Use API Gateway.");
             return;
         }
 
-        // Extract user information from headers
         String email = request.getHeader("X-User-Email");
         String roles = request.getHeader("X-User-Roles");
 
+        // Set authentication context if headers present
         if (email != null && roles != null) {
             List<GrantedAuthority> authorities = Arrays.stream(roles.split(","))
                     .map(String::trim)
                     .filter(role -> !role.isEmpty())
-                    .map(SimpleGrantedAuthority::new)
+                    .map(role -> new SimpleGrantedAuthority(role))
                     .collect(Collectors.toList());
 
             UserDetails userDetails = new User(email, "N/A", authorities);
@@ -72,20 +69,20 @@ public class GatewayAuthenticationFilter extends OncePerRequestFilter {
                     null, authorities);
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
-
             log.debug("Authenticated user: {} with authorities: {}", email, authorities);
-        } else {
-            log.warn("Missing authentication headers from gateway");
         }
 
-        // FIX: Don't catch ServletException - let it propagate
-        // This allows proper error handling by Spring's exception handlers
         try {
             filterChain.doFilter(request, response);
         } finally {
-            // Always clear context after request
             SecurityContextHolder.clearContext();
         }
+    }
+
+    private boolean isPublicPath(String path) {
+        return path.startsWith("/actuator/") ||
+                path.startsWith("/v3/api-docs") ||
+                path.startsWith("/swagger-ui");
     }
 
     private String getClientIp(HttpServletRequest request) {
@@ -95,5 +92,15 @@ public class GatewayAuthenticationFilter extends OncePerRequestFilter {
         }
         ip = request.getHeader("X-Real-IP");
         return ip != null && !ip.isEmpty() ? ip : request.getRemoteAddr();
+    }
+
+    private void sendJsonError(HttpServletResponse response, int status,
+            String error, String message) throws IOException {
+        response.setStatus(status);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write(String.format(
+                "{\"error\":\"%s\",\"message\":\"%s\",\"statusCode\":%d,\"timestamp\":\"%s\"}",
+                error, message, status, java.time.LocalDateTime.now().toString()));
     }
 }

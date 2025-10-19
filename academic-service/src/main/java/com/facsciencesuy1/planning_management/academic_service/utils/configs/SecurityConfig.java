@@ -25,16 +25,14 @@ public class SecurityConfig {
 	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		return http
 				.csrf(csrf -> csrf.disable())
-				.cors(cors -> cors.disable()) // CORS handled by gateway
+				.cors(cors -> cors.disable())
 
 				.authorizeHttpRequests(authorize -> authorize
-						// Health check for service discovery
+
 						.requestMatchers("/actuator/health", "/actuator/info").permitAll()
 
-						// Swagger docs (accessed by gateway)
 						.requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
 
-						// All other requests must come through gateway
 						.anyRequest().authenticated())
 
 				.sessionManagement(session -> session

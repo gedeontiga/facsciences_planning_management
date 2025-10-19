@@ -2,7 +2,6 @@ package com.facsciencesuy1.planning_management.planning_service.controllers;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -27,9 +26,20 @@ import java.io.IOException;
 @RequiredArgsConstructor
 @RequestMapping("/api/export/timetables")
 public class TimetableExportController {
+
 	private final TimetableExportService exportService;
 	private final TimetableService timetableService;
 
+	/**
+	 * Export timetable in specified format (PDF or CSV)
+	 * 
+	 * Note: Using InputStreamResource for efficient streaming through API Gateway.
+	 * Gateway preserves all headers and streams binary data unchanged to client.
+	 * 
+	 * @param timetableId ID of the timetable to export
+	 * @param type        Export format (PDF or CSV)
+	 * @return Downloadable file as stream
+	 */
 	@GetMapping("/{timetableId}")
 	public ResponseEntity<InputStreamResource> exportTimetable(
 			@PathVariable String timetableId,
@@ -37,7 +47,7 @@ public class TimetableExportController {
 
 		TimetableDTO timetable = timetableService.getTimetableById(timetableId);
 
-		// Generate the appropriate export
+		// Generate file content based on type
 		ByteArrayInputStream bis = switch (type) {
 			case PDF -> exportService.generateTimetablePdf(timetable, timetable.levelCode());
 			case CSV -> exportService.generateTimetableCsv(timetable);
@@ -56,19 +66,15 @@ public class TimetableExportController {
 				timetable.semester(),
 				type.name().toLowerCase());
 
-		// Get content length before creating InputStreamResource
-		int contentLength = bis.available();
-
-		// Set headers for file download
+		// Build headers for file download
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(mediaType);
 		headers.setContentDispositionFormData("attachment", filename);
-		headers.setContentLength(contentLength);
+		headers.setContentLength(bis.available());
 		headers.setCacheControl("no-cache, no-store, must-revalidate");
 		headers.setPragma("no-cache");
 		headers.setExpires(0);
 
-		// Use InputStreamResource for better streaming support
 		return ResponseEntity.ok()
 				.headers(headers)
 				.body(new InputStreamResource(bis));

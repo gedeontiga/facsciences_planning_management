@@ -20,6 +20,7 @@ import reactor.core.publisher.Mono;
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationWebFilter implements WebFilter {
+
     private final JwtService jwtService;
     private final ReactiveUserDetailsService userDetailsService;
 
@@ -27,15 +28,16 @@ public class JwtAuthenticationWebFilter implements WebFilter {
     public @NonNull Mono<Void> filter(@NonNull ServerWebExchange exchange, @NonNull WebFilterChain chain) {
         String path = exchange.getRequest().getPath().value();
 
-        // Skip authentication for public paths
+        // Allow public paths without authentication
         if (isPublicPath(path)) {
             return chain.filter(exchange);
         }
 
         String authHeader = exchange.getRequest().getHeaders().getFirst("Authorization");
 
-        // Missing Authorization header
+        // Check for missing authorization header
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            log.warn("Missing or invalid Authorization header for path: {}", path);
             return Mono.error(new ResponseStatusException(
                     HttpStatus.UNAUTHORIZED,
                     "Authentication credentials are required"));
@@ -43,49 +45,65 @@ public class JwtAuthenticationWebFilter implements WebFilter {
 
         String jwt = authHeader.substring(7);
 
+        // Validate token format
+        if (!isValidTokenFormat(jwt)) {
+            log.warn("Invalid token format for path: {}", path);
+            return Mono.error(new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Invalid token format"));
+        }
+
+        // Validate token using JwtService
         try {
-            // Validate token format first
-            if (!isValidTokenFormat(jwt)) {
-                return Mono.error(new JwtException("Invalid token format"));
-            }
-
-            // Check if token is expired
             if (jwtService.isTokenExpired(jwt)) {
-                return Mono.error(new JwtException("Token has expired"));
+                log.warn("Expired token for path: {}", path);
+                return Mono.error(new ResponseStatusException(
+                        HttpStatus.UNAUTHORIZED,
+                        "Token has expired"));
             }
 
-            // Validate token completely
             if (!jwtService.isTokenValid(jwt)) {
-                return Mono.error(new JwtException("Invalid token"));
+                log.warn("Invalid token for path: {}", path);
+                return Mono.error(new ResponseStatusException(
+                        HttpStatus.UNAUTHORIZED,
+                        "Invalid token"));
             }
 
-            // Extract email and authenticate
             String email = jwtService.getEmailFromToken(jwt);
 
             if (email == null || email.trim().isEmpty()) {
-                return Mono.error(new JwtException("Invalid token: missing email"));
+                log.warn("Token missing email claim for path: {}", path);
+                return Mono.error(new ResponseStatusException(
+                        HttpStatus.UNAUTHORIZED,
+                        "Invalid token: missing email"));
             }
 
+            // Load user details and authenticate BEFORE continuing the chain
             return userDetailsService.findByUsername(email)
+                    .switchIfEmpty(Mono.defer(() -> {
+                        log.warn("User not found: {} for path: {}", email, path);
+                        return Mono.error(new ResponseStatusException(
+                                HttpStatus.UNAUTHORIZED,
+                                "User not found"));
+                    }))
                     .flatMap(userDetails -> {
                         var authToken = new UsernamePasswordAuthenticationToken(
                                 userDetails, null, userDetails.getAuthorities());
 
-                        log.debug("Authenticated user: {} with roles: {}",
-                                email, userDetails.getAuthorities());
+                        log.debug("Authenticated user: {} with roles: {}", email, userDetails.getAuthorities());
 
+                        // Continue the chain with authentication context
                         return chain.filter(exchange)
                                 .contextWrite(ReactiveSecurityContextHolder.withAuthentication(authToken));
-                    })
-                    .switchIfEmpty(Mono.error(new ResponseStatusException(
-                            HttpStatus.UNAUTHORIZED,
-                            "User not found")));
+                    });
 
         } catch (JwtException e) {
-            log.warn("JWT validation failed: {}", e.getMessage());
-            return Mono.error(e);
+            log.warn("JWT validation failed for path {}: {}", path, e.getMessage());
+            return Mono.error(new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Invalid token: " + e.getMessage()));
         } catch (Exception e) {
-            log.error("Unexpected error during authentication: {}", e.getMessage(), e);
+            log.error("Unexpected error during authentication for path {}: {}", path, e.getMessage(), e);
             return Mono.error(new ResponseStatusException(
                     HttpStatus.INTERNAL_SERVER_ERROR,
                     "Authentication processing failed"));
