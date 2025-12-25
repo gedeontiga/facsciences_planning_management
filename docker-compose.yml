@@ -11,9 +11,9 @@ services:
       - backend
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
+      interval: 5s
+      timeout: 3s
+      retries: 2
       start_period: 10s
 
   discovery-service:
@@ -32,22 +32,22 @@ services:
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8761/actuator/health"]
       interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
 
-  user-management-service:
+  user-service:
     build:
       context: .
       dockerfile: Dockerfile.service
       args:
-        SERVICE_NAME: user-management-service
-    container_name: user-management-service
+        SERVICE_NAME: user-service
+    container_name: user-service
     restart: unless-stopped
     ports:
       - "8383:8383"
     environment:
-      - SPRING_APPLICATION_NAME=user-management-service
+      - SPRING_APPLICATION_NAME=user-service
       - SERVER_PORT=8383
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka
       - SPRING_DATA_MONGODB_URI=${MONGODB_URI}
@@ -67,10 +67,10 @@ services:
       - backend
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8383/actuator/health"]
-      interval: 15s
-      timeout: 5s
-      retries: 5
-      start_period: 40s
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 20s
 
   academic-service:
     build:
@@ -98,10 +98,10 @@ services:
       - backend
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8282/actuator/health"]
-      interval: 15s
-      timeout: 5s
-      retries: 5
-      start_period: 40s
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
 
   planning-service:
     build:
@@ -129,10 +129,10 @@ services:
       - backend
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8181/actuator/health"]
-      interval: 15s
-      timeout: 5s
-      retries: 5
-      start_period: 60s
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 20s
 
   api-gateway:
     build:
@@ -141,7 +141,7 @@ services:
       args:
         SERVICE_NAME: api-gateway
     container_name: api-gateway
-    restart: unless-stopped
+    # restart: unless-stopped
     ports:
       - "8080:8080"
     environment:
@@ -152,7 +152,7 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka
       - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRATION_HOURS=${JWT_EXPIRATION_HOURS}
-      - USER_MANAGEMENT_URL=http://user-management-service:8383
+      - USER_SERVICE_URL=http://user-service:8383
       - ACADEMIC_SERVICE_URL=http://academic-service:8282
       - PLANNING_SERVICE_URL=http://planning-service:8181
       - CORS_ALLOWED_ORIGINS=${CORS_ORIGINS}
@@ -163,8 +163,6 @@ services:
       - PASSWORD_SUFFIX=${PASSWORD_SUFFIX}
       - LOG_LEVEL=${LOG_LEVEL}
     depends_on:
-      user-management-service:
-        condition: service_healthy
       academic-service:
         condition: service_healthy
       planning-service:
@@ -173,10 +171,10 @@ services:
       - backend
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
-      interval: 15s
-      timeout: 5s
-      retries: 5
-      start_period: 50s
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 30s
 
 networks:
   backend:

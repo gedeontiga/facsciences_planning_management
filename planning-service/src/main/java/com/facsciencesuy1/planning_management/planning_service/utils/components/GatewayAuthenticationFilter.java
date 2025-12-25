@@ -35,8 +35,6 @@ public class GatewayAuthenticationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain) throws ServletException, IOException {
 
         String requestPath = request.getRequestURI();
-
-        // Allow public endpoints
         if (isPublicPath(requestPath)) {
             filterChain.doFilter(request, response);
             return;
@@ -46,8 +44,6 @@ public class GatewayAuthenticationFilter extends OncePerRequestFilter {
 
         // Verify request comes from gateway
         if (gatewaySecret == null || !gatewaySecret.equals(expectedGatewaySecret)) {
-            log.warn("Unauthorized direct access attempt from IP: {} to path: {}",
-                    getClientIp(request), requestPath);
             sendJsonError(response, HttpServletResponse.SC_FORBIDDEN,
                     "Forbidden", "Direct service access not allowed. Use API Gateway.");
             return;
@@ -85,22 +81,18 @@ public class GatewayAuthenticationFilter extends OncePerRequestFilter {
                 path.startsWith("/swagger-ui");
     }
 
-    private String getClientIp(HttpServletRequest request) {
-        String ip = request.getHeader("X-Forwarded-For");
-        if (ip != null && !ip.isEmpty()) {
-            return ip.split(",")[0].trim();
-        }
-        ip = request.getHeader("X-Real-IP");
-        return ip != null && !ip.isEmpty() ? ip : request.getRemoteAddr();
-    }
-
-    private void sendJsonError(HttpServletResponse response, int status,
-            String error, String message) throws IOException {
+    // Inside GatewayAuthenticationFilter.java
+    private void sendJsonError(HttpServletResponse response, int status, String title, String detail)
+            throws IOException {
         response.setStatus(status);
-        response.setContentType("application/json");
+        response.setContentType("application/problem+json"); // IMPORTANT: Standard MIME type
         response.setCharacterEncoding("UTF-8");
-        response.getWriter().write(String.format(
-                "{\"error\":\"%s\",\"message\":\"%s\",\"statusCode\":%d,\"timestamp\":\"%s\"}",
-                error, message, status, java.time.LocalDateTime.now().toString()));
+
+        // Manual RFC 7807 formatting
+        String json = String.format(
+                "{\"type\":\"about:blank\",\"title\":\"%s\",\"status\":%d,\"detail\":\"%s\",\"instance\":\"%s\"}",
+                title, status, detail, response.getHeader("request-uri"));
+
+        response.getWriter().write(json);
     }
 }

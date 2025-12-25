@@ -1,4 +1,3 @@
-com/facsciencesuy1/planning_management/advices/GlobalExceptionHandler.class
 com/facsciencesuy1/planning_management/dtos/RoleDTO.class
 com/facsciencesuy1/planning_management/entities/Users.class
 com/facsciencesuy1/planning_management/entities/CourseScheduling$CourseSchedulingBuilder.class
@@ -64,4 +63,3 @@ com/facsciencesuy1/planning_management/entities/Validation$ValidationBuilder.cla
 com/facsciencesuy1/planning_management/entities/Branch.class
 com/facsciencesuy1/planning_management/dtos/TimetableDTO.class
 com/facsciencesuy1/planning_management/dtos/TeacherDTO.class
-com/facsciencesuy1/planning_management/dtos/ErrorResponse.class

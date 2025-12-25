@@ -12,7 +12,7 @@
   <modules>
     <module>common</module>
     <module>discovery-service</module>
-    <module>user-management-service</module>
+    <module>user-service</module>
     <module>planning-service</module>
     <module>academic-service</module>
     <module>api-gateway</module>

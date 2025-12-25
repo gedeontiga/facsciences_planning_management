@@ -1,4 +1,4 @@
-package com.facsciencesuy1.planning_management.academic_service.utils.components;
+package com.facsciencesuy1.planning_management.user_service.utils.components;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

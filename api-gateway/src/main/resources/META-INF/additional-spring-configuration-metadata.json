@@ -28,14 +28,14 @@
       "description": "A description for 'app.default-password-end'"
     },
     {
-      "name": "services.user-management.websocket-url",
+      "name": "services.user.websocket-url",
       "type": "java.lang.String",
-      "description": "A description for 'services.user-management.websocket-url'"
+      "description": "A description for 'services.user.websocket-url'"
     },
     {
-      "name": "services.user-management.url",
+      "name": "services.user.url",
       "type": "java.lang.String",
-      "description": "A description for 'services.user-management.url'"
+      "description": "A description for 'services.user.url'"
     },
     {
       "name": "services.academic.url",
@@ -106,6 +106,16 @@
       "name": "spring.websocket.proxy.enabled",
       "type": "java.lang.String",
       "description": "A description for 'spring.websocket.proxy.enabled'"
+    },
+    {
+      "name": "problem-detail.include-exception-message",
+      "type": "java.lang.String",
+      "description": "A description for 'problem-detail.include-exception-message'"
+    },
+    {
+      "name": "problem-detail.include-binding-errors",
+      "type": "java.lang.String",
+      "description": "A description for 'problem-detail.include-binding-errors'"
     }
   ]
 }

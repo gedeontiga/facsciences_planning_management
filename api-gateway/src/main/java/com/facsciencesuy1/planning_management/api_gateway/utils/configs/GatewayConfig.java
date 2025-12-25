@@ -42,12 +42,12 @@ public class GatewayConfig {
 								.retry(retryConfig -> retryConfig.setRetries(2)))
 						.uri("lb://planning-service"))
 
-				.route("user-management-service", r -> r
+				.route("user-service", r -> r
 						.path("/api/user/**", "/api/admin/**")
 						.filters(f -> f
 								.filter(authenticationHeaderFilter())
 								.retry(retryConfig -> retryConfig.setRetries(2)))
-						.uri("lb://user-management-service"))
+						.uri("lb://user-service"))
 
 				.route("academic-swagger", r -> r
 						.path("/v3/api-docs/academic")
@@ -59,10 +59,10 @@ public class GatewayConfig {
 						.filters(f -> f.rewritePath("/v3/api-docs/planning", "/v3/api-docs"))
 						.uri("lb://planning-service"))
 
-				.route("user-management-swagger", r -> r
-						.path("/v3/api-docs/user-management")
-						.filters(f -> f.rewritePath("/v3/api-docs/user-management", "/v3/api-docs"))
-						.uri("lb://user-management-service"))
+				.route("user-swagger", r -> r
+						.path("/v3/api-docs/user")
+						.filters(f -> f.rewritePath("/v3/api-docs/user", "/v3/api-docs"))
+						.uri("lb://user-service"))
 
 				.build();
 	}
