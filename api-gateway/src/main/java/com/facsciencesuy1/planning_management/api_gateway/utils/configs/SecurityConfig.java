@@ -45,26 +45,42 @@ public class SecurityConfig {
 				.formLogin(ServerHttpSecurity.FormLoginSpec::disable)
 				.logout(ServerHttpSecurity.LogoutSpec::disable)
 				.authorizeExchange(exchanges -> exchanges
+						// Public endpoints
 						.pathMatchers("/api/auth/**").permitAll()
-						.pathMatchers("/actuator/health").permitAll()
+						.pathMatchers("/actuator/health", "/actuator/info").permitAll()
+
+						// Swagger UI and API docs (public for documentation)
 						.pathMatchers("/swagger-ui/**", "/swagger-ui.html").permitAll()
 						.pathMatchers("/v3/api-docs/**", "/api-docs/**").permitAll()
 						.pathMatchers("/webjars/**").permitAll()
+
+						// WebSocket
 						.pathMatchers("/ws/**").permitAll()
-						.pathMatchers("/api/admin/**").hasAuthority("ADMIN")
+
+						// Admin endpoints require ADMIN role
+						.pathMatchers("/api/admin/**").hasAuthority("ROLE_ADMIN")
+
+						// All other requests require authentication
 						.anyExchange().authenticated())
+
 				.exceptionHandling(exception -> exception
-						// Fix: Delegate to a helper method for type safety
 						.authenticationEntryPoint((exchange, ex) -> writeErrorResponse(exchange,
-								HttpStatus.UNAUTHORIZED, "Unauthorized", ex.getMessage()))
-						.accessDeniedHandler((exchange, ex) -> writeErrorResponse(exchange, HttpStatus.FORBIDDEN,
-								"Forbidden", "Access Denied")))
+								HttpStatus.UNAUTHORIZED, "Unauthorized",
+								"Authentication required. Please provide a valid Bearer token."))
+						.accessDeniedHandler((exchange, ex) -> writeErrorResponse(exchange,
+								HttpStatus.FORBIDDEN, "Forbidden",
+								"You don't have permission to access this resource.")))
+
 				.securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
 				.addFilterAt(jwtAuthenticationWebFilter, SecurityWebFiltersOrder.AUTHENTICATION)
 				.build();
 	}
 
-	private Mono<Void> writeErrorResponse(ServerWebExchange exchange, HttpStatus status, String title, String detail) {
+	/**
+	 * Write RFC 7807 Problem Details JSON response
+	 */
+	private Mono<Void> writeErrorResponse(ServerWebExchange exchange, HttpStatus status,
+			String title, String detail) {
 		ServerHttpResponse response = exchange.getResponse();
 		response.setStatusCode(status);
 		response.getHeaders().setContentType(MediaType.APPLICATION_PROBLEM_JSON);
@@ -82,15 +98,30 @@ public class SecurityConfig {
 		return response.writeWith(Mono.just(buffer));
 	}
 
+	/**
+	 * CORS configuration
+	 */
 	@Bean
 	CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
+
+		// Parse allowed origins from environment variable
 		String[] origins = allowedOrigins.split(",");
 		configuration.setAllowedOriginPatterns(Arrays.asList(origins));
+
+		// Allow all standard HTTP methods
 		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"));
+
+		// Allow all headers
 		configuration.setAllowedHeaders(List.of("*"));
+
+		// Allow credentials (cookies, authorization headers)
 		configuration.setAllowCredentials(true);
+
+		// Expose headers to client
 		configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Total-Count"));
+
+		// Cache preflight response for 1 hour
 		configuration.setMaxAge(3600L);
 
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

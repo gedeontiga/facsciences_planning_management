@@ -25,14 +25,14 @@ public class SwaggerConfig {
 								.name("User Management Team")
 								.email("user@example.com"))
 						.license(new License()
-								.name("Apache 2.0")
-								.url("https://www.apache.org/licenses/LICENSE-2.0.html")))
+								.name("GNU GPL 3.0")
+								.url("https://fsf.org/")))
 				.components(new Components()
 						.addSecuritySchemes("gateway-auth", new SecurityScheme()
 								.type(SecurityScheme.Type.APIKEY)
 								.in(SecurityScheme.In.HEADER)
 								.name("X-Gateway-Secret")
-								.description("Gateway authentication")))
+								.description("Internal gateway authentication (not accessible externally)")))
 				.addSecurityItem(new SecurityRequirement().addList("gateway-auth"));
 	}
 }

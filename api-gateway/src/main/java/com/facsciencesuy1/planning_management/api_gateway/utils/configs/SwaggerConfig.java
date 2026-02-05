@@ -16,21 +16,20 @@ public class SwaggerConfig {
 	OpenAPI customOpenAPI() {
 		return new OpenAPI()
 				.info(new Info()
-						.title("Planning Management API Gateway")
-						.version("1.0.0")
-						.description("Unified API Gateway for microservices architecture")
+						.title("Planning Management - API Gateway")
+						.version("26.02.0")
 						.contact(new Contact()
 								.name("API Support")
-								.email("support@example.com"))
+								.email("gedeontigadev@gmail.com"))
 						.license(new License()
-								.name("Apache 2.0")
-								.url("https://www.apache.org/licenses/LICENSE-2.0.html")))
+								.name("GNU GPL 3.0")
+								.url("https://fsf.org/")))
 				.components(new io.swagger.v3.oas.models.Components()
 						.addSecuritySchemes("bearer-jwt", new SecurityScheme()
 								.type(SecurityScheme.Type.HTTP)
 								.scheme("bearer")
 								.bearerFormat("JWT")
-								.description("JWT token authentication")))
+								.description("Enter JWT token from /api/auth/login endpoint. Format: Bearer <token>")))
 				.addSecurityItem(new SecurityRequirement().addList("bearer-jwt"));
 	}
 }

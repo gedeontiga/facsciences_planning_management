@@ -21,6 +21,7 @@ public class GatewayConfig {
 	@Bean
 	RouteLocator routes(RouteLocatorBuilder builder) {
 		return builder.routes()
+				// Academic Service Routes
 				.route("academic-service", r -> r
 						.path("/api/courses/**", "/api/faculties/**", "/api/rooms/**", "/api/ues/**")
 						.filters(f -> f
@@ -28,6 +29,7 @@ public class GatewayConfig {
 								.retry(retryConfig -> retryConfig.setRetries(2)))
 						.uri("lb://academic-service"))
 
+				// Planning Service Routes
 				.route("planning-service", r -> r
 						.path("/api/schedules/**", "/api/reservations/**", "/api/timetables/**")
 						.filters(f -> f
@@ -35,6 +37,7 @@ public class GatewayConfig {
 								.retry(retryConfig -> retryConfig.setRetries(2)))
 						.uri("lb://planning-service"))
 
+				// Planning Export Service Routes
 				.route("planning-export-service", r -> r
 						.path("/api/export/timetables/**")
 						.filters(f -> f
@@ -42,6 +45,7 @@ public class GatewayConfig {
 								.retry(retryConfig -> retryConfig.setRetries(2)))
 						.uri("lb://planning-service"))
 
+				// User Service Routes
 				.route("user-service", r -> r
 						.path("/api/user/**", "/api/admin/**")
 						.filters(f -> f
@@ -49,6 +53,7 @@ public class GatewayConfig {
 								.retry(retryConfig -> retryConfig.setRetries(2)))
 						.uri("lb://user-service"))
 
+				// Swagger Documentation Routes for each service
 				.route("academic-swagger", r -> r
 						.path("/v3/api-docs/academic")
 						.filters(f -> f.rewritePath("/v3/api-docs/academic", "/v3/api-docs"))
@@ -69,6 +74,8 @@ public class GatewayConfig {
 
 	/**
 	 * Adds authentication headers to downstream service requests
+	 * This filter extracts user info from Spring Security context and forwards it
+	 * to services
 	 */
 	private GatewayFilter authenticationHeaderFilter() {
 		return (exchange, chain) -> ReactiveSecurityContextHolder.getContext()
@@ -78,9 +85,14 @@ public class GatewayConfig {
 					if (auth != null && auth.isAuthenticated()) {
 						String email = auth.getName();
 						String roles = auth.getAuthorities().stream()
-								.map(authority -> authority.getAuthority().replace("ROLE_", ""))
+								.map(authority -> {
+									String role = authority.getAuthority();
+									// Remove ROLE_ prefix if present for cleaner transmission
+									return role.startsWith("ROLE_") ? role.substring(5) : role;
+								})
 								.collect(Collectors.joining(","));
 
+						// Add headers for downstream services
 						ServerWebExchange mutatedExchange = exchange.mutate()
 								.request(builder -> builder
 										.header("X-Gateway-Secret", gatewaySecret)
@@ -91,7 +103,13 @@ public class GatewayConfig {
 						return chain.filter(mutatedExchange);
 					}
 
-					return chain.filter(exchange);
+					// If no authentication, still add gateway secret for public endpoints
+					ServerWebExchange mutatedExchange = exchange.mutate()
+							.request(builder -> builder
+									.header("X-Gateway-Secret", gatewaySecret))
+							.build();
+
+					return chain.filter(mutatedExchange);
 				})
 				.switchIfEmpty(chain.filter(exchange));
 	}
