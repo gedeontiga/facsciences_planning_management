@@ -1,0 +1,375 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: planning-management
+
+---
+# ==========================================
+# CONFIGURATION & SECRETS
+# ==========================================
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secrets
+  namespace: planning-management
+type: Opaque
+stringData:
+  mongodb-uri: ${MONGODB_URI}
+  mongodb-root-password: ${MONGODB_PASSWORD}
+  mongodb-username: ${MONGODB_USERNAME}
+  mongodb-db: ${MONGODB_DATABASE}
+  jwt-secret: ${JWT_SECRET}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: planning-management
+data:
+  EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://discovery-service:8761/eureka"
+  LOG_LEVEL: "INFO"
+
+---
+# ==========================================
+# 1. MONGODB
+# ==========================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb
+  namespace: planning-management
+spec:
+  ports:
+    - port: 27017
+      targetPort: 27017
+  selector:
+    app: mongodb
+  type: ClusterIP # Internal only
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb
+  namespace: planning-management
+spec:
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+    metadata:
+      labels:
+        app: mongodb
+    spec:
+      containers:
+        - name: mongodb
+          image: mongo:latest
+          ports:
+            - containerPort: 27017
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: mongodb-username
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: mongodb-root-password
+            - name: MONGO_INITDB_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: mongodb-db
+          # Simple liveness probe matching compose healthcheck
+          livenessProbe:
+            exec:
+              command: ["mongosh", "--eval", "db.adminCommand('ping')"]
+            initialDelaySeconds: 10
+            periodSeconds: 5
+
+---
+# ==========================================
+# 2. DISCOVERY SERVICE (EUREKA)
+# ==========================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: discovery-service
+  namespace: planning-management
+spec:
+  ports:
+    - port: 8761
+      targetPort: 8761
+  selector:
+    app: discovery-service
+  type: ClusterIP # Internal only
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: discovery-service
+  namespace: planning-management
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: discovery-service
+  template:
+    metadata:
+      labels:
+        app: discovery-service
+    spec:
+      containers:
+        - name: discovery-service
+          image: my-registry/discovery-service:latest
+          ports:
+            - containerPort: 8761
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8761
+            initialDelaySeconds: 15
+            periodSeconds: 10
+
+---
+# ==========================================
+# 3. USER SERVICE
+# ==========================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-service
+  namespace: planning-management
+spec:
+  ports:
+    - port: 8383
+      targetPort: 8383
+  selector:
+    app: user-service
+  type: ClusterIP
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-service
+  namespace: planning-management
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: user-service
+  template:
+    metadata:
+      labels:
+        app: user-service
+    spec:
+      containers:
+        - name: user-service
+          image: my-registry/user-service:latest
+          ports:
+            - containerPort: 8383
+          envFrom:
+            - configMapRef:
+                name: app-config
+          env:
+            - name: SPRING_DATA_MONGODB_URI
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: mongodb-uri
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8383
+            initialDelaySeconds: 20
+            periodSeconds: 10
+
+---
+# ==========================================
+# 4. ACADEMIC SERVICE
+# ==========================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: academic-service
+  namespace: planning-management
+spec:
+  ports:
+    - port: 8282
+      targetPort: 8282
+  selector:
+    app: academic-service
+  type: ClusterIP
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: academic-service
+  namespace: planning-management
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: academic-service
+  template:
+    metadata:
+      labels:
+        app: academic-service
+    spec:
+      containers:
+        - name: academic-service
+          image: my-registry/academic-service:latest
+          ports:
+            - containerPort: 8282
+          envFrom:
+            - configMapRef:
+                name: app-config
+          env:
+            - name: SPRING_DATA_MONGODB_URI
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: mongodb-uri
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: jwt-secret
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8282
+            initialDelaySeconds: 15
+            periodSeconds: 10
+
+---
+# ==========================================
+# 5. PLANNING SERVICE
+# ==========================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: planning-service
+  namespace: planning-management
+spec:
+  ports:
+    - port: 8181
+      targetPort: 8181
+  selector:
+    app: planning-service
+  type: ClusterIP
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: planning-service
+  namespace: planning-management
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: planning-service
+  template:
+    metadata:
+      labels:
+        app: planning-service
+    spec:
+      containers:
+        - name: planning-service
+          image: my-registry/planning-service:latest
+          ports:
+            - containerPort: 8181
+          envFrom:
+            - configMapRef:
+                name: app-config
+          env:
+            - name: SPRING_DATA_MONGODB_URI
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: mongodb-uri
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: jwt-secret
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8181
+            initialDelaySeconds: 20
+            periodSeconds: 10
+
+---
+# ==========================================
+# 6. API GATEWAY (Public Access)
+# ==========================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway
+  namespace: planning-management
+spec:
+  # This makes it accessible externally (like 'backend-public' network)
+  type: LoadBalancer
+  ports:
+    - port: 80
+      targetPort: 8080
+  selector:
+    app: api-gateway
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+  namespace: planning-management
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+    spec:
+      containers:
+        - name: api-gateway
+          image: my-registry/api-gateway:latest
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: app-config
+          env:
+            # Internal K8s DNS matches Docker Compose service names
+            - name: USER_SERVICE_URL
+              value: "http://user-service:8383"
+            - name: ACADEMIC_SERVICE_URL
+              value: "http://academic-service:8282"
+            - name: PLANNING_SERVICE_URL
+              value: "http://planning-service:8181"
+            - name: SPRING_DATA_MONGODB_URI
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: mongodb-uri
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: jwt-secret
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10

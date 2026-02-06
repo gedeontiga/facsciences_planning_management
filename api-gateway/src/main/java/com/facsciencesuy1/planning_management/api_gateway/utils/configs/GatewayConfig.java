@@ -1,6 +1,5 @@
 package com.facsciencesuy1.planning_management.api_gateway.utils.configs;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
@@ -14,9 +13,6 @@ import java.util.stream.Collectors;
 
 @Configuration
 public class GatewayConfig {
-
-	@Value("${gateway.secret}")
-	private String gatewaySecret;
 
 	@Bean
 	RouteLocator routes(RouteLocatorBuilder builder) {
@@ -72,11 +68,6 @@ public class GatewayConfig {
 				.build();
 	}
 
-	/**
-	 * Adds authentication headers to downstream service requests
-	 * This filter extracts user info from Spring Security context and forwards it
-	 * to services
-	 */
 	private GatewayFilter authenticationHeaderFilter() {
 		return (exchange, chain) -> ReactiveSecurityContextHolder.getContext()
 				.flatMap(securityContext -> {
@@ -87,15 +78,13 @@ public class GatewayConfig {
 						String roles = auth.getAuthorities().stream()
 								.map(authority -> {
 									String role = authority.getAuthority();
-									// Remove ROLE_ prefix if present for cleaner transmission
 									return role.startsWith("ROLE_") ? role.substring(5) : role;
 								})
 								.collect(Collectors.joining(","));
 
-						// Add headers for downstream services
+						// REMOVE X-Gateway-Secret header
 						ServerWebExchange mutatedExchange = exchange.mutate()
 								.request(builder -> builder
-										.header("X-Gateway-Secret", gatewaySecret)
 										.header("X-User-Email", email)
 										.header("X-User-Roles", roles))
 								.build();
@@ -103,13 +92,7 @@ public class GatewayConfig {
 						return chain.filter(mutatedExchange);
 					}
 
-					// If no authentication, still add gateway secret for public endpoints
-					ServerWebExchange mutatedExchange = exchange.mutate()
-							.request(builder -> builder
-									.header("X-Gateway-Secret", gatewaySecret))
-							.build();
-
-					return chain.filter(mutatedExchange);
+					return chain.filter(exchange);
 				})
 				.switchIfEmpty(chain.filter(exchange));
 	}

@@ -98,11 +98,6 @@
       "description": "A description for 'rate-limit.requests-per-minute'"
     },
     {
-      "name": "gateway.secret",
-      "type": "java.lang.String",
-      "description": "A description for 'gateway.secret'"
-    },
-    {
       "name": "spring.websocket.proxy.enabled",
       "type": "java.lang.String",
       "description": "A description for 'spring.websocket.proxy.enabled'"

@@ -1,6 +1,7 @@
 package com.facsciencesuy1.planning_management.api_gateway.utils.configs;
 
 import com.facsciencesuy1.planning_management.api_gateway.utils.components.JwtAuthenticationWebFilter;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -8,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
@@ -22,6 +24,7 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 
@@ -32,6 +35,7 @@ import java.util.List;
 public class SecurityConfig {
 
 	private final JwtAuthenticationWebFilter jwtAuthenticationWebFilter;
+	private final ObjectMapper objectMapper;
 
 	@Value("${cors.allowed-origins}")
 	private String allowedOrigins;
@@ -64,12 +68,15 @@ public class SecurityConfig {
 						.anyExchange().authenticated())
 
 				.exceptionHandling(exception -> exception
-						.authenticationEntryPoint((exchange, ex) -> writeErrorResponse(exchange,
-								HttpStatus.UNAUTHORIZED, "Unauthorized",
-								"Authentication required. Please provide a valid Bearer token."))
-						.accessDeniedHandler((exchange, ex) -> writeErrorResponse(exchange,
-								HttpStatus.FORBIDDEN, "Forbidden",
-								"You don't have permission to access this resource.")))
+						.authenticationEntryPoint(
+								(exchange, ex) -> writeErrorResponse(exchange, HttpStatus.UNAUTHORIZED,
+										"Authentication Required",
+										"Please provide a valid Bearer token in the Authorization header.",
+										"AUTH_100"))
+						.accessDeniedHandler((exchange, ex) -> writeErrorResponse(exchange, HttpStatus.FORBIDDEN,
+								"Access Denied",
+								"You don't have permission to access this resource.",
+								"AUTH_101")))
 
 				.securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
 				.addFilterAt(jwtAuthenticationWebFilter, SecurityWebFiltersOrder.AUTHENTICATION)
@@ -78,24 +85,35 @@ public class SecurityConfig {
 
 	/**
 	 * Write RFC 7807 Problem Details JSON response
+	 * Used by Security Filter Chain for authentication/authorization errors
 	 */
 	private Mono<Void> writeErrorResponse(ServerWebExchange exchange, HttpStatus status,
-			String title, String detail) {
+			String title, String detail, String errorCode) {
 		ServerHttpResponse response = exchange.getResponse();
 		response.setStatusCode(status);
 		response.getHeaders().setContentType(MediaType.APPLICATION_PROBLEM_JSON);
 
-		String requestPath = exchange.getRequest().getPath().value();
-		String safeDetail = detail == null ? "" : detail.replace("\"", "'");
+		// Create RFC 7807 Problem Detail
+		ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(status, detail);
+		problemDetail.setTitle(title);
+		problemDetail.setProperty("timestamp", Instant.now());
+		problemDetail.setProperty("errorCode", errorCode);
+		problemDetail.setProperty("path", exchange.getRequest().getPath().value());
 
-		String body = String.format(
-				"{\"type\":\"about:blank\",\"title\":\"%s\",\"status\":%d,\"detail\":\"%s\",\"instance\":\"%s\"}",
-				title, status.value(), safeDetail, requestPath);
-
-		byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
-		DataBuffer buffer = response.bufferFactory().wrap(bytes);
-
-		return response.writeWith(Mono.just(buffer));
+		try {
+			// Serialize to JSON using ObjectMapper (respects ProblemDetail structure)
+			byte[] bytes = objectMapper.writeValueAsBytes(problemDetail);
+			DataBuffer buffer = response.bufferFactory().wrap(bytes);
+			return response.writeWith(Mono.just(buffer));
+		} catch (Exception e) {
+			// Fallback to simple JSON if serialization fails
+			String fallbackJson = String.format(
+					"{\"type\":\"about:blank\",\"title\":\"%s\",\"status\":%d,\"detail\":\"%s\",\"timestamp\":\"%s\",\"errorCode\":\"%s\"}",
+					title, status.value(), detail, Instant.now(), errorCode);
+			byte[] bytes = fallbackJson.getBytes(StandardCharsets.UTF_8);
+			DataBuffer buffer = response.bufferFactory().wrap(bytes);
+			return response.writeWith(Mono.just(buffer));
+		}
 	}
 
 	/**

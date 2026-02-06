@@ -32,59 +32,59 @@ import reactor.core.publisher.Mono;
 public class AuthController {
     private final AuthService authService;
 
+    /**
+     * Register a new user account
+     * Errors are handled by ReactiveExceptionHandler
+     */
     @PostMapping("/register")
     public Mono<ResponseEntity<String>> register(@Valid @RequestBody UserRequest request) {
         return Mono.fromRunnable(() -> authService.register(request))
                 .then(Mono.just(ResponseEntity.status(HttpStatus.CREATED)
                         .body("User registered successfully. Please check your email for activation.")))
-                .onErrorResume(e -> {
-                    log.error("Registration failed: {}", e.getMessage());
-                    return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                            .body("Registration failed: " + e.getMessage()));
-                });
+                .doOnError(e -> log.error("Registration failed: {}", e.getMessage()));
     }
 
+    /**
+     * Activate user account via token
+     * Errors are handled by ReactiveExceptionHandler
+     */
     @PatchMapping("/activate")
     public Mono<ResponseEntity<String>> activate(@RequestParam String token) {
         return Mono.fromRunnable(() -> authService.activate(token))
                 .then(Mono.just(ResponseEntity.ok("Account activated successfully")))
-                .onErrorResume(e -> {
-                    log.error("Activation failed: {}", e.getMessage());
-                    return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                            .body("Activation failed: " + e.getMessage()));
-                });
+                .doOnError(e -> log.error("Activation failed: {}", e.getMessage()));
     }
 
+    /**
+     * Login endpoint
+     * Errors are handled by ReactiveExceptionHandler
+     */
     @PostMapping("/login")
     public Mono<ResponseEntity<LoginResponse>> login(@Valid @RequestBody LoginRequest request) {
         return authService.login(request)
                 .map(ResponseEntity::ok)
-                .onErrorResume(e -> {
-                    log.error("Login failed: {}", e.getMessage());
-                    return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                            .body(null));
-                });
+                .doOnError(e -> log.error("Login failed: {}", e.getMessage()));
     }
 
+    /**
+     * Request password reset
+     * Errors are handled by ReactiveExceptionHandler
+     */
     @PostMapping("/reset-password-request")
     public Mono<ResponseEntity<String>> requestPasswordReset(@RequestParam String email) {
         return Mono.fromRunnable(() -> authService.requestPasswordReset(email))
                 .then(Mono.just(ResponseEntity.ok("Password reset email sent")))
-                .onErrorResume(e -> {
-                    log.error("Password reset request failed: {}", e.getMessage());
-                    return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                            .body("Password reset request failed: " + e.getMessage()));
-                });
+                .doOnError(e -> log.error("Password reset request failed: {}", e.getMessage()));
     }
 
+    /**
+     * Reset password with token
+     * Errors are handled by ReactiveExceptionHandler
+     */
     @PostMapping("/reset-password")
     public Mono<ResponseEntity<String>> resetPassword(@Valid @RequestBody PasswordResetRequest request) {
         return Mono.fromRunnable(() -> authService.resetPassword(request))
                 .then(Mono.just(ResponseEntity.ok("Password reset successful")))
-                .onErrorResume(e -> {
-                    log.error("Password reset failed: {}", e.getMessage());
-                    return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                            .body("Password reset failed: " + e.getMessage()));
-                });
+                .doOnError(e -> log.error("Password reset failed: {}", e.getMessage()));
     }
 }

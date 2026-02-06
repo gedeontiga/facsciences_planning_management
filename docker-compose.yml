@@ -8,7 +8,7 @@ services:
       - MONGO_INITDB_ROOT_PASSWORD=${MONGODB_PASSWORD}
       - MONGO_INITDB_DATABASE=${MONGODB_DATABASE}
     networks:
-      - backend
+      - backend-private
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 5s
@@ -28,13 +28,13 @@ services:
     environment:
       - SPRING_APPLICATION_NAME=discovery-service
     networks:
-      - backend
+      - backend-private
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8761/actuator/health"]
       interval: 10s
       timeout: 3s
       retries: 3
-      start_period: 15s
+      start_period: 12s
 
   user-service:
     build:
@@ -51,7 +51,6 @@ services:
       - SERVER_PORT=8383
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka
       - SPRING_DATA_MONGODB_URI=${MONGODB_URI}
-      - GATEWAY_SECRET=${GATEWAY_SECRET}
       - FRONTEND_URL=${FRONTEND_URL}
       - MAIL_FROM=${MAIL_FROM}
       - MAIL_USERNAME=${MAIL_USERNAME}
@@ -64,13 +63,13 @@ services:
       discovery-service:
         condition: service_healthy
     networks:
-      - backend
+      - backend-private
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8383/actuator/health"]
       interval: 10s
       timeout: 3s
       retries: 3
-      start_period: 20s
+      start_period: 15s
 
   academic-service:
     build:
@@ -86,7 +85,6 @@ services:
       - SERVER_PORT=8282
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka
       - SPRING_DATA_MONGODB_URI=${MONGODB_URI}
-      - GATEWAY_SECRET=${GATEWAY_SECRET}
       - JWT_SECRET=${JWT_SECRET}
       - LOG_LEVEL=${LOG_LEVEL}
     depends_on:
@@ -95,7 +93,7 @@ services:
       discovery-service:
         condition: service_healthy
     networks:
-      - backend
+      - backend-private
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8282/actuator/health"]
       interval: 10s
@@ -117,7 +115,6 @@ services:
       - SERVER_PORT=8181
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka
       - SPRING_DATA_MONGODB_URI=${MONGODB_URI}
-      - GATEWAY_SECRET=${GATEWAY_SECRET}
       - JWT_SECRET=${JWT_SECRET}
       - LOG_LEVEL=${LOG_LEVEL}
     depends_on:
@@ -126,13 +123,13 @@ services:
       discovery-service:
         condition: service_healthy
     networks:
-      - backend
+      - backend-private
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8181/actuator/health"]
       interval: 10s
       timeout: 3s
       retries: 3
-      start_period: 20s
+      start_period: 15s
 
   api-gateway:
     build:
@@ -147,7 +144,6 @@ services:
     environment:
       - SPRING_APPLICATION_NAME=api-gateway
       - SERVER_PORT=8080
-      - GATEWAY_SECRET=${GATEWAY_SECRET}
       - SPRING_DATA_MONGODB_URI=${MONGODB_URI}
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka
       - JWT_SECRET=${JWT_SECRET}
@@ -168,14 +164,19 @@ services:
       planning-service:
         condition: service_healthy
     networks:
-      - backend
+      - backend-public
+      - backend-private
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
       interval: 10s
       timeout: 3s
       retries: 3
-      start_period: 30s
+      start_period: 20s
 
 networks:
-  backend:
+  backend-public:
     driver: bridge
+
+  backend-private:
+    driver: bridge
+    internal: true
